@@ -7,6 +7,7 @@ class SyncOutboxEntries extends Table {
   TextColumn get operationId => text()();
   TextColumn get organizationId => text().nullable()();
   TextColumn get branchId => text().nullable()();
+  TextColumn get actorUserId => text().nullable()();
   TextColumn get commandType => text()();
   TextColumn get aggregateType => text()();
   TextColumn get aggregateId => text()();

@@ -20,7 +20,6 @@ class DesktopSidebar extends StatelessWidget {
     required this.onDestinationSelected,
     required this.onSettingsSelected,
     required this.onBranchSelected,
-    required this.onRefreshAccess,
     required this.onLogout,
   });
 
@@ -32,7 +31,6 @@ class DesktopSidebar extends StatelessWidget {
   final ValueChanged<AppNavigationItem> onDestinationSelected;
   final VoidCallback onSettingsSelected;
   final BranchSelectionCallback onBranchSelected;
-  final VoidCallback onRefreshAccess;
   final VoidCallback onLogout;
 
   @override
@@ -103,12 +101,6 @@ class DesktopSidebar extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                   ],
-                  SidebarAction(
-                    label: 'Refresh access',
-                    icon: Icons.refresh,
-                    onTap: onRefreshAccess,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
                   SidebarAction(
                     label: 'Logout',
                     icon: Icons.logout,

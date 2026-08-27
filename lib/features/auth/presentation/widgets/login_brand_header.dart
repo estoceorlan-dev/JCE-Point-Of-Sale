@@ -9,8 +9,7 @@ class LoginBrandHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -38,23 +37,6 @@ class LoginBrandHeader extends StatelessWidget {
               height: 88,
               fit: BoxFit.cover,
             ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          'JCE',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.headlineLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Dry Goods Trading',
-          textAlign: TextAlign.center,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ],

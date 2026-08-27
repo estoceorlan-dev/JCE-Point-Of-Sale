@@ -1,3 +1,6 @@
+import '../../../../core/error/failure.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/error/result.dart';
 import '../repositories/auth_repository.dart';
 
 class SendPasswordResetUseCase {
@@ -5,10 +8,14 @@ class SendPasswordResetUseCase {
 
   final AuthRepository _authRepository;
 
-  Future<void> call(String email) {
+  Future<Result<void, Failure>> call(String email) {
     final normalized = email.trim();
     if (normalized.isEmpty || !normalized.contains('@')) {
-      throw const AuthException('Enter your email address first.');
+      return Future.value(
+        const Result<void, Failure>.failure(
+          ValidationFailure('Enter your email address first.'),
+        ),
+      );
     }
     return _authRepository.sendPasswordResetEmail(normalized);
   }

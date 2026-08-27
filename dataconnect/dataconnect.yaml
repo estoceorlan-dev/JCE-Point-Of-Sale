@@ -8,5 +8,6 @@ schema:
       database: jce-pos-database
       cloudSql:
         instanceId: jce-pos-instance
-      schemaValidation: "NONE"
-connectorDirs: []
+      schemaValidation: "COMPATIBLE"
+connectorDirs:
+  - "./pos-connector"

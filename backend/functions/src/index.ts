@@ -5,12 +5,22 @@ import {defineString} from "firebase-functions/params";
 
 import {
   AccessProfileDeniedError,
-  bootstrapTemporaryAdminAccessProfile,
   loadAccessProfile,
   registerDeviceForUser,
   updateBranchNameForUser,
 } from "./access_profile";
 import {withDatabase} from "./database";
+import {
+  asObject,
+  RemoteCommandError,
+} from "./remote_commands/command_types";
+import {processRemoteCommand} from "./remote_commands/remote_command_service";
+import {
+  copyProductImage,
+  deleteStagingImage,
+  findPriorImageFinalization,
+  persistProductImageFinalization,
+} from "./product_image_finalizer";
 
 initializeApp();
 
@@ -19,18 +29,16 @@ const functionsRegion = defineString("JCE_FUNCTIONS_REGION", {
 });
 const databaseInstanceConnectionName = defineString(
   "JCE_DB_INSTANCE_CONNECTION_NAME",
-  {
-    default: "jce-pos:asia-southeast1:jce-pos-instance",
-  },
+  {description: "Cloud SQL project:region:instance for this environment."},
 );
 const databaseName = defineString("JCE_DB_NAME", {
-  default: "jce-pos-database",
+  description: "PostgreSQL database for this environment.",
 });
 const databaseUser = defineString("JCE_DB_USER", {
-  default: "jce-pos@appspot",
+  description: "IAM PostgreSQL user for this environment.",
 });
 const runtimeServiceAccount = defineString("JCE_FUNCTIONS_SERVICE_ACCOUNT", {
-  default: "jce-pos@appspot.gserviceaccount.com",
+  description: "Runtime service account for this environment.",
 });
 
 export const getMyAccessProfile = onCall(
@@ -63,41 +71,6 @@ export const getMyAccessProfile = onCall(
       }
       logger.error("Access profile lookup failed.", error);
       throw new HttpsError("internal", "Access profile lookup failed.");
-    }
-  },
-);
-
-export const bootstrapTemporaryAdmin = onCall(
-  {
-    region: functionsRegion,
-    serviceAccount: runtimeServiceAccount,
-  },
-  async (request) => {
-    const uid = request.auth?.uid;
-    const email =
-      typeof request.auth?.token.email === "string"
-        ? request.auth.token.email
-        : undefined;
-    if (uid === undefined || email === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
-
-    try {
-      return await withDatabase(databaseConfig(), (client) =>
-        bootstrapTemporaryAdminAccessProfile(client, {
-          firebaseUid: uid,
-          email,
-        }),
-      );
-    } catch (error) {
-      if (error instanceof AccessProfileDeniedError) {
-        throw new HttpsError(
-          "permission-denied",
-          "The temporary admin bootstrap is not available for this account.",
-        );
-      }
-      logger.error("Temporary admin bootstrap failed.", error);
-      throw new HttpsError("internal", "Temporary admin bootstrap failed.");
     }
   },
 );
@@ -182,6 +155,86 @@ export const updateBranchName = onCall(
       }
       logger.error("Branch name update failed.", error);
       throw new HttpsError("internal", "Branch name update failed.");
+    }
+  },
+);
+
+export const applyRemoteCommand = onCall(
+  {
+    region: functionsRegion,
+    serviceAccount: runtimeServiceAccount,
+  },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (uid === undefined) {
+      throw new HttpsError("unauthenticated", "Authentication is required.");
+    }
+    try {
+      const data = asObject(request.data, "data");
+      const payload = asObject(data.payload, "payload");
+      return await withDatabase(databaseConfig(), (client) =>
+        processRemoteCommand(client, {
+          firebaseUid: uid,
+          operationId: requiredString(data, "operationId"),
+          organizationId: requiredString(data, "organizationId"),
+          branchId: requiredString(data, "branchId"),
+          commandType: requiredString(data, "commandType"),
+          aggregateType: requiredString(data, "aggregateType"),
+          aggregateId: requiredString(data, "aggregateId"),
+          payload,
+        }),
+      );
+    } catch (error) {
+      if (error instanceof RemoteCommandError) {
+        throw new HttpsError(error.code, error.message);
+      }
+      logger.error("Remote command failed.", error);
+      throw new HttpsError("internal", "The remote command failed.");
+    }
+  },
+);
+
+export const finalizeProductImage = onCall(
+  {
+    region: functionsRegion,
+    serviceAccount: runtimeServiceAccount,
+  },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (uid === undefined) {
+      throw new HttpsError("unauthenticated", "Authentication is required.");
+    }
+    try {
+      const data = asObject(request.data, "data");
+      const imageId = requiredString(data, "imageId");
+      const input = {
+        firebaseUid: uid,
+        operationId: requiredString(data, "operationId"),
+        organizationId: requiredString(data, "organizationId"),
+        branchId: requiredString(data, "branchId"),
+        commandType: "product_image.finalize",
+        aggregateType: "product_image",
+        aggregateId: imageId,
+        productId: requiredString(data, "productId"),
+        stagingPath: requiredString(data, "stagingPath"),
+        payload: {},
+      };
+      const prior = await withDatabase(databaseConfig(), (client) =>
+        findPriorImageFinalization(client, input),
+      );
+      if (prior !== null) return prior;
+      const uploaded = await copyProductImage(input);
+      const result = await withDatabase(databaseConfig(), (client) =>
+        persistProductImageFinalization(client, input, uploaded),
+      );
+      await deleteStagingImage(input.stagingPath);
+      return result;
+    } catch (error) {
+      if (error instanceof RemoteCommandError) {
+        throw new HttpsError(error.code, error.message);
+      }
+      logger.error("Product image finalization failed.", error);
+      throw new HttpsError("internal", "The product image could not be finalized.");
     }
   },
 );

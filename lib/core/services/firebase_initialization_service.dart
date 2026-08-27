@@ -1,9 +1,9 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../firebase_options.dart';
 import '../config/app_config.dart';
 import '../startup/app_initialization_service.dart';
+import 'firebase_environment_options.dart';
 
 final firebaseInitializationServiceProvider =
     Provider<AppInitializationService>((ref) {
@@ -15,12 +15,21 @@ class FirebaseInitializationService implements AppInitializationService {
 
   @override
   Future<void> initialize(AppConfig config) async {
-    if (Firebase.apps.isNotEmpty) {
+    final options = FirebaseEnvironmentOptions.forEnvironment(
+      config.environment,
+    );
+    final existingApps = Firebase.apps;
+    if (existingApps.isNotEmpty) {
+      final activeProjectId = existingApps.first.options.projectId;
+      if (activeProjectId != options.projectId) {
+        throw StateError(
+          'Firebase is already initialized for $activeProjectId, but the '
+          '${config.environment.name} build requires ${options.projectId}.',
+        );
+      }
       return;
     }
 
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    await Firebase.initializeApp(options: options);
   }
 }

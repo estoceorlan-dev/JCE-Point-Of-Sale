@@ -2,7 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/error/failure.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/error/result.dart';
+import '../../../../core/logger/app_logger.dart';
 import '../../domain/entities/auth_session.dart';
+import '../../domain/usecases/refresh_access_usecase.dart';
 import '../providers/auth_providers.dart';
 
 final authControllerProvider =
@@ -13,80 +18,125 @@ class AuthController extends AsyncNotifier<AuthSession?> {
   Future<AuthSession?> build() {
     final repository = ref.watch(authRepositoryProvider);
     final initial = Completer<AuthSession?>();
-    final subscription = repository.authStateChanges().listen(
-      (session) {
-        if (initial.isCompleted) {
-          state = AsyncData(session);
-        } else {
-          initial.complete(session);
-        }
-      },
-      onError: (Object error, [StackTrace? stackTrace]) {
-        final resolvedStackTrace = stackTrace ?? StackTrace.current;
-        if (initial.isCompleted) {
-          state = AsyncError(error, resolvedStackTrace);
-        } else {
-          initial.completeError(error, resolvedStackTrace);
-        }
-      },
-    );
+    final subscription = repository.authStateChanges().listen((result) {
+      result.fold(
+        onSuccess: (session) {
+          if (initial.isCompleted) {
+            final previous = state.asData?.value;
+            state = AsyncData(session);
+            unawaited(_recordStreamedRoleChange(previous, session));
+          } else {
+            initial.complete(session);
+          }
+        },
+        onFailure: (failure) {
+          final stackTrace = failure.stackTrace ?? StackTrace.current;
+          if (initial.isCompleted) {
+            state = AsyncError(failure, stackTrace);
+          } else {
+            initial.completeError(failure, stackTrace);
+          }
+        },
+      );
+    });
     ref.onDispose(subscription.cancel);
     return initial.future;
   }
 
-  Future<void> signIn({required String email, required String password}) async {
+  Future<Result<AuthSession, Failure>> signIn({
+    required String email,
+    required String password,
+  }) async {
     state = const AsyncLoading();
-    try {
-      final session = await ref
-          .read(signInUseCaseProvider)
-          .call(email: email, password: password);
-      state = AsyncData(session);
-    } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
-      rethrow;
-    }
+    final result = await ref
+        .read(signInUseCaseProvider)
+        .call(email: email, password: password);
+    _applySessionResult(result);
+    return result;
   }
 
-  Future<void> signOut() async {
+  Future<Result<void, Failure>> signOut() async {
     final session = state.asData?.value;
-    await ref.read(signOutUseCaseProvider).call(session);
-    state = const AsyncData(null);
+    final result = await ref.read(signOutUseCaseProvider).call(session);
+    result.fold(
+      onSuccess: (_) => state = const AsyncData(null),
+      onFailure: _applyFailure,
+    );
+    return result;
   }
 
-  Future<void> selectActiveBranch({
+  Future<Result<AuthSession, Failure>> selectActiveBranch({
     required String organizationId,
     required String branchId,
   }) async {
     final previous = state.asData?.value;
     if (previous == null) {
-      return;
+      const failure = AuthenticationFailure('Authentication is required.');
+      _applyFailure(failure);
+      return const Result<AuthSession, Failure>.failure(failure);
     }
-    state = AsyncData(
-      await ref
-          .read(selectActiveBranchUseCaseProvider)
-          .call(
-            previous: previous,
-            organizationId: organizationId,
-            branchId: branchId,
-          ),
+    final result = await ref
+        .read(selectActiveBranchUseCaseProvider)
+        .call(
+          previous: previous,
+          organizationId: organizationId,
+          branchId: branchId,
+        );
+    _applySessionResult(result);
+    return result;
+  }
+
+  Future<Result<AuthSession, Failure>> refreshAccess() async {
+    final previous = state.asData?.value;
+    if (previous == null) {
+      const failure = AuthenticationFailure('Authentication is required.');
+      _applyFailure(failure);
+      return const Result<AuthSession, Failure>.failure(failure);
+    }
+    final result = await ref.read(refreshAccessUseCaseProvider).call(previous);
+    _applySessionResult(result);
+    return result;
+  }
+
+  Future<Result<void, Failure>> sendPasswordResetEmail(String email) {
+    return ref.read(sendPasswordResetUseCaseProvider).call(email);
+  }
+
+  void _applySessionResult(Result<AuthSession, Failure> result) {
+    result.fold(
+      onSuccess: (session) => state = AsyncData(session),
+      onFailure: _applyFailure,
     );
   }
 
-  Future<void> refreshAccess() async {
-    final previous = state.asData?.value;
-    if (previous == null) {
+  void _applyFailure(Failure failure) {
+    state = AsyncError(failure, failure.stackTrace ?? StackTrace.current);
+  }
+
+  Future<void> _recordStreamedRoleChange(
+    AuthSession? previous,
+    AuthSession? current,
+  ) async {
+    if (previous == null || current == null) {
+      return;
+    }
+    if (RefreshAccessUseCase.roleSignature(previous) ==
+        RefreshAccessUseCase.roleSignature(current)) {
       return;
     }
     try {
-      state = AsyncData(
-        await ref.read(refreshAccessUseCaseProvider).call(previous),
-      );
+      await ref
+          .read(authAuditRepositoryProvider)
+          .recordRoleChange(previous: previous, current: current);
     } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
+      ref
+          .read(appLoggerProvider)
+          .error(
+            'Unable to record streamed role change.',
+            scope: 'auth',
+            error: error,
+            stackTrace: stackTrace,
+          );
     }
-  }
-
-  Future<void> sendPasswordResetEmail(String email) {
-    return ref.read(sendPasswordResetUseCaseProvider).call(email);
   }
 }

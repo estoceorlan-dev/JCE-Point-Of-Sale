@@ -18,6 +18,9 @@
   "dataconnect": {
     "source": "dataconnect"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "flutter": {
     "platforms": {
       "android": {

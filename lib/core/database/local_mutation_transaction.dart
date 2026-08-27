@@ -42,6 +42,9 @@ class LocalMutationTransaction {
       });
       return Result.success(value);
     } catch (error, stackTrace) {
+      if (error is Failure) {
+        return Result.failure(error);
+      }
       return Result.failure(
         DatabaseFailure(
           'The local mutation could not be saved atomically.',

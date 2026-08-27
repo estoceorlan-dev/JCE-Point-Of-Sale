@@ -8,6 +8,8 @@ final appConfigProvider = Provider<AppConfig>((ref) {
 
 class AppConfig {
   static const defaultFirebaseFunctionsRegion = 'asia-southeast1';
+  static const defaultAccessRefreshInterval = Duration(minutes: 5);
+  static const defaultMaxOfflineAccessAge = Duration(hours: 24);
 
   const AppConfig({
     required this.environment,
@@ -16,7 +18,10 @@ class AppConfig {
     this.accessProfileFunctionName = 'getMyAccessProfile',
     this.deviceRegistrationFunctionName = 'registerDevice',
     this.updateBranchNameFunctionName = 'updateBranchName',
-    this.adminBootstrapFunctionName = 'bootstrapTemporaryAdmin',
+    this.remoteCommandFunctionName = 'applyRemoteCommand',
+    this.finalizeProductImageFunctionName = 'finalizeProductImage',
+    this.accessRefreshInterval = defaultAccessRefreshInterval,
+    this.maxOfflineAccessAge = defaultMaxOfflineAccessAge,
     this.apiBaseUri,
     this.demoBranchId,
     this.firebaseFunctionsRegion,
@@ -47,11 +52,20 @@ class AppConfig {
       'JCE_UPDATE_BRANCH_NAME_FUNCTION',
       defaultValue: 'updateBranchName',
     );
-    const adminBootstrapFunction = String.fromEnvironment(
-      'JCE_ADMIN_BOOTSTRAP_FUNCTION',
-      defaultValue: 'bootstrapTemporaryAdmin',
+    const remoteCommandFunction = String.fromEnvironment(
+      'JCE_REMOTE_COMMAND_FUNCTION',
+      defaultValue: 'applyRemoteCommand',
     );
-
+    const finalizeProductImageFunction = String.fromEnvironment(
+      'JCE_FINALIZE_PRODUCT_IMAGE_FUNCTION',
+      defaultValue: 'finalizeProductImage',
+    );
+    const accessRefreshMinutes = String.fromEnvironment(
+      'JCE_ACCESS_REFRESH_MINUTES',
+    );
+    const maxOfflineAccessHours = String.fromEnvironment(
+      'JCE_MAX_OFFLINE_ACCESS_HOURS',
+    );
     return AppConfig.fromValues(
       environment: environmentValue,
       apiBaseUrl: apiBaseUrl,
@@ -62,7 +76,10 @@ class AppConfig {
       accessProfileFunctionName: accessProfileFunction,
       deviceRegistrationFunctionName: deviceRegistrationFunction,
       updateBranchNameFunctionName: updateBranchNameFunction,
-      adminBootstrapFunctionName: adminBootstrapFunction,
+      remoteCommandFunctionName: remoteCommandFunction,
+      finalizeProductImageFunctionName: finalizeProductImageFunction,
+      accessRefreshMinutes: accessRefreshMinutes,
+      maxOfflineAccessHours: maxOfflineAccessHours,
     );
   }
 
@@ -76,7 +93,10 @@ class AppConfig {
     String accessProfileFunctionName = 'getMyAccessProfile',
     String deviceRegistrationFunctionName = 'registerDevice',
     String updateBranchNameFunctionName = 'updateBranchName',
-    String adminBootstrapFunctionName = 'bootstrapTemporaryAdmin',
+    String remoteCommandFunctionName = 'applyRemoteCommand',
+    String finalizeProductImageFunctionName = 'finalizeProductImage',
+    String? accessRefreshMinutes,
+    String? maxOfflineAccessHours,
   }) {
     final parsedEnvironment = AppEnvironment.parse(environment);
     final parsedApiBaseUri = _parseAbsoluteUri(apiBaseUrl);
@@ -106,11 +126,24 @@ class AppConfig {
       updateBranchNameFunctionName,
       key: 'JCE_UPDATE_BRANCH_NAME_FUNCTION',
     );
-    final normalizedAdminBootstrapFunction = _requireValue(
-      adminBootstrapFunctionName,
-      key: 'JCE_ADMIN_BOOTSTRAP_FUNCTION',
+    final normalizedRemoteCommandFunction = _requireValue(
+      remoteCommandFunctionName,
+      key: 'JCE_REMOTE_COMMAND_FUNCTION',
     );
-
+    final normalizedFinalizeProductImageFunction = _requireValue(
+      finalizeProductImageFunctionName,
+      key: 'JCE_FINALIZE_PRODUCT_IMAGE_FUNCTION',
+    );
+    final parsedAccessRefreshMinutes = _parsePositiveInt(
+      accessRefreshMinutes,
+      fallback: defaultAccessRefreshInterval.inMinutes,
+      key: 'JCE_ACCESS_REFRESH_MINUTES',
+    );
+    final parsedMaxOfflineAccessHours = _parsePositiveInt(
+      maxOfflineAccessHours,
+      fallback: defaultMaxOfflineAccessAge.inHours,
+      key: 'JCE_MAX_OFFLINE_ACCESS_HOURS',
+    );
     if (parsedEnableDemoAuth && normalizedDemoBranchId == null) {
       throw const FormatException(
         'JCE_DEMO_BRANCH_ID is required when demo authentication is enabled.',
@@ -133,7 +166,10 @@ class AppConfig {
       accessProfileFunctionName: normalizedAccessProfileFunction,
       deviceRegistrationFunctionName: normalizedDeviceRegistrationFunction,
       updateBranchNameFunctionName: normalizedUpdateBranchNameFunction,
-      adminBootstrapFunctionName: normalizedAdminBootstrapFunction,
+      remoteCommandFunctionName: normalizedRemoteCommandFunction,
+      finalizeProductImageFunctionName: normalizedFinalizeProductImageFunction,
+      accessRefreshInterval: Duration(minutes: parsedAccessRefreshMinutes),
+      maxOfflineAccessAge: Duration(hours: parsedMaxOfflineAccessHours),
     );
   }
 
@@ -146,7 +182,10 @@ class AppConfig {
   final String accessProfileFunctionName;
   final String deviceRegistrationFunctionName;
   final String updateBranchNameFunctionName;
-  final String adminBootstrapFunctionName;
+  final String remoteCommandFunctionName;
+  final String finalizeProductImageFunctionName;
+  final Duration accessRefreshInterval;
+  final Duration maxOfflineAccessAge;
 
   static Uri? _parseAbsoluteUri(String? value) {
     final normalized = _normalizeOptional(value);
@@ -178,6 +217,22 @@ class AppConfig {
       'false' || '0' || 'no' => false,
       _ => throw FormatException('$key must be true or false.'),
     };
+  }
+
+  static int _parsePositiveInt(
+    String? value, {
+    required int fallback,
+    required String key,
+  }) {
+    final normalized = _normalizeOptional(value);
+    if (normalized == null) {
+      return fallback;
+    }
+    final parsed = int.tryParse(normalized);
+    if (parsed == null || parsed <= 0) {
+      throw FormatException('$key must be a positive integer.');
+    }
+    return parsed;
   }
 
   static String? _normalizeOptional(String? value) {

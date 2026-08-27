@@ -1,3 +1,6 @@
+import '../../../../core/error/failure.dart';
+import '../../../../core/error/failure_mapper.dart';
+import '../../../../core/error/result.dart';
 import '../entities/auth_session.dart';
 import '../repositories/auth_audit_repository.dart';
 import '../repositories/auth_repository.dart';
@@ -12,18 +15,28 @@ class RefreshAccessUseCase {
   final AuthRepository _authRepository;
   final AuthAuditRepository _auditRepository;
 
-  Future<AuthSession> call(AuthSession previous) async {
-    final current = await _authRepository.refreshAccess();
-    if (_roleSignature(previous) != _roleSignature(current)) {
-      await _auditRepository.recordRoleChange(
-        previous: previous,
-        current: current,
+  Future<Result<AuthSession, Failure>> call(AuthSession previous) async {
+    final result = await _authRepository.refreshAccess();
+    if (result case FailureResult<AuthSession, Failure>()) {
+      return result;
+    }
+    final value = result.valueOrNull!;
+    try {
+      if (roleSignature(previous) != roleSignature(value)) {
+        await _auditRepository.recordRoleChange(
+          previous: previous,
+          current: value,
+        );
+      }
+      return result;
+    } catch (error, stackTrace) {
+      return Result<AuthSession, Failure>.failure(
+        FailureMapper.fromException(error, stackTrace),
       );
     }
-    return current;
   }
 
-  String _roleSignature(AuthSession session) {
+  static String roleSignature(AuthSession session) {
     final roleCodes = session.roles.map((role) => role.code).toList()..sort();
     final permissions =
         session.permissions.map((permission) => permission.code).toList()

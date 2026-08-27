@@ -1,0 +1,5 @@
+connectorId: pos-connector
+generate:
+  dartSdk:
+    outputDir: ../../lib/core/remote/generated
+    package: jce_pos_sql_connect

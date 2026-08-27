@@ -3,7 +3,9 @@ enum OutboxState {
   processing('processing'),
   succeeded('succeeded'),
   retryableFailure('retryable_failure'),
-  permanentFailure('permanent_failure');
+  permanentFailure('permanent_failure'),
+  conflict('conflict'),
+  discarded('discarded');
 
   const OutboxState(this.databaseValue);
 

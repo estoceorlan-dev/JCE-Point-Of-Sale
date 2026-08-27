@@ -1,3 +1,6 @@
+import '../../../../core/error/failure.dart';
+import '../../../../core/error/failure_mapper.dart';
+import '../../../../core/error/result.dart';
 import '../entities/auth_session.dart';
 import '../repositories/auth_audit_repository.dart';
 import '../repositories/auth_repository.dart';
@@ -12,10 +15,16 @@ class SignOutUseCase {
   final AuthRepository _authRepository;
   final AuthAuditRepository _auditRepository;
 
-  Future<void> call(AuthSession? session) async {
-    if (session != null) {
-      await _auditRepository.recordLogout(session);
+  Future<Result<void, Failure>> call(AuthSession? session) async {
+    try {
+      if (session != null) {
+        await _auditRepository.recordLogout(session);
+      }
+      return _authRepository.signOut();
+    } catch (error, stackTrace) {
+      return Result<void, Failure>.failure(
+        FailureMapper.fromException(error, stackTrace),
+      );
     }
-    await _authRepository.signOut();
   }
 }

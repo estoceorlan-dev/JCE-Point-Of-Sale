@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/logger/app_logger.dart';
 import 'core/startup/app_startup.dart';
+import 'core/sync/background_sync.dart';
 
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeBackgroundSync();
 
   final container = ProviderContainer();
   final logger = container.read(appLoggerProvider);

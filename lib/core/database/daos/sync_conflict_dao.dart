@@ -11,7 +11,34 @@ class SyncConflictDao extends DatabaseAccessor<AppDatabase>
   SyncConflictDao(super.attachedDatabase);
 
   Future<void> add(SyncConflictsCompanion conflict) {
-    return into(syncConflicts).insert(conflict);
+    return into(
+      syncConflicts,
+    ).insert(conflict, mode: InsertMode.insertOrReplace);
+  }
+
+  Stream<List<SyncConflict>> watchUnresolvedFor({
+    required String organizationId,
+    required String branchId,
+  }) {
+    final query = select(syncConflicts)
+      ..where(
+        (row) =>
+            row.organizationId.equals(organizationId) &
+            (row.branchId.isNull() | row.branchId.equals(branchId)) &
+            row.resolvedAt.isNull(),
+      )
+      ..orderBy([(row) => OrderingTerm.desc(row.createdAt)]);
+    return query.watch();
+  }
+
+  Future<SyncConflict?> unresolvedForOperation(String operationId) {
+    return (select(syncConflicts)
+          ..where(
+            (row) =>
+                row.operationId.equals(operationId) & row.resolvedAt.isNull(),
+          )
+          ..limit(1))
+        .getSingleOrNull();
   }
 
   Stream<List<SyncConflict>> watchUnresolved() {

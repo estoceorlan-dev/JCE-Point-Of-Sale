@@ -7,6 +7,7 @@ import 'daos/metadata_dao.dart';
 import 'daos/outbox_dao.dart';
 import 'daos/sync_conflict_dao.dart';
 import 'daos/sync_cursor_dao.dart';
+import 'daos/sync_entity_version_dao.dart';
 
 final appDatabaseConfigProvider = Provider<AppDatabaseConfig>((ref) {
   return const AppDatabaseConfig();
@@ -32,6 +33,10 @@ final syncCursorDaoProvider = Provider<SyncCursorDao>((ref) {
 
 final syncConflictDaoProvider = Provider<SyncConflictDao>((ref) {
   return ref.watch(appDatabaseProvider).syncConflictDao;
+});
+
+final syncEntityVersionDaoProvider = Provider<SyncEntityVersionDao>((ref) {
+  return ref.watch(appDatabaseProvider).syncEntityVersionDao;
 });
 
 final auditLogDaoProvider = Provider<AuditLogDao>((ref) {

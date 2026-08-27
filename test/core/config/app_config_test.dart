@@ -16,6 +16,11 @@ void main() {
         config.firebaseFunctionsRegion,
         AppConfig.defaultFirebaseFunctionsRegion,
       );
+      expect(
+        config.accessRefreshInterval,
+        AppConfig.defaultAccessRefreshInterval,
+      );
+      expect(config.maxOfflineAccessAge, AppConfig.defaultMaxOfflineAccessAge);
     });
 
     test('keeps demo authentication opt-in during development', () {
@@ -52,6 +57,27 @@ void main() {
       );
 
       expect(config.firebaseFunctionsRegion, 'us-central1');
+    });
+
+    test('allows access verification durations to be overridden', () {
+      final config = AppConfig.fromValues(
+        environment: 'development',
+        accessRefreshMinutes: '10',
+        maxOfflineAccessHours: '8',
+      );
+
+      expect(config.accessRefreshInterval, const Duration(minutes: 10));
+      expect(config.maxOfflineAccessAge, const Duration(hours: 8));
+    });
+
+    test('rejects invalid access verification durations', () {
+      expect(
+        () => AppConfig.fromValues(
+          environment: 'development',
+          accessRefreshMinutes: '0',
+        ),
+        throwsFormatException,
+      );
     });
 
     test('rejects relative API endpoints', () {

@@ -34,14 +34,21 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  flutter_riverpod: ^3.3.2
+  # Riverpod 3.3+ pulls in a `test` version that conflicts with the versions
+  # pinned by this Flutter SDK and the current Drift generator toolchain.
+  flutter_riverpod: ^2.6.1
   go_router: ^17.2.3
   drift: 2.27.0
   sqlite3_flutter_libs: ^0.5.42
   firebase_core: ^4.11.0
   firebase_auth: ^6.5.3
   firebase_storage: ^13.4.3
+  # 0.3.0+3 and newer require sqlite3 3.x, while the pinned Drift 2.27
+  # generator used by the offline database requires sqlite3 2.x.
+  firebase_data_connect: 0.3.0+2
   cloud_functions: ^6.3.3
+  connectivity_plus: ^6.1.5
+  workmanager: ^0.10.9
   fl_chart: ^1.2.0
   freezed_annotation: ^3.1.0
   json_annotation: 4.9.0

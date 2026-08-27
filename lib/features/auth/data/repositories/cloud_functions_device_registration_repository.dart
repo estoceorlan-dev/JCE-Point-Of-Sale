@@ -66,6 +66,7 @@ class CloudFunctionsDeviceRegistrationRepository
           operationId: _idGenerator.newId(),
           organizationId: session.activeOrganizationId,
           branchId: session.activeBranchId,
+          actorUserId: session.activeOrganization.appUserId,
           commandType: 'device.register',
           aggregateType: 'device',
           aggregateId: id,

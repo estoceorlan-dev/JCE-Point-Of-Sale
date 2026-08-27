@@ -13,6 +13,8 @@ import '../../../../shared/models/user_account_status.dart';
 abstract interface class AccessLocalDataSource {
   Future<model.AppUser?> findByFirebaseUid(String firebaseUid);
   Future<void> replaceProfile(model.AppUser user);
+  Future<DateTime?> lastVerifiedAt(String firebaseUid);
+  Future<void> recordVerifiedAt(String firebaseUid, DateTime verifiedAt);
   Future<void> clearProfile(String firebaseUid);
 }
 
@@ -20,6 +22,9 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
   const DriftAccessLocalDataSource(this._database);
 
   final db.AppDatabase _database;
+
+  String _verificationKey(String firebaseUid) =>
+      'auth.access_verified_at.$firebaseUid';
 
   @override
   Future<model.AppUser?> findByFirebaseUid(String firebaseUid) async {
@@ -267,6 +272,23 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
     });
   }
 
+  @override
+  Future<DateTime?> lastVerifiedAt(String firebaseUid) async {
+    final value = await _database.metadataDao.readValue(
+      _verificationKey(firebaseUid),
+    );
+    return value == null ? null : DateTime.tryParse(value)?.toUtc();
+  }
+
+  @override
+  Future<void> recordVerifiedAt(String firebaseUid, DateTime verifiedAt) {
+    return _database.metadataDao.writeValue(
+      key: _verificationKey(firebaseUid),
+      value: verifiedAt.toUtc().toIso8601String(),
+      updatedAt: verifiedAt.toUtc(),
+    );
+  }
+
   Future<void> _insertAssignment({
     required OrganizationAccess access,
     required AccessRole role,
@@ -293,5 +315,6 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
     await (_database.delete(
       _database.appUsers,
     )..where((row) => row.firebaseUid.equals(firebaseUid))).go();
+    await _database.metadataDao.deleteValue(_verificationKey(firebaseUid));
   }
 }

@@ -1,0 +1,7 @@
+# Copy these keys to .env.<firebase-project-id> for each isolated project.
+# These values are deployment identifiers; never place a database password here.
+JCE_FUNCTIONS_REGION=asia-southeast1
+JCE_DB_INSTANCE_CONNECTION_NAME=project-id:asia-southeast1:jce-pos-instance
+JCE_DB_NAME=jce-pos-database
+JCE_DB_USER=service-account-name
+JCE_FUNCTIONS_SERVICE_ACCOUNT=service-account@project-id.iam.gserviceaccount.com

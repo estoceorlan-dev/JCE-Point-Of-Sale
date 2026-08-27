@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import '../../../../core/error/failure.dart';
+import '../../../../core/error/failures.dart';
+import '../../../../core/error/result.dart';
 import '../../../../shared/models/access_role.dart';
 import '../../../../shared/models/app_user.dart';
 import '../../../../shared/models/branch.dart';
@@ -19,8 +22,8 @@ class HardcodedAuthRepository implements AuthRepository {
   static const _demoPassword = 'password123';
 
   final Map<String, AuthSession> _users;
-  final StreamController<AuthSession?> _changes =
-      StreamController<AuthSession?>.broadcast();
+  final StreamController<Result<AuthSession?, Failure>> _changes =
+      StreamController<Result<AuthSession?, Failure>>.broadcast();
 
   AuthSession? _currentSession;
 
@@ -92,61 +95,86 @@ class HardcodedAuthRepository implements AuthRepository {
   }
 
   @override
-  Stream<AuthSession?> authStateChanges() async* {
-    yield _currentSession;
+  Stream<Result<AuthSession?, Failure>> authStateChanges() async* {
+    yield Result<AuthSession?, Failure>.success(_currentSession);
     yield* _changes.stream;
   }
 
   @override
-  Future<AuthSession> signInWithEmailAndPassword({
+  Future<Result<AuthSession, Failure>> signInWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
     final normalizedEmail = email.trim().toLowerCase();
     final session = _users[normalizedEmail];
     if (session == null || password != _demoPassword) {
-      throw const AuthException('Email or password is incorrect.');
+      return const Result<AuthSession, Failure>.failure(
+        AuthenticationFailure(
+          'Email or password is incorrect.',
+          code: 'invalid-credential',
+        ),
+      );
     }
     _currentSession = session;
-    _changes.add(session);
-    return session;
+    _changes.add(Result<AuthSession?, Failure>.success(session));
+    return Result<AuthSession, Failure>.success(session);
   }
 
   @override
-  Future<AuthSession> selectActiveBranch({
+  Future<Result<AuthSession, Failure>> selectActiveBranch({
     required String organizationId,
     required String branchId,
   }) async {
     final current = _currentSession;
     if (current == null) {
-      throw const AuthException('Authentication is required.');
+      return const Result<AuthSession, Failure>.failure(
+        AuthenticationFailure('Authentication is required.'),
+      );
     }
-    final updated = current.switchTo(
-      organizationId: organizationId,
-      branchId: branchId,
-    );
-    _currentSession = updated;
-    _changes.add(updated);
-    return updated;
+    try {
+      final updated = current.switchTo(
+        organizationId: organizationId,
+        branchId: branchId,
+      );
+      _currentSession = updated;
+      _changes.add(Result<AuthSession?, Failure>.success(updated));
+      return Result<AuthSession, Failure>.success(updated);
+    } on ArgumentError catch (error, stackTrace) {
+      return Result<AuthSession, Failure>.failure(
+        AuthorizationFailure(
+          'The selected branch is not assigned to this account.',
+          cause: error,
+          stackTrace: stackTrace,
+        ),
+      );
+    }
   }
 
   @override
-  Future<AuthSession> refreshAccess() async {
+  Future<Result<AuthSession, Failure>> refreshAccess() async {
     final current = _currentSession;
     if (current == null) {
-      throw const AuthException('Authentication is required.');
+      return const Result<AuthSession, Failure>.failure(
+        AuthenticationFailure('Authentication is required.'),
+      );
     }
-    return current;
+    return Result<AuthSession, Failure>.success(current);
   }
 
   @override
-  Future<void> sendPasswordResetEmail(String email) async {}
+  Future<Result<void, Failure>> sendPasswordResetEmail(String email) async {
+    return const Result<void, Failure>.success(null);
+  }
 
   @override
-  Future<void> signOut() async {
+  Future<Result<void, Failure>> signOut() async {
     _currentSession = null;
-    _changes.add(null);
+    _changes.add(const Result<AuthSession?, Failure>.success(null));
+    return const Result<void, Failure>.success(null);
   }
+
+  @override
+  Future<void> dispose() => _changes.close();
 
   static Set<AppPermission> _demoPermissions(UserRole role) {
     return switch (role) {
@@ -156,6 +184,8 @@ class HardcodedAuthRepository implements AuthRepository {
         AppPermission.processSales,
         AppPermission.manageProducts,
         AppPermission.manageInventory,
+        AppPermission.manageRegisters,
+        AppPermission.approveShiftDiscrepancies,
         AppPermission.approveTransfers,
         AppPermission.createPurchases,
         AppPermission.viewReports,

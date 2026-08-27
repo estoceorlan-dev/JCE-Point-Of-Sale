@@ -19,7 +19,7 @@ be copied into development.
 | Key | Required | Description |
 |---|---:|---|
 | `JCE_ENV` | Yes for release builds | `development`, `staging`, or `production` |
-| `JCE_API_BASE_URL` | When remote sync is enabled | Absolute service URL |
+| `JCE_API_BASE_URL` | No | Reserved absolute URL for future non-Firebase services |
 | `JCE_ENABLE_DEMO_AUTH` | No | Enables the development-only demo repository |
 | `JCE_DEMO_BRANCH_ID` | When demo auth is enabled | Non-production demo branch identifier |
 | `JCE_ENABLE_DIAGNOSTICS` | No | Enables additional non-sensitive diagnostics |
@@ -27,6 +27,8 @@ be copied into development.
 | `JCE_ACCESS_PROFILE_FUNCTION` | No | Callable name used to load the current access profile |
 | `JCE_DEVICE_REGISTRATION_FUNCTION` | No | Callable name used to register the local device |
 | `JCE_UPDATE_BRANCH_NAME_FUNCTION` | No | Callable name used to update a branch label |
+| `JCE_REMOTE_COMMAND_FUNCTION` | No | Transactional outbox command callable; defaults to `applyRemoteCommand` |
+| `JCE_FINALIZE_PRODUCT_IMAGE_FUNCTION` | No | Authenticated product-image finalizer callable |
 
 Values are parsed by `AppConfig` and can be replaced in tests through
 `appConfigProvider.overrideWithValue(...)`.
@@ -36,10 +38,19 @@ For the `jce-pos` Firebase project, the Flutter app automatically targets
 `JCE_FIREBASE_FUNCTIONS_REGION` only when running against another Firebase
 project or region.
 
+Firebase client options are selected from `JCE_ENV`. Development uses
+`jce-pos`, staging uses `jce-pos-staging-259528`, and production fails closed
+until its isolated backend and client registrations are provisioned. Android
+uses explicit Dart Firebase options instead of native Google Services resource
+auto-initialization so a staging binary cannot silently attach to development.
+
+See [Phase 7 remote backend](phase_7_remote_backend.md) for isolated Firebase,
+SQL Connect, Cloud SQL, and Storage environment provisioning and deployment.
+
 ## Firebase Functions environment values
 
 These values are non-secret deployment identifiers and are loaded from
-`backend/functions/.env.jce-pos` during deploy:
+`backend/functions/.env.<firebase-project-id>` during deploy:
 
 | Key | Description |
 |---|---|
@@ -62,12 +73,10 @@ These values are non-secret deployment identifiers and are loaded from
 
 ```sh
 flutter build apk \
-  --dart-define=JCE_ENV=staging \
-  --dart-define=JCE_API_BASE_URL=https://your-staging-service.example
+  --dart-define=JCE_ENV=staging
 ```
 
 ```sh
 flutter build windows \
-  --dart-define=JCE_ENV=production \
-  --dart-define=JCE_API_BASE_URL=https://your-production-service.example
+  --dart-define=JCE_ENV=production
 ```

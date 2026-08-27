@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/constants/app_constants.dart';
 import 'core/routing/app_router.dart';
+import 'core/sync/sync_lifecycle_listener.dart';
 import 'core/theme/app_theme.dart';
 
 class JcePosApp extends ConsumerWidget {
@@ -19,6 +20,8 @@ class JcePosApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
       routerConfig: router,
+      builder: (context, child) =>
+          SyncLifecycleListener(child: child ?? const SizedBox.shrink()),
     );
   }
 }

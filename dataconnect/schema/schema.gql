@@ -1,0 +1,164 @@
+# SQL Connect maps these synchronization-facing types to the migration-owned
+# PostgreSQL tables. Business writes are exposed by authenticated callable
+# commands because checkout and ledger validation require server code; typed
+# SQL Connect operations provide the pull/read contract used by the sync layer.
+
+type AppUser @table(name: "app_users", key: "id") {
+  id: String!
+  organizationId: String!
+  firebaseUid: String
+  email: String!
+  displayName: String!
+  status: String!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+type UserRoleAssignment @table(name: "user_role_assignments", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String
+  userId: String!
+  roleId: String!
+  user: AppUser! @ref(fields: "userId", references: "id")
+  role: Role! @ref(fields: "roleId", references: "id")
+  version: Int!
+  assignedAt: Timestamp!
+  updatedAt: Timestamp!
+  revokedAt: Timestamp
+}
+
+type Role @table(name: "roles", key: "id") {
+  id: String!
+  organizationId: String!
+  code: String!
+  name: String!
+  isActive: Boolean!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+type Product @table(name: "products", key: "id") {
+  id: String!
+  organizationId: String!
+  categoryId: String
+  unitId: String!
+  taxCategoryId: String
+  sku: String!
+  normalizedSku: String!
+  name: String!
+  normalizedName: String!
+  description: String
+  isActive: Boolean!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+type InventoryBalance @table(name: "inventory_balances", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String!
+  stockLocationId: String!
+  productId: String!
+  onHandMilli: Int64!
+  reservedMilli: Int64!
+  reorderPointMilli: Int64!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+}
+
+type Shift @table(name: "shifts", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String!
+  registerId: String!
+  deviceId: String!
+  operationId: String!
+  closeOperationId: String
+  status: String!
+  openingCashMinor: Int64!
+  expectedCashMinor: Int64
+  countedCashMinor: Int64
+  discrepancyMinor: Int64
+  openedByUserId: String!
+  openedAt: Timestamp!
+  closedByUserId: String
+  closedAt: Timestamp
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+}
+
+type Sale @table(name: "sales", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String!
+  registerId: String!
+  shiftId: String
+  inventoryTransactionId: String
+  operationId: String!
+  receiptNumber: String
+  status: String!
+  cashierUserId: String!
+  subtotalMinor: Int64!
+  discountMinor: Int64!
+  taxMinor: Int64!
+  totalMinor: Int64!
+  tenderedMinor: Int64!
+  changeMinor: Int64!
+  completedAt: Timestamp
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+}
+
+type ProductImage @table(name: "product_images", key: "id") {
+  id: String!
+  organizationId: String!
+  productId: String!
+  storagePath: String
+  remoteUrl: String
+  uploadStatus: String!
+  sortOrder: Int!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+type ProcessedOperation @table(
+  name: "processed_operations"
+  key: ["organizationId", "operationId"]
+) {
+  organizationId: String!
+  operationId: String!
+  branchId: String
+  commandType: String!
+  aggregateType: String!
+  aggregateId: String!
+  actorUserId: String!
+  firebaseUid: String!
+  resultJson: Any!
+  processedAt: Timestamp!
+}
+
+type ChangeFeedEntry @table(name: "change_feed", key: "sequence") {
+  sequence: Int64!
+  organizationId: String!
+  branchId: String
+  aggregateType: String!
+  aggregateId: String!
+  operationId: String!
+  changeType: String!
+  version: Int!
+  payloadJson: Any!
+  occurredAt: Timestamp!
+  createdAt: Timestamp!
+}

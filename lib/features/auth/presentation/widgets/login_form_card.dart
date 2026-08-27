@@ -137,13 +137,20 @@ class LoginFormCard extends StatelessWidget {
                     ),
                     onPressed: isSubmitting ? null : onSubmit,
                     child: isSubmitting
-                        ? SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: isDark ? Colors.black : Colors.white,
-                            ),
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: isDark ? Colors.black : Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              const Text('Signing in...'),
+                            ],
                           )
                         : const Text('Login'),
                   ),

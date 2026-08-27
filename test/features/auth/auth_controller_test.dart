@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jce_pos/core/error/failure.dart';
+import 'package:jce_pos/core/error/failures.dart';
+import 'package:jce_pos/core/error/result.dart';
 import 'package:jce_pos/features/auth/data/repositories/noop_auth_audit_repository.dart';
 import 'package:jce_pos/features/auth/domain/entities/auth_session.dart';
 import 'package:jce_pos/features/auth/domain/repositories/auth_audit_repository.dart';
@@ -43,7 +46,7 @@ void main() {
       overrides: [
         authRepositoryProvider.overrideWithValue(
           _FakeAuthRepository(
-            initialError: const AuthException(
+            initialFailure: const AuthorizationFailure(
               'No application profile.',
               code: 'profile-not-found',
             ),
@@ -65,7 +68,7 @@ void main() {
     addTearDown(subscription.close);
 
     final state = await errorState.future.timeout(const Duration(seconds: 2));
-    expect(state.error, isA<AuthException>());
+    expect(state.error, isA<AuthorizationFailure>());
   });
 
   test('refreshed role permissions replace the active access set', () async {
@@ -94,48 +97,88 @@ void main() {
     );
     expect(audit.roleChanges, 1);
   });
+
+  test('a streamed access revocation replaces the active session', () async {
+    final initial = _session({AppPermission.viewDashboard});
+    final repository = _FakeAuthRepository(
+      initial: initial,
+      refreshed: initial,
+    );
+    final container = ProviderContainer(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(repository),
+        authAuditRepositoryProvider.overrideWithValue(
+          const NoopAuthAuditRepository(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await container.read(authControllerProvider.future);
+    repository.emitFailure(
+      const AuthorizationFailure('Access revoked.', code: 'permission-denied'),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(
+      container.read(authControllerProvider).error,
+      isA<AuthorizationFailure>(),
+    );
+  });
 }
 
 class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({this.initial, this.refreshed, this.initialError});
+  _FakeAuthRepository({this.initial, this.refreshed, this.initialFailure});
 
   final AuthSession? initial;
   final AuthSession? refreshed;
-  final Object? initialError;
+  final Failure? initialFailure;
+  final StreamController<Result<AuthSession?, Failure>> _changes =
+      StreamController<Result<AuthSession?, Failure>>.broadcast();
 
   @override
-  Stream<AuthSession?> authStateChanges() {
-    final error = initialError;
-    return error == null
-        ? Stream.value(initial)
-        : Stream<AuthSession?>.error(error);
+  Stream<Result<AuthSession?, Failure>> authStateChanges() async* {
+    final failure = initialFailure;
+    yield failure == null
+        ? Result<AuthSession?, Failure>.success(initial)
+        : Result<AuthSession?, Failure>.failure(failure);
+    yield* _changes.stream;
   }
 
   @override
-  Future<AuthSession> refreshAccess() async => refreshed!;
+  Future<Result<AuthSession, Failure>> refreshAccess() async =>
+      Result<AuthSession, Failure>.success(refreshed!);
 
   @override
-  Future<void> sendPasswordResetEmail(String email) async {}
+  Future<Result<void, Failure>> sendPasswordResetEmail(String email) async =>
+      const Result<void, Failure>.success(null);
 
   @override
-  Future<AuthSession> selectActiveBranch({
+  Future<Result<AuthSession, Failure>> selectActiveBranch({
     required String organizationId,
     required String branchId,
   }) async {
-    return initial!.switchTo(
-      organizationId: organizationId,
-      branchId: branchId,
+    return Result<AuthSession, Failure>.success(
+      initial!.switchTo(organizationId: organizationId, branchId: branchId),
     );
   }
 
   @override
-  Future<AuthSession> signInWithEmailAndPassword({
+  Future<Result<AuthSession, Failure>> signInWithEmailAndPassword({
     required String email,
     required String password,
-  }) async => initial!;
+  }) async => Result<AuthSession, Failure>.success(initial!);
 
   @override
-  Future<void> signOut() async {}
+  Future<Result<void, Failure>> signOut() async =>
+      const Result<void, Failure>.success(null);
+
+  void emitFailure(Failure failure) {
+    _changes.add(Result<AuthSession?, Failure>.failure(failure));
+  }
+
+  @override
+  Future<void> dispose() => _changes.close();
 }
 
 class _RecordingAuditRepository implements AuthAuditRepository {

@@ -50,7 +50,7 @@ class CloudFunctionsAccessRemoteDataSource implements AccessRemoteDataSource {
           error.code == 'unauthenticated') {
         throw AccessProfileRejectedException(error.code);
       }
-      rethrow;
+      throw AccessProfileUnavailableException(error.code, cause: error);
     }
   }
 
@@ -135,6 +135,13 @@ class AccessProfileRejectedException implements Exception {
   const AccessProfileRejectedException(this.reason);
 
   final String reason;
+}
+
+class AccessProfileUnavailableException implements Exception {
+  const AccessProfileUnavailableException(this.reason, {this.cause});
+
+  final String reason;
+  final Object? cause;
 }
 
 Map<String, Object?> _requiredMap(Map<String, Object?> payload, String key) {

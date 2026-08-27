@@ -20,13 +20,18 @@ import 'app_navigation_item.dart';
 import 'app_route.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final currentUser = ref.watch(authControllerProvider);
-  final session = currentUser.asData?.value;
+  final refreshNotifier = _RouterRefreshNotifier();
+  ref.listen(authControllerProvider, (_, _) => refreshNotifier.refresh());
+
+  final initialSession = ref.read(authControllerProvider).asData?.value;
   final router = GoRouter(
-    initialLocation: session == null
+    initialLocation: initialSession == null
         ? AppRoute.auth.path
         : AppRoute.dashboard.path,
+    refreshListenable: refreshNotifier,
     redirect: (context, state) {
+      final currentUser = ref.read(authControllerProvider);
+      final session = currentUser.asData?.value;
       final isAuthRoute = state.matchedLocation == AppRoute.auth.path;
 
       if (currentUser.isLoading) {
@@ -79,9 +84,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 
-  ref.onDispose(router.dispose);
+  ref.onDispose(() {
+    router.dispose();
+    refreshNotifier.dispose();
+  });
   return router;
 });
+
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
 
 String? _firstAccessiblePath(AuthSession session) {
   for (final item in appNavigationItems) {

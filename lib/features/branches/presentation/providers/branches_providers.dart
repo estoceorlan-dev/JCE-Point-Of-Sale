@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/local_mutation_transaction.dart';
-import '../../../../core/config/app_config.dart';
 import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -11,8 +10,6 @@ import '../../domain/usecases/update_branch_name_usecase.dart';
 
 final branchesRepositoryProvider = Provider<BranchesRepository>((ref) {
   return OfflineFirstBranchesRepository(
-    functions: ref.watch(firebaseFunctionsProvider),
-    functionName: ref.watch(appConfigProvider).updateBranchNameFunctionName,
     localMutationTransaction: ref.watch(localMutationTransactionProvider),
     idGenerator: ref.watch(idGeneratorProvider),
     clock: ref.watch(appClockProvider),

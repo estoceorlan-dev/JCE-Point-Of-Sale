@@ -22,8 +22,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('JCE'), findsOneWidget);
-    expect(find.text('Dry Goods Trading'), findsOneWidget);
+    expect(
+      find.image(const AssetImage('assets/images/jce_logo.jpg')),
+      findsOneWidget,
+    );
+    expect(find.text('JCE'), findsNothing);
+    expect(find.text('Dry Goods Trading'), findsNothing);
     expect(find.text('Sign in to your workspace'), findsOneWidget);
     expect(find.text('Email'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);
@@ -63,5 +67,29 @@ void main() {
     expect(find.text('Cashier'), findsWidgets);
     expect(find.text('POS'), findsWidgets);
     expect(find.text('Reports'), findsNothing);
+
+    await tester.tap(find.text('Logout'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Log out?'), findsOneWidget);
+    expect(
+      find.text('Are you sure you want to log out of your account?'),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.logout_rounded), findsOneWidget);
+    expect(find.byTooltip('Close'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Log out?'), findsNothing);
+    expect(find.text('Dashboard'), findsWidgets);
+
+    await tester.tap(find.text('Logout'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Logout'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Login'), findsOneWidget);
   });
 }

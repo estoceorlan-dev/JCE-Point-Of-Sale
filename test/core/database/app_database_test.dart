@@ -14,7 +14,7 @@ void main() {
     await database.close();
   });
 
-  test('creates the complete version 1 schema on a fresh database', () async {
+  test('creates the complete current schema on a fresh database', () async {
     final rows = await database
         .customSelect(
           "SELECT name FROM sqlite_master WHERE type = 'table' "
@@ -27,15 +27,27 @@ void main() {
       containsAll(<String>[
         'app_users',
         'branches',
+        'categories',
+        'cash_movements',
         'local_audit_logs',
         'local_metadata',
         'organizations',
         'permissions',
+        'product_barcodes',
+        'product_images',
+        'product_prices',
+        'products',
+        'registers',
         'role_permissions',
         'roles',
+        'shift_counts',
+        'shifts',
         'sync_conflicts',
         'sync_cursors',
+        'sync_entity_versions',
         'sync_outbox',
+        'tax_categories',
+        'units',
         'user_role_assignments',
       ]),
     );
@@ -46,7 +58,7 @@ void main() {
     final result = await DatabaseHealthCheckService(database).check();
 
     expect(result.isSuccess, isTrue);
-    expect(result.valueOrNull?.schemaVersion, 1);
+    expect(result.valueOrNull?.schemaVersion, AppDatabase.currentSchemaVersion);
     expect(result.valueOrNull?.foreignKeysEnabled, isTrue);
   });
 
@@ -88,6 +100,116 @@ void main() {
               name: 'Main',
               createdAt: now,
               updatedAt: now,
+            ),
+          ),
+      throwsA(isA<SqliteException>()),
+    );
+  });
+
+  test('catalog foreign keys reject cross-organization units', () async {
+    final now = DateTime.utc(2026, 1, 1);
+    for (final value in const [('org-a', 'A'), ('org-b', 'B')]) {
+      await database
+          .into(database.organizations)
+          .insert(
+            OrganizationsCompanion.insert(
+              id: value.$1,
+              code: value.$2,
+              name: value.$2,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+    }
+    await database
+        .into(database.units)
+        .insert(
+          UnitsCompanion.insert(
+            id: 'unit-b',
+            organizationId: 'org-b',
+            code: 'PC',
+            name: 'Piece',
+            abbreviation: 'pc',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+    await expectLater(
+      database
+          .into(database.products)
+          .insert(
+            ProductsCompanion.insert(
+              id: 'product-a',
+              organizationId: 'org-a',
+              unitId: 'unit-b',
+              sku: 'SKU-A',
+              normalizedSku: 'SKUA',
+              name: 'Product A',
+              normalizedName: 'product a',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ),
+      throwsA(isA<SqliteException>()),
+    );
+  });
+
+  test('price scope constraint matches branch presence', () async {
+    final now = DateTime.utc(2026, 1, 1);
+    await database
+        .into(database.organizations)
+        .insert(
+          OrganizationsCompanion.insert(
+            id: 'org',
+            code: 'ORG',
+            name: 'Organization',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await database
+        .into(database.units)
+        .insert(
+          UnitsCompanion.insert(
+            id: 'unit',
+            organizationId: 'org',
+            code: 'PC',
+            name: 'Piece',
+            abbreviation: 'pc',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await database
+        .into(database.products)
+        .insert(
+          ProductsCompanion.insert(
+            id: 'product',
+            organizationId: 'org',
+            unitId: 'unit',
+            sku: 'SKU',
+            normalizedSku: 'SKU',
+            name: 'Product',
+            normalizedName: 'product',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+    await expectLater(
+      database
+          .into(database.productPrices)
+          .insert(
+            ProductPricesCompanion.insert(
+              id: 'price',
+              organizationId: 'org',
+              productId: 'product',
+              branchScope: 'branch-without-id',
+              unitPriceMinor: 100,
+              effectiveFrom: now,
+              createdByUserId: 'user',
+              createdAt: now,
             ),
           ),
       throwsA(isA<SqliteException>()),

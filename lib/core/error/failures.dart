@@ -8,14 +8,28 @@ final class ValidationFailure extends Failure {
 }
 
 final class AuthenticationFailure extends Failure {
-  const AuthenticationFailure(super.message, {super.cause, super.stackTrace});
+  const AuthenticationFailure(
+    super.message, {
+    this.code,
+    super.cause,
+    super.stackTrace,
+  });
+
+  final String? code;
 
   @override
   FailureType get type => FailureType.authentication;
 }
 
 final class AuthorizationFailure extends Failure {
-  const AuthorizationFailure(super.message, {super.cause, super.stackTrace});
+  const AuthorizationFailure(
+    super.message, {
+    this.code,
+    super.cause,
+    super.stackTrace,
+  });
+
+  final String? code;
 
   @override
   FailureType get type => FailureType.authorization;
@@ -29,7 +43,14 @@ final class DatabaseFailure extends Failure {
 }
 
 final class NetworkFailure extends Failure {
-  const NetworkFailure(super.message, {super.cause, super.stackTrace});
+  const NetworkFailure(
+    super.message, {
+    this.code,
+    super.cause,
+    super.stackTrace,
+  });
+
+  final String? code;
 
   @override
   FailureType get type => FailureType.network;

@@ -1,21 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/widgets/feature_placeholder_page.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../shifts/presentation/pages/shift_page.dart';
+import 'checkout_page.dart';
+import 'sales_history_page.dart';
 
-class PosPage extends StatelessWidget {
+class PosPage extends ConsumerWidget {
   const PosPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const FeaturePlaceholderPage(
-      title: 'POS',
-      subtitle: 'Fast cashier workspace for sales processing.',
-      icon: Icons.point_of_sale_outlined,
-      highlights: [
-        'Register, cart, discounts, payment, and receipt flow.',
-        'Offline transaction queue through Drift before backend sync.',
-        'Audit entries for sale creation, voids, refunds, and overrides.',
-      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: [
+          Material(
+            color: Theme.of(context).colorScheme.surface,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: TabBar(
+                isScrollable: true,
+                tabs: [
+                  Tab(
+                    icon: Icon(Icons.point_of_sale_outlined),
+                    text: 'Checkout',
+                  ),
+                  Tab(
+                    icon: Icon(Icons.storefront_outlined),
+                    text: 'Register & shift',
+                  ),
+                  Tab(
+                    icon: Icon(Icons.receipt_long_outlined),
+                    text: 'Transactions',
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const Expanded(
+            child: TabBarView(
+              children: [CheckoutPage(), ShiftPage(), SalesHistoryPage()],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/database/database_provider.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../models/business_context.dart';
 import '../models/permission.dart';
-import '../models/sync_state.dart';
+export '../../core/sync/sync_controller.dart' show syncStateProvider;
 
 final currentBranchIdProvider = Provider<String?>((ref) {
   return ref.watch(authControllerProvider).asData?.value?.activeBranchId;
@@ -29,14 +28,4 @@ final businessContextProvider = Provider<BusinessContext?>((ref) {
     branchId: session.activeBranchId,
     actorUserId: session.activeOrganization.appUserId,
   );
-});
-
-final syncStateProvider = StreamProvider<SyncState>((ref) {
-  return ref
-      .watch(outboxDaoProvider)
-      .watchPendingCount()
-      .map(
-        (pendingChanges) =>
-            SyncState(status: SyncStatus.idle, pendingChanges: pendingChanges),
-      );
 });

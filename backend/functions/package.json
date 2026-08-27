@@ -6,9 +6,12 @@
     "node": "22"
   },
   "scripts": {
+    "access:provision": "node scripts/provision-user-access.js",
     "build": "tsc",
     "db:migrate": "node scripts/apply-schema.js",
-    "lint": "tsc --noEmit",
+    "lint": "npm run security:check && tsc --noEmit",
+    "security:check": "node scripts/check-no-client-bootstrap.js",
+    "test": "npm run build && node --test lib/remote_commands/remote_command_service.test.js",
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"
   },

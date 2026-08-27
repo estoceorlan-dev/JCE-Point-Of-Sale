@@ -6,6 +6,9 @@ class SyncConflicts extends Table {
 
   TextColumn get id => text()();
   TextColumn get operationId => text()();
+  TextColumn get organizationId => text().nullable()();
+  TextColumn get branchId => text().nullable()();
+  TextColumn get actorUserId => text().nullable()();
   TextColumn get entityType => text()();
   TextColumn get entityId => text()();
   TextColumn get localPayloadJson => text()();

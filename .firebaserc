@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "jce-pos"
+    "default": "jce-pos",
+    "development": "jce-pos",
+    "staging": "jce-pos-staging-259528",
+    "production": "jce-pos-production-259528"
   }
 }

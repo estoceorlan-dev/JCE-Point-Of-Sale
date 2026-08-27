@@ -12,6 +12,33 @@ class Branches extends Table {
       text().withDefault(const Constant<String>('Asia/Manila'))();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant<bool>(true))();
+  BoolColumn get allowNegativeStock =>
+      boolean().withDefault(const Constant<bool>(false))();
+  IntColumn get adjustmentApprovalThresholdMilli => integer().nullable().check(
+    const CustomExpression<bool>(
+      'adjustment_approval_threshold_milli IS NULL OR '
+      'adjustment_approval_threshold_milli >= 0',
+    ),
+  )();
+  BoolColumn get allowMultipleOpenShiftsPerUser =>
+      boolean().withDefault(const Constant<bool>(false))();
+  BoolColumn get allowSalesWithoutOpenShift =>
+      boolean().withDefault(const Constant<bool>(false))();
+  IntColumn get cashDiscrepancyApprovalThresholdMinor =>
+      integer().nullable().check(
+        const CustomExpression<bool>(
+          'cash_discrepancy_approval_threshold_minor IS NULL OR '
+          'cash_discrepancy_approval_threshold_minor >= 0',
+        ),
+      )();
+  IntColumn get discountApprovalThresholdBasisPoints =>
+      integer().nullable().check(
+        const CustomExpression<bool>(
+          'discount_approval_threshold_basis_points IS NULL OR '
+          '(discount_approval_threshold_basis_points >= 0 AND '
+          'discount_approval_threshold_basis_points <= 10000)',
+        ),
+      )();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
@@ -22,5 +49,6 @@ class Branches extends Table {
   @override
   List<Set<Column<Object>>> get uniqueKeys => [
     {organizationId, code},
+    {id, organizationId},
   ];
 }

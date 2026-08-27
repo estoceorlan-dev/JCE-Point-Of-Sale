@@ -5,6 +5,7 @@ import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../branches/presentation/providers/branches_providers.dart';
+import '../widgets/sync_conflict_panel.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -55,6 +56,8 @@ class SettingsPage extends ConsumerWidget {
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.xl),
+        const SyncConflictPanel(),
       ],
     );
   }

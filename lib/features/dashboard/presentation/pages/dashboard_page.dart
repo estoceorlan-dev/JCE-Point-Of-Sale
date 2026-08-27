@@ -13,20 +13,20 @@ class DashboardPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final pendingSyncCount = ref
-        .watch(syncStateProvider)
-        .when(
-          data: (state) => state.pendingChanges.toString(),
-          error: (_, _) => '!',
-          loading: () => '…',
-        );
+    final syncState = ref.watch(syncStateProvider).asData?.value;
+    final pending = syncState == null
+        ? '…'
+        : (syncState.pendingChanges +
+                  syncState.retryingChanges +
+                  syncState.failedChanges +
+                  syncState.conflicts)
+              .toString();
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final horizontalPadding = constraints.maxWidth < AppBreakpoints.compact
             ? AppSpacing.lg
             : AppSpacing.xxl;
-
         return ListView(
           padding: EdgeInsets.symmetric(
             horizontal: horizontalPadding,
@@ -45,7 +45,7 @@ class DashboardPage extends ConsumerWidget {
                   Text('Dashboard', style: theme.textTheme.headlineLarge),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'Sales, inventory, branch activity, and sync health will surface here.',
+                    'Sales, inventory, branch activity, and sync health.',
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: AppSpacing.xl),
@@ -56,25 +56,27 @@ class DashboardPage extends ConsumerWidget {
                       const MetricTile(
                         title: 'Today sales',
                         value: 'PHP 0.00',
-                        detail: 'Waiting for POS transactions',
+                        detail: 'Completed local sales',
                         icon: Icons.payments_outlined,
                       ),
                       const MetricTile(
                         title: 'Open carts',
                         value: '0',
-                        detail: 'No active registers yet',
+                        detail: 'Current register activity',
                         icon: Icons.shopping_bag_outlined,
                       ),
                       const MetricTile(
                         title: 'Low stock',
                         value: '0',
-                        detail: 'Inventory schema pending',
+                        detail: 'Branch inventory thresholds',
                         icon: Icons.warning_amber_outlined,
                       ),
                       MetricTile(
                         title: 'Pending sync',
-                        value: pendingSyncCount,
-                        detail: 'Commands waiting in the local outbox',
+                        value: pending,
+                        detail:
+                            syncState?.message ??
+                            'Local changes waiting for the backend',
                         icon: Icons.cloud_sync_outlined,
                       ),
                     ],
@@ -87,12 +89,15 @@ class DashboardPage extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'System foundation',
+                            'Sync diagnostics',
                             style: theme.textTheme.titleMedium,
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           Text(
-                            'This dashboard is wired to the app shell, routing, theme tokens, Riverpod scope, and placeholder service providers. Real metrics can be connected through feature repositories without moving business rules into widgets.',
+                            'Pending ${syncState?.pendingChanges ?? 0}  •  '
+                            'Retrying ${syncState?.retryingChanges ?? 0}  •  '
+                            'Failed ${syncState?.failedChanges ?? 0}  •  '
+                            'Conflicts ${syncState?.conflicts ?? 0}',
                             style: theme.textTheme.bodyMedium,
                           ),
                         ],

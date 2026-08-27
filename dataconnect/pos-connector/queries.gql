@@ -1,0 +1,112 @@
+fragment VerifyBranchAccess on AppUser {
+  assignments: userRoleAssignments_on_user(
+    where: {
+      _and: [
+        {revokedAt: {isNull: true}}
+        {
+          _or: [
+            {branchId: {eq: $branchId}}
+            {branchId: {isNull: true}}
+          ]
+        }
+      ]
+    }
+  ) @check(message: "Active branch membership is required") {
+    role {
+      isActive @check(expr: "this == true", message: "The assigned role is inactive")
+      deletedAt @check(expr: "this == null", message: "The assigned role was deleted")
+    }
+  }
+}
+
+query PullChanges(
+  $organizationId: String!
+  $branchId: String!
+  $afterSequence: Int64!
+  $limit: Int!
+) @auth(
+  expr: "auth.uid != '' && auth.token.firebase.sign_in_provider != 'anonymous' && vars.limit >= 1 && vars.limit <= 500"
+) {
+  access: appUsers(
+    where: {
+      organizationId: {eq: $organizationId}
+      firebaseUid: {eq_expr: "auth.uid"}
+      status: {eq: "active"}
+      deletedAt: {isNull: true}
+    }
+    limit: 1
+  ) @check(message: "Active organization membership is required") @redact {
+    ...VerifyBranchAccess
+  }
+
+  changes: changeFeedEntries(
+    where: {
+      _and: [
+        {organizationId: {eq: $organizationId}}
+        {sequence: {gt: $afterSequence}}
+        {
+          _or: [
+            {branchId: {eq: $branchId}}
+            {branchId: {isNull: true}}
+          ]
+        }
+      ]
+    }
+    orderBy: {sequence: ASC}
+    limit: $limit
+  ) {
+    sequence
+    organizationId
+    branchId
+    aggregateType
+    aggregateId
+    operationId
+    changeType
+    version
+    payloadJson
+    occurredAt
+  }
+}
+
+query GetProcessedOperation(
+  $organizationId: String!
+  $branchId: String!
+  $operationId: String!
+) @auth(level: USER) {
+  access: appUsers(
+    where: {
+      organizationId: {eq: $organizationId}
+      firebaseUid: {eq_expr: "auth.uid"}
+      status: {eq: "active"}
+      deletedAt: {isNull: true}
+    }
+    limit: 1
+  ) @check(message: "Active organization membership is required") @redact {
+    ...VerifyBranchAccess
+  }
+
+  operations: processedOperations(
+    where: {
+      _and: [
+        {organizationId: {eq: $organizationId}}
+        {operationId: {eq: $operationId}}
+        {
+          _or: [
+            {branchId: {eq: $branchId}}
+            {branchId: {isNull: true}}
+          ]
+        }
+      ]
+    }
+    limit: 1
+  ) {
+    organizationId
+    operationId
+    branchId
+    commandType
+    aggregateType
+    aggregateId
+    resultJson
+    processedAt
+  }
+}

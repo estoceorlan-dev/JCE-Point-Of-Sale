@@ -12,12 +12,14 @@ class OutboxCommand {
     required this.createdAt,
     this.organizationId,
     this.branchId,
+    this.actorUserId,
     this.state = OutboxState.pending,
   });
 
   final String operationId;
   final String? organizationId;
   final String? branchId;
+  final String? actorUserId;
   final String commandType;
   final String aggregateType;
   final String aggregateId;
