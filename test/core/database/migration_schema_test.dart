@@ -232,4 +232,47 @@ entity_name, entity_id, metadata_json, created_at) VALUES
       schema.close();
     },
   );
+
+  test('released version 7 sync schema migrates to corrections', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(7);
+    final database = AppDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(
+      database,
+      AppDatabase.currentSchemaVersion,
+    );
+    final now = DateTime.utc(2026, 8, 29);
+    await database
+        .into(database.organizations)
+        .insert(
+          OrganizationsCompanion.insert(
+            id: 'org-v8',
+            code: 'V8',
+            name: 'Version 8',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await database
+        .into(database.branches)
+        .insert(
+          BranchesCompanion.insert(
+            id: 'branch-v8',
+            organizationId: 'org-v8',
+            code: 'MAIN',
+            name: 'Main',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+    final branch = await database.select(database.branches).getSingle();
+    expect(branch.returnApprovalThresholdMinor, isNull);
+    expect(branch.voidWindowMinutes, 15);
+    expect(await database.select(database.saleReturns).get(), isEmpty);
+    expect(await database.select(database.approvalRequests).get(), isEmpty);
+
+    await database.close();
+    schema.close();
+  });
 }

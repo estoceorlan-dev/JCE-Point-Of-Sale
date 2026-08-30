@@ -22,9 +22,15 @@ class InventoryLedgerWriter {
     required String transactionId,
     required String operationId,
     required DateTime now,
+    bool allowInactiveProducts = false,
   }) async {
     _validateLines(draft);
-    await _validateScope(database, context, draft);
+    await _validateScope(
+      database,
+      context,
+      draft,
+      allowInactiveProducts: allowInactiveProducts,
+    );
     final policy = await _loadPolicy(database, context);
     _requireAdjustmentApproval(draft, policy.approvalThresholdMilli);
 
@@ -163,8 +169,9 @@ class InventoryLedgerWriter {
   Future<void> _validateScope(
     AppDatabase database,
     BusinessContext context,
-    InventoryMovementDraft draft,
-  ) async {
+    InventoryMovementDraft draft, {
+    bool allowInactiveProducts = false,
+  }) async {
     for (final line in draft.lines) {
       final location =
           await (database.select(database.stockLocations)..where(
@@ -181,8 +188,9 @@ class InventoryLedgerWriter {
                 (row) =>
                     row.id.equals(line.productId) &
                     row.organizationId.equals(context.organizationId) &
-                    row.isActive.equals(true) &
-                    row.deletedAt.isNull(),
+                    (allowInactiveProducts
+                        ? const Constant(true)
+                        : row.isActive.equals(true) & row.deletedAt.isNull()),
               ))
               .getSingleOrNull();
       if (location == null || product == null) {

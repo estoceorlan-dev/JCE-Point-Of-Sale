@@ -12,6 +12,8 @@ import 'daos/sync_entity_version_dao.dart';
 import 'database_connection.dart';
 import 'models/outbox_state.dart';
 import 'tables/app_users_table.dart';
+import 'tables/approval_decisions_table.dart';
+import 'tables/approval_requests_table.dart';
 import 'tables/branches_table.dart';
 import 'tables/cash_movements_table.dart';
 import 'tables/categories_table.dart';
@@ -33,7 +35,10 @@ import 'tables/role_permissions_table.dart';
 import 'tables/roles_table.dart';
 import 'tables/sale_discounts_table.dart';
 import 'tables/sale_items_table.dart';
+import 'tables/sale_return_items_table.dart';
+import 'tables/sale_returns_table.dart';
 import 'tables/sales_table.dart';
+import 'tables/refund_payments_table.dart';
 import 'tables/sync_conflicts_table.dart';
 import 'tables/sync_cursors_table.dart';
 import 'tables/sync_entity_versions_table.dart';
@@ -86,6 +91,11 @@ part 'app_database.g.dart';
     Payments,
     SaleDiscounts,
     ReceiptSequences,
+    ApprovalRequests,
+    ApprovalDecisions,
+    SaleReturns,
+    SaleReturnItems,
+    RefundPayments,
   ],
   daos: [
     MetadataDao,
@@ -102,7 +112,7 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 7;
+  static const int currentSchemaVersion = 8;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -172,6 +182,9 @@ class AppDatabase extends _$AppDatabase {
                   const CustomExpression<int>('NULL'),
               branches.discountApprovalThresholdBasisPoints:
                   const CustomExpression<int>('NULL'),
+              branches.returnApprovalThresholdMinor:
+                  const CustomExpression<int>('NULL'),
+              branches.voidWindowMinutes: const Constant<int>(15),
             },
           ),
         );
@@ -282,6 +295,32 @@ class AppDatabase extends _$AppDatabase {
           'WHERE actor_user_id IS NULL',
           updates: {syncOutboxEntries},
         );
+      case 8:
+        if (!await _tableHasColumn('sync_outbox', 'depends_on_operation_id')) {
+          await migrator.addColumn(
+            syncOutboxEntries,
+            syncOutboxEntries.dependsOnOperationId,
+          );
+        }
+        if (!await _tableHasColumn(
+          'branches',
+          'return_approval_threshold_minor',
+        )) {
+          await migrator.addColumn(
+            branches,
+            branches.returnApprovalThresholdMinor,
+          );
+        }
+        if (!await _tableHasColumn('branches', 'void_window_minutes')) {
+          await migrator.addColumn(branches, branches.voidWindowMinutes);
+        }
+        await migrator.createTable(approvalRequests);
+        await migrator.createTable(approvalDecisions);
+        await migrator.createTable(saleReturns);
+        await migrator.createTable(saleReturnItems);
+        await migrator.createTable(refundPayments);
+        await migrator.createIndex(approvalRequestsStatusIdx);
+        await migrator.createIndex(saleReturnsHistoryIdx);
       default:
         throw StateError('Missing migration for schema version $version.');
     }

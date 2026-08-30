@@ -11,6 +11,7 @@ class SyncOutboxEntries extends Table {
   TextColumn get commandType => text()();
   TextColumn get aggregateType => text()();
   TextColumn get aggregateId => text()();
+  TextColumn get dependsOnOperationId => text().nullable()();
   TextColumn get payloadJson => text()();
   TextColumn get status => text()();
   IntColumn get attemptCount => integer().withDefault(const Constant<int>(0))();

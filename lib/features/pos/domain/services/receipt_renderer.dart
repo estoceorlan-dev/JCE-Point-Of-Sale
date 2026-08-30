@@ -1,5 +1,6 @@
 import '../../../../shared/utils/formatters.dart';
 import '../entities/sale.dart';
+import '../entities/sale_correction.dart';
 
 class ReceiptDocument {
   const ReceiptDocument({required this.plainText});
@@ -38,6 +39,50 @@ class PlainTextReceiptRenderer implements ReceiptRenderer {
       'Change: ${Formatters.currencyMinor(sale.changeMinor)}',
       '--------------------------------',
       'Thank you!',
+    ];
+    return ReceiptDocument(plainText: lines.join('\n'));
+  }
+}
+
+abstract interface class CorrectionReceiptRenderer {
+  ReceiptDocument render({
+    required SaleRecord sale,
+    required SaleCorrectionRecord correction,
+  });
+}
+
+class PlainTextCorrectionReceiptRenderer implements CorrectionReceiptRenderer {
+  const PlainTextCorrectionReceiptRenderer();
+
+  @override
+  ReceiptDocument render({
+    required SaleRecord sale,
+    required SaleCorrectionRecord correction,
+  }) {
+    final lines = <String>[
+      'JCE General Merchandise',
+      '${correction.type.label} ${correction.returnNumber}',
+      'Status: ${correction.status}',
+      'Original receipt: ${sale.receiptNumber}',
+      'Date: ${correction.completedAt.toLocal()}',
+      'Reason: ${correction.reasonCode}',
+      if (correction.notes case final notes?) 'Notes: $notes',
+      '--------------------------------',
+      for (final item in correction.items) ...[
+        '${item.productName} (${item.disposition.label})',
+        '${_quantity(item.quantityMilli)}  ${Formatters.currencyMinor(item.totalMinor)}',
+      ],
+      '--------------------------------',
+      'Subtotal: ${Formatters.currencyMinor(correction.subtotalMinor)}',
+      'Discount: -${Formatters.currencyMinor(correction.discountMinor)}',
+      'Tax: ${Formatters.currencyMinor(correction.taxMinor)}',
+      'REFUND: ${Formatters.currencyMinor(correction.totalMinor)}',
+      for (final refund in correction.refunds)
+        '${refund.method.label}: ${Formatters.currencyMinor(refund.amountMinor)}',
+      if (correction.approvedByUserId case final manager?)
+        'Approved by: $manager',
+      '--------------------------------',
+      'Correction records do not alter the original receipt.',
     ];
     return ReceiptDocument(plainText: lines.join('\n'));
   }

@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_breakpoints.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/utils/formatters.dart';
+import '../../../../shared/models/permission.dart';
 import '../../domain/entities/sale.dart';
 import '../providers/pos_providers.dart';
+import '../widgets/correction_policy_dialog.dart';
 import '../widgets/sale_details_dialog.dart';
 
 class SalesHistoryPage extends ConsumerWidget {
@@ -14,6 +16,11 @@ class SalesHistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sales = ref.watch(recentSalesProvider);
+    final canManagePolicy =
+        ref
+            .watch(activePosSessionProvider)
+            ?.can(AppPermission.manageSettings) ??
+        false;
     return LayoutBuilder(
       builder: (context, constraints) {
         final padding = constraints.maxWidth < AppBreakpoints.compact
@@ -30,9 +37,25 @@ class SalesHistoryPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Sales transactions',
-                      style: Theme.of(context).textTheme.headlineLarge,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Sales transactions',
+                            style: Theme.of(context).textTheme.headlineLarge,
+                          ),
+                        ),
+                        if (canManagePolicy)
+                          OutlinedButton.icon(
+                            onPressed: () => showDialog<void>(
+                              context: context,
+                              builder: (context) =>
+                                  const CorrectionPolicyDialog(),
+                            ),
+                            icon: const Icon(Icons.policy_outlined),
+                            label: const Text('Correction policy'),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     const Text(

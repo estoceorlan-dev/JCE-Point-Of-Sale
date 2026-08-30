@@ -39,6 +39,15 @@ class Branches extends Table {
           'discount_approval_threshold_basis_points <= 10000)',
         ),
       )();
+  IntColumn get returnApprovalThresholdMinor => integer().nullable().check(
+    const CustomExpression<bool>(
+      'return_approval_threshold_minor IS NULL OR '
+      'return_approval_threshold_minor >= 0',
+    ),
+  )();
+  IntColumn get voidWindowMinutes => integer()
+      .withDefault(const Constant<int>(15))
+      .check(const CustomExpression<bool>('void_window_minutes >= 0'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();

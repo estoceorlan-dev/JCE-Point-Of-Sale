@@ -178,7 +178,7 @@ async function applyInventoryLine(
       SELECT 1
       FROM stock_locations sl
       INNER JOIN products p
-        ON p.id = $4 AND p.organization_id = sl.organization_id AND p.deleted_at IS NULL
+        ON p.id = $4 AND p.organization_id = sl.organization_id
       WHERE sl.id = $3 AND sl.organization_id = $1 AND sl.branch_id = $2 AND sl.deleted_at IS NULL
     `,
     [command.organizationId, command.branchId, line.stockLocationId, line.productId],

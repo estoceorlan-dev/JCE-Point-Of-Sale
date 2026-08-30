@@ -87,6 +87,46 @@ export async function applyBranchCommand(
     return {branch: result.rows[0]};
   }
 
+  if (command.commandType === "branch.correction_policy.update") {
+    const threshold = optionalInteger(
+      command.payload,
+      "returnApprovalThresholdMinor",
+    );
+    const voidWindowMinutes = requiredInteger(
+      command.payload,
+      "voidWindowMinutes",
+    );
+    if ((threshold !== null && threshold < 0) || voidWindowMinutes < 0) {
+      throw new RemoteCommandError(
+        "invalid-argument",
+        "The correction policy is invalid.",
+      );
+    }
+    const result = await client.query(
+      `UPDATE branches SET
+         return_approval_threshold_minor = $3,
+         void_window_minutes = $4,
+         version = version + 1,
+         updated_at = now()
+       WHERE id = $1 AND organization_id = $2
+         AND is_active = true AND deleted_at IS NULL
+       RETURNING id, version`,
+      [
+        command.branchId,
+        command.organizationId,
+        threshold,
+        voidWindowMinutes,
+      ],
+    );
+    if (result.rowCount !== 1) {
+      throw new RemoteCommandError(
+        "not-found",
+        "The active branch does not exist.",
+      );
+    }
+    return {branch: result.rows[0]};
+  }
+
   throw new RemoteCommandError(
     "invalid-argument",
     `Unsupported branch command: ${command.commandType}.`,

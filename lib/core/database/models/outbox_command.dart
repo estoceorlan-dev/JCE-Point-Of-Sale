@@ -10,6 +10,7 @@ class OutboxCommand {
     required this.aggregateId,
     required this.payload,
     required this.createdAt,
+    this.dependsOnOperationId,
     this.organizationId,
     this.branchId,
     this.actorUserId,
@@ -23,6 +24,7 @@ class OutboxCommand {
   final String commandType;
   final String aggregateType;
   final String aggregateId;
+  final String? dependsOnOperationId;
   final Map<String, Object?> payload;
   final DateTime createdAt;
   final OutboxState state;

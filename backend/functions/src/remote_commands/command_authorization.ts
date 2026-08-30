@@ -27,6 +27,9 @@ const permissionByCommand: Readonly<Record<string, string>> = {
   "branch.update_name": "settings.manage",
   "branch.shift_policy.update": "registers.manage",
   "branch.discount_policy.update": "settings.manage",
+  "branch.correction_policy.update": "settings.manage",
+  "sale.return": "sales.returns.process",
+  "sale.void": "sales.returns.process",
 };
 
 export async function authorizeCommand(

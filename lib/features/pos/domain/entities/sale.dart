@@ -1,6 +1,7 @@
 import 'cart.dart';
 import 'payment.dart';
 import 'sale_status.dart';
+import 'sale_correction.dart';
 
 class SaleItem {
   const SaleItem({
@@ -22,6 +23,7 @@ class SaleItem {
     required this.taxAmountMinor,
     required this.totalAmountMinor,
     this.barcode,
+    this.returnedQuantityMilli = 0,
   });
 
   final String id;
@@ -42,6 +44,9 @@ class SaleItem {
   final int netAmountMinor;
   final int taxAmountMinor;
   final int totalAmountMinor;
+  final int returnedQuantityMilli;
+
+  int get returnableQuantityMilli => quantityMilli - returnedQuantityMilli;
 }
 
 class SalePayment {
@@ -82,6 +87,7 @@ class SaleRecord {
     required this.payments,
     this.shiftId,
     this.discountApprovedByUserId,
+    this.corrections = const [],
   });
 
   final String id;
@@ -102,6 +108,7 @@ class SaleRecord {
   final List<SaleItem> items;
   final List<SalePayment> payments;
   final String? discountApprovedByUserId;
+  final List<SaleCorrectionRecord> corrections;
 }
 
 class CheckoutDraft {

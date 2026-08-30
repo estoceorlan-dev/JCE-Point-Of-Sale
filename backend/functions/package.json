@@ -9,9 +9,10 @@
     "access:provision": "node scripts/provision-user-access.js",
     "build": "tsc",
     "db:migrate": "node scripts/apply-schema.js",
+    "db:migrate:iam": "node scripts/apply-schema-iam.js",
     "lint": "npm run security:check && tsc --noEmit",
     "security:check": "node scripts/check-no-client-bootstrap.js",
-    "test": "npm run build && node --test lib/remote_commands/remote_command_service.test.js",
+    "test": "npm run build && node --test lib/remote_commands/*.test.js",
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"
   },
@@ -19,6 +20,7 @@
     "@google-cloud/cloud-sql-connector": "^1.11.1",
     "firebase-admin": "^13.10.0",
     "firebase-functions": "^7.2.5",
+    "google-auth-library": "^10.9.0",
     "pg": "^8.22.0"
   },
   "devDependencies": {

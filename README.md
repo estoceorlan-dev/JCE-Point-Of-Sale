@@ -128,6 +128,12 @@ administrator conflict workflow. See
 [Phase 8 synchronization engine](docs/phase_8_sync_engine.md) before deploying
 the updated Functions and client together.
 
+Phase 9 adds immutable, compensating return and void transactions, refund and
+drawer reconciliation, manager approval evidence, correction receipts, and
+offline ordering guarantees. See
+[Phase 9 sale corrections](docs/phase_9_sale_corrections.md) for its policy and
+deployment requirements.
+
 ## Code generation
 
 ```sh

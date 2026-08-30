@@ -2,6 +2,8 @@ enum AppPermission {
   viewDashboard('dashboard.view'),
   processSales('sales.process'),
   approveSaleDiscounts('sales.discounts.approve'),
+  processSaleReturns('sales.returns.process'),
+  approveSaleCorrections('sales.corrections.approve'),
   manageProducts('products.manage'),
   manageInventory('inventory.manage'),
   approveInventoryAdjustments('inventory.adjustments.approve'),

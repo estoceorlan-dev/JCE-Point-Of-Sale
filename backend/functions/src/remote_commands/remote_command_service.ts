@@ -13,6 +13,7 @@ import {
 import {applyInventoryCommand} from "./inventory_commands";
 import {applyProductCommand} from "./product_commands";
 import {completeSale} from "./sale_commands";
+import {correctSale} from "./sale_correction_commands";
 import {applyShiftCommand} from "./shift_commands";
 import {applyStockCountCommand} from "./stock_count_commands";
 
@@ -147,6 +148,9 @@ function changeType(commandType: string): "upsert" | "tombstone" {
 
 function handlerFor(commandType: string): CommandHandler {
   if (commandType === "sale.complete") return completeSale;
+  if (commandType === "sale.return" || commandType === "sale.void") {
+    return correctSale;
+  }
   if (commandType.startsWith("branch.")) return applyBranchCommand;
   if (commandType.startsWith("register.") || commandType.startsWith("shift.")) {
     return applyShiftCommand;

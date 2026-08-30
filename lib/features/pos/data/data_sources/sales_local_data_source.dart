@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/payment.dart' as domain;
 import '../../domain/entities/sale.dart' as domain;
+import '../../domain/entities/sale_correction.dart' as domain;
 import '../../domain/entities/sale_product.dart';
 import '../../domain/entities/sale_status.dart';
 
@@ -273,6 +274,7 @@ LIMIT 100
   }) {
     final sales = _database.sales;
     final registers = _database.registers;
+    final returns = _database.saleReturns;
     final query =
         _database.select(sales).join([
             innerJoin(
@@ -281,20 +283,23 @@ LIMIT 100
                   registers.organizationId.equalsExp(sales.organizationId) &
                   registers.branchId.equalsExp(sales.branchId),
             ),
+            leftOuterJoin(returns, returns.saleId.equalsExp(sales.id)),
           ])
           ..where(
             sales.organizationId.equals(organizationId) &
                 sales.branchId.equals(branchId) &
                 sales.status.equals('draft').not(),
           )
+          ..groupBy([sales.id])
           ..orderBy([OrderingTerm.desc(sales.completedAt)])
           ..limit(50);
     return query.watch().asyncMap((rows) async {
       final result = <domain.SaleRecord>[];
+      final seen = <String>{};
       for (final row in rows) {
-        result.add(
-          await _hydrate(row.readTable(sales), row.readTable(registers).name),
-        );
+        final sale = row.readTable(sales);
+        if (!seen.add(sale.id)) continue;
+        result.add(await _hydrate(sale, row.readTable(registers).name));
       }
       return result;
     });
@@ -336,6 +341,67 @@ LIMIT 100
               ..where((row) => row.saleId.equals(sale.id))
               ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]))
             .get();
+    final correctionRows =
+        await (_database.select(_database.saleReturns)
+              ..where((row) => row.saleId.equals(sale.id))
+              ..orderBy([(row) => OrderingTerm.asc(row.completedAt)]))
+            .get();
+    final corrections = <domain.SaleCorrectionRecord>[];
+    final returnedByItem = <String, int>{};
+    for (final correction in correctionRows) {
+      final items = await _correctionItems(correction.id, itemRows);
+      if (correction.status == 'completed') {
+        for (final item in items) {
+          returnedByItem.update(
+            item.saleItemId,
+            (quantity) => quantity + item.quantityMilli,
+            ifAbsent: () => item.quantityMilli,
+          );
+        }
+      }
+      final refunds =
+          await (_database.select(_database.refundPayments)
+                ..where((row) => row.saleReturnId.equals(correction.id))
+                ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]))
+              .get();
+      corrections.add(
+        domain.SaleCorrectionRecord(
+          id: correction.id,
+          returnNumber: correction.returnNumber,
+          type: domain.SaleCorrectionType.fromDatabase(
+            correction.correctionType,
+          ),
+          status: correction.status,
+          reasonCode: correction.reasonCode,
+          notes: correction.notes,
+          subtotalMinor: correction.subtotalMinor,
+          discountMinor: correction.discountMinor,
+          taxMinor: correction.taxMinor,
+          totalMinor: correction.totalMinor,
+          createdByUserId: correction.createdByUserId,
+          approvedByUserId: correction.approvedByUserId,
+          completedAt: correction.completedAt,
+          items: items,
+          refunds: refunds
+              .map(
+                (refund) => domain.RefundRecord(
+                  id: refund.id,
+                  method: domain.RefundMethod.fromDatabase(refund.refundMethod),
+                  amountMinor: refund.amountMinor,
+                  reference: refund.reference,
+                ),
+              )
+              .toList(growable: false),
+        ),
+      );
+    }
+    final originalStatus = SaleStatus.fromDatabase(sale.status);
+    final effectiveStatus = _effectiveStatus(
+      originalStatus,
+      itemRows,
+      returnedByItem,
+      corrections,
+    );
     return domain.SaleRecord(
       id: sale.id,
       branchId: sale.branchId,
@@ -343,7 +409,7 @@ LIMIT 100
       registerName: registerName,
       shiftId: sale.shiftId,
       receiptNumber: sale.receiptNumber ?? 'Pending',
-      status: SaleStatus.fromDatabase(sale.status),
+      status: effectiveStatus,
       cashierUserId: sale.cashierUserId,
       subtotalMinor: sale.subtotalMinor,
       discountMinor: sale.discountMinor,
@@ -374,6 +440,7 @@ LIMIT 100
               netAmountMinor: item.netAmountMinor,
               taxAmountMinor: item.taxAmountMinor,
               totalAmountMinor: item.totalAmountMinor,
+              returnedQuantityMilli: returnedByItem[item.id] ?? 0,
             ),
           )
           .toList(growable: false),
@@ -391,8 +458,75 @@ LIMIT 100
             ),
           )
           .toList(growable: false),
+      corrections: corrections,
     );
   }
+
+  Future<List<domain.SaleCorrectionItem>> _correctionItems(
+    String correctionId,
+    List<SaleItem> saleItems,
+  ) async {
+    final rows =
+        await (_database.select(_database.saleReturnItems).join([
+              leftOuterJoin(
+                _database.stockLocations,
+                _database.stockLocations.id.equalsExp(
+                  _database.saleReturnItems.destinationStockLocationId,
+                ),
+              ),
+            ])..where(
+              _database.saleReturnItems.saleReturnId.equals(correctionId),
+            ))
+            .get();
+    final products = {for (final item in saleItems) item.id: item};
+    return rows
+        .map((row) {
+          final item = row.readTable(_database.saleReturnItems);
+          final saleItem = products[item.saleItemId];
+          return domain.SaleCorrectionItem(
+            id: item.id,
+            saleItemId: item.saleItemId,
+            productId: item.productId,
+            productName: saleItem?.productNameSnapshot ?? 'Product',
+            quantityMilli: item.quantityMilli,
+            disposition: domain.ReturnDisposition.fromDatabase(
+              item.disposition,
+            ),
+            destinationStockLocationId: item.destinationStockLocationId,
+            destinationName: row
+                .readTableOrNull(_database.stockLocations)
+                ?.name,
+            subtotalMinor: item.subtotalMinor,
+            discountMinor: item.discountMinor,
+            taxMinor: item.taxMinor,
+            totalMinor: item.totalMinor,
+          );
+        })
+        .toList(growable: false);
+  }
+}
+
+SaleStatus _effectiveStatus(
+  SaleStatus original,
+  List<SaleItem> items,
+  Map<String, int> returnedByItem,
+  List<domain.SaleCorrectionRecord> corrections,
+) {
+  if (original == SaleStatus.syncRejected) return original;
+  if (corrections.any(
+    (correction) =>
+        correction.status == 'completed' &&
+        correction.type == domain.SaleCorrectionType.voidSale,
+  )) {
+    return SaleStatus.voided;
+  }
+  final returned = returnedByItem.values.fold<int>(
+    0,
+    (total, quantity) => total + quantity,
+  );
+  if (returned == 0) return original;
+  final sold = items.fold<int>(0, (total, item) => total + item.quantityMilli);
+  return returned >= sold ? SaleStatus.returned : SaleStatus.partiallyReturned;
 }
 
 String _normalizeName(String value) =>

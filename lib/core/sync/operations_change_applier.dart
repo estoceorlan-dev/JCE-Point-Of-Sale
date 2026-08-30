@@ -24,6 +24,8 @@ class OperationsChangeApplier {
       await _stockCount(envelope);
     } else if (type == 'sale.complete') {
       await _sale(envelope);
+    } else if (type == 'sale.return' || type == 'sale.void') {
+      await _saleCorrection(envelope);
     } else if (type == 'device.register') {
       // Device registration has no local business projection.
     } else {
@@ -65,6 +67,16 @@ class OperationsChangeApplier {
             discountApprovalThresholdBasisPoints: Value(
               _nullableInt(payload['approvalThresholdBasisPoints']),
             ),
+          ),
+        );
+      case 'branch.correction_policy.update':
+        await _updateBranch(
+          envelope,
+          update.copyWith(
+            returnApprovalThresholdMinor: Value(
+              _nullableInt(payload['returnApprovalThresholdMinor']),
+            ),
+            voidWindowMinutes: Value(_integer(payload['voidWindowMinutes'])),
           ),
         );
       case 'inventory.policy.configure':
@@ -740,6 +752,246 @@ class OperationsChangeApplier {
     }
   }
 
+  Future<void> _saleCorrection(RemoteChangeEnvelope envelope) async {
+    final result = envelope.result;
+    final payload = envelope.commandPayload;
+    final correction = _requiredMap(result['correction'], 'correction');
+    final correctionId = envelope.change.aggregateId;
+    final saleId = _requiredString(correction, 'saleId');
+    final sale = await (database.select(
+      database.sales,
+    )..where((row) => row.id.equals(saleId))).getSingleOrNull();
+    if (sale == null) {
+      throw const FormatException(
+        'Original sale must synchronize before its correction.',
+      );
+    }
+
+    final inventory = _map(result['inventory']);
+    if (inventory != null) {
+      final correctionItems = payload['items'];
+      await _applyInventoryTransaction(
+        envelope,
+        result: inventory,
+        payload: {
+          'id': correction['inventoryTransactionId'],
+          'transactionType': 'sale_return',
+          'reasonCode': correction['reasonCode'],
+          'notes': correction['notes'],
+          'referenceType': 'sale_correction',
+          'referenceId': correctionId,
+          'approvedByUserId': correction['approvedByUserId'],
+          'occurredAt': correction['completedAt'],
+          'lines': [
+            if (correctionItems is List)
+              for (final value in correctionItems)
+                if (_requiredMap(value, 'correction item')['disposition'] !=
+                    'non_restock')
+                  {
+                    'stockLocationId': _requiredMap(
+                      value,
+                      'correction item',
+                    )['destinationStockLocationId'],
+                    'productId': _requiredMap(
+                      value,
+                      'correction item',
+                    )['productId'],
+                    'quantityDeltaMilli': _requiredMap(
+                      value,
+                      'correction item',
+                    )['quantityMilli'],
+                  },
+          ],
+        },
+        operationId: '${envelope.change.operationId}:inventory',
+      );
+    }
+
+    final existing = await (database.select(
+      database.saleReturns,
+    )..where((row) => row.id.equals(correctionId))).getSingleOrNull();
+    if (existing != null) {
+      if (existing.status != 'completed') {
+        await (database.update(
+          database.saleReturns,
+        )..where((row) => row.id.equals(correctionId))).write(
+          SaleReturnsCompanion(
+            status: const Value('completed'),
+            updatedAt: Value(envelope.change.occurredAt),
+          ),
+        );
+      }
+      return;
+    }
+
+    final completedAt =
+        _date(correction['completedAt']) ?? envelope.change.occurredAt;
+    final approvalRequestId = _string(correction['approvalRequestId']);
+    final approvedByUserId = _string(correction['approvedByUserId']);
+    if (approvalRequestId != null) {
+      await database
+          .into(database.approvalRequests)
+          .insert(
+            ApprovalRequestsCompanion.insert(
+              id: approvalRequestId,
+              organizationId: envelope.change.organizationId,
+              branchId: _branchId(envelope),
+              operationId: '${envelope.change.operationId}:approval',
+              requestType: envelope.commandType == 'sale.void'
+                  ? 'sale_void'
+                  : 'sale_return',
+              entityType: 'sale',
+              entityId: saleId,
+              status: const Value('approved'),
+              requestedByUserId: envelope.actorUserId,
+              reason: _requiredString(correction, 'reasonCode'),
+              actualAmountMinor: _integer(correction['totalMinor']),
+              requestedAt: completedAt,
+              resolvedAt: Value(completedAt),
+              createdAt: envelope.change.occurredAt,
+              updatedAt: envelope.change.occurredAt,
+            ),
+          );
+      await database
+          .into(database.approvalDecisions)
+          .insert(
+            ApprovalDecisionsCompanion.insert(
+              id: 'sync:${envelope.change.operationId}:decision',
+              organizationId: envelope.change.organizationId,
+              branchId: _branchId(envelope),
+              approvalRequestId: approvalRequestId,
+              decision: 'approved',
+              decidedByUserId: approvedByUserId ?? envelope.actorUserId,
+              notes: Value(_string(correction['notes'])),
+              decidedAt: completedAt,
+              createdAt: envelope.change.occurredAt,
+            ),
+          );
+    }
+
+    final cash = _map(result['cashMovement']);
+    if (cash != null) {
+      await database
+          .into(database.cashMovements)
+          .insert(
+            CashMovementsCompanion.insert(
+              id: _requiredString(cash, 'id'),
+              organizationId: envelope.change.organizationId,
+              branchId: _branchId(envelope),
+              registerId: _requiredString(cash, 'registerId'),
+              shiftId: _requiredString(cash, 'shiftId'),
+              operationId: '${envelope.change.operationId}:cash_refund',
+              movementType: 'cash_out',
+              amountMinor: -_refundAmount(result, 'cash'),
+              reason:
+                  'Refund ${_requiredString(correction, 'returnNumber')}: '
+                  '${_requiredString(correction, 'reasonCode')}',
+              createdByUserId: envelope.actorUserId,
+              approvedByUserId: Value(approvedByUserId),
+              approvedAt: Value(approvedByUserId == null ? null : completedAt),
+              occurredAt: completedAt,
+              createdAt: envelope.change.occurredAt,
+            ),
+          );
+    }
+
+    await database
+        .into(database.saleReturns)
+        .insert(
+          SaleReturnsCompanion.insert(
+            id: correctionId,
+            organizationId: envelope.change.organizationId,
+            branchId: _branchId(envelope),
+            saleId: saleId,
+            operationId: envelope.change.operationId,
+            returnNumber: _requiredString(correction, 'returnNumber'),
+            correctionType: _requiredString(correction, 'correctionType'),
+            reasonCode: _requiredString(correction, 'reasonCode'),
+            notes: Value(_string(correction['notes'])),
+            inventoryTransactionId: Value(
+              _string(correction['inventoryTransactionId']),
+            ),
+            approvalRequestId: Value(approvalRequestId),
+            subtotalMinor: _integer(correction['subtotalMinor']),
+            discountMinor: _integer(correction['discountMinor']),
+            taxMinor: _integer(correction['taxMinor']),
+            totalMinor: _integer(correction['totalMinor']),
+            createdByUserId: envelope.actorUserId,
+            approvedByUserId: Value(approvedByUserId),
+            approvedAt: Value(approvedByUserId == null ? null : completedAt),
+            completedAt: completedAt,
+            createdAt: envelope.change.occurredAt,
+            updatedAt: envelope.change.occurredAt,
+          ),
+        );
+
+    final localItems = await (database.select(
+      database.saleItems,
+    )..where((row) => row.saleId.equals(saleId))).get();
+    final localByLine = {for (final item in localItems) item.lineNumber: item};
+    final items = result['items'];
+    if (items is! List) {
+      throw const FormatException('Correction items are missing.');
+    }
+    for (var index = 0; index < items.length; index++) {
+      final item = _requiredMap(items[index], 'correction item');
+      final saleItem = localByLine[_integer(item['lineNumber'])];
+      if (saleItem == null) {
+        throw const FormatException('Correction sale item is unavailable.');
+      }
+      await database
+          .into(database.saleReturnItems)
+          .insert(
+            SaleReturnItemsCompanion.insert(
+              id:
+                  _string(item['id']) ??
+                  'sync:${envelope.change.operationId}:item:$index',
+              organizationId: envelope.change.organizationId,
+              branchId: _branchId(envelope),
+              saleReturnId: correctionId,
+              saleItemId: saleItem.id,
+              productId: saleItem.productId,
+              disposition: _requiredString(item, 'disposition'),
+              destinationStockLocationId: Value(
+                _string(item['destinationStockLocationId']),
+              ),
+              quantityMilli: _integer(item['quantityMilli']),
+              subtotalMinor: _integer(item['subtotalMinor']),
+              discountMinor: _integer(item['discountMinor']),
+              taxMinor: _integer(item['taxMinor']),
+              totalMinor: _integer(item['totalMinor']),
+              createdAt: envelope.change.occurredAt,
+            ),
+          );
+    }
+
+    final refunds = result['refunds'];
+    if (refunds is! List) {
+      throw const FormatException('Correction refunds are missing.');
+    }
+    for (var index = 0; index < refunds.length; index++) {
+      final refund = _requiredMap(refunds[index], 'refund');
+      await database
+          .into(database.refundPayments)
+          .insert(
+            RefundPaymentsCompanion.insert(
+              id:
+                  _string(refund['id']) ??
+                  'sync:${envelope.change.operationId}:refund:$index',
+              organizationId: envelope.change.organizationId,
+              branchId: _branchId(envelope),
+              saleReturnId: correctionId,
+              shiftId: Value(_string(refund['shiftId'])),
+              cashMovementId: Value(_string(refund['cashMovementId'])),
+              refundMethod: _requiredString(refund, 'method'),
+              amountMinor: _integer(refund['amountMinor']),
+              reference: Value(_string(refund['reference'])),
+              createdAt: envelope.change.occurredAt,
+            ),
+          );
+    }
+  }
+
   Future<void> _insertDiscount(
     RemoteChangeEnvelope envelope,
     String saleId,
@@ -805,3 +1057,17 @@ int? _nullableInt(Object? value) => value == null ? null : _integer(value);
 
 DateTime? _date(Object? value) =>
     value == null ? null : DateTime.parse(value.toString()).toUtc();
+
+int _refundAmount(Map<String, Object?> result, String method) {
+  final refunds = result['refunds'];
+  if (refunds is! List) {
+    throw const FormatException('Correction refunds are missing.');
+  }
+  for (final value in refunds) {
+    final refund = _requiredMap(value, 'refund');
+    if (_string(refund['method']) == method) {
+      return _integer(refund['amountMinor']);
+    }
+  }
+  throw FormatException('$method refund is missing.');
+}

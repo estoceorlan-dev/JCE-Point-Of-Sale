@@ -88,6 +88,29 @@ void main() {
     expect(row.nextAttemptAt, isNull);
   });
 
+  test('dependent commands wait for their prerequisite to succeed', () async {
+    final now = DateTime.utc(2026, 1, 1, 12);
+    await database.outboxDao.enqueue(_command('sale-operation', now));
+    await database.outboxDao.enqueue(
+      _command(
+        'return-operation',
+        now.add(const Duration(seconds: 1)),
+        dependsOnOperationId: 'sale-operation',
+      ),
+    );
+
+    final first = await database.outboxDao.claimEligibleBatch(now: now);
+    expect(first.map((entry) => entry.operationId), ['sale-operation']);
+    await database.outboxDao.markSucceeded(
+      operationId: 'sale-operation',
+      now: now,
+    );
+    final second = await database.outboxDao.claimEligibleBatch(
+      now: now.add(const Duration(seconds: 2)),
+    );
+    expect(second.map((entry) => entry.operationId), ['return-operation']);
+  });
+
   test('stale processing commands are returned to pending', () async {
     final startedAt = DateTime.utc(2026, 1, 1, 12);
     await database.outboxDao.enqueue(_command('operation-1', startedAt));
@@ -127,7 +150,11 @@ void main() {
   });
 }
 
-OutboxCommand _command(String operationId, DateTime createdAt) {
+OutboxCommand _command(
+  String operationId,
+  DateTime createdAt, {
+  String? dependsOnOperationId,
+}) {
   return OutboxCommand(
     operationId: operationId,
     organizationId: 'org-1',
@@ -135,6 +162,7 @@ OutboxCommand _command(String operationId, DateTime createdAt) {
     commandType: 'test_command',
     aggregateType: 'test',
     aggregateId: operationId,
+    dependsOnOperationId: dependsOnOperationId,
     payload: const {'test': true},
     createdAt: createdAt,
   );

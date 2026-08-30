@@ -370,6 +370,8 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       );
       if (command.aggregateType == 'sale') {
         await _setSaleRejected(command.aggregateId, context, reason);
+      } else if (command.aggregateType == 'sale_correction') {
+        await _setSaleCorrectionRejected(command.aggregateId, context, reason);
       }
     });
   }
@@ -382,6 +384,8 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
     await _database.transaction(() async {
       if (command.aggregateType == 'sale') {
         await _setSaleRejected(command.aggregateId, context, reason);
+      } else if (command.aggregateType == 'sale_correction') {
+        await _setSaleCorrectionRejected(command.aggregateId, context, reason);
       }
       await _conflictDao.add(
         SyncConflictsCompanion.insert(
@@ -390,7 +394,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
           organizationId: Value(context.organizationId),
           branchId: Value(context.branchId),
           actorUserId: Value(context.actorUserId),
-          entityType: 'sale',
+          entityType: command.aggregateType,
           entityId: command.aggregateId,
           localPayloadJson: command.payloadJson,
           remotePayloadJson: '{}',
@@ -422,6 +426,29 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
     _logger.warning(
       'A completed local sale was rejected by the remote backend: $reason',
       scope: 'sync.sale',
+    );
+  }
+
+  Future<void> _setSaleCorrectionRejected(
+    String correctionId,
+    BusinessContext context,
+    String reason,
+  ) async {
+    await (_database.update(_database.saleReturns)..where(
+          (row) =>
+              row.id.equals(correctionId) &
+              row.organizationId.equals(context.organizationId) &
+              row.branchId.equals(context.branchId),
+        ))
+        .write(
+          SaleReturnsCompanion(
+            status: const Value('sync_rejected'),
+            updatedAt: Value(_clock.nowUtc()),
+          ),
+        );
+    _logger.warning(
+      'A local sale correction was rejected by the remote backend: $reason',
+      scope: 'sync.sale_correction',
     );
   }
 

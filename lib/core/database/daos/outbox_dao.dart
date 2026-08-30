@@ -23,6 +23,7 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
         commandType: command.commandType,
         aggregateType: command.aggregateType,
         aggregateId: command.aggregateId,
+        dependsOnOperationId: Value(command.dependsOnOperationId),
         payloadJson: command.payloadJson,
         status: command.state.databaseValue,
         createdAt: command.createdAt.toUtc(),
@@ -96,6 +97,16 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
             '${entry.aggregateType}|${entry.aggregateId}';
         if (!claimedAggregates.add(aggregateKey)) {
           continue;
+        }
+        if (entry.dependsOnOperationId case final dependency?) {
+          final satisfied =
+              await (select(syncOutboxEntries)..where(
+                    (row) =>
+                        row.operationId.equals(dependency) &
+                        row.status.equals(OutboxState.succeeded.databaseValue),
+                  ))
+                  .getSingleOrNull();
+          if (satisfied == null) continue;
         }
         final olderBlocker =
             await (select(syncOutboxEntries)
