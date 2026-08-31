@@ -8912,6 +8912,1787 @@ i1.GeneratedColumn<String> _column_216(String aliasedName) =>
       false,
       type: i1.DriftSqlType.string,
     );
+
+final class Schema9 extends i0.VersionedSchema {
+  Schema9({required super.database}) : super(version: 9);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    localMetadata,
+    syncOutbox,
+    syncCursors,
+    syncConflicts,
+    syncEntityVersions,
+    localAuditLogs,
+    organizations,
+    branches,
+    appUsers,
+    roles,
+    permissions,
+    rolePermissions,
+    userRoleAssignments,
+    categories,
+    units,
+    taxCategories,
+    products,
+    productBarcodes,
+    productPrices,
+    productImages,
+    stockLocations,
+    inventoryTransactions,
+    inventoryLedgerEntries,
+    inventoryBalances,
+    stockCounts,
+    stockCountItems,
+    registers,
+    shifts,
+    cashMovements,
+    shiftCounts,
+    sales,
+    saleItems,
+    payments,
+    saleDiscounts,
+    receiptSequences,
+    approvalRequests,
+    approvalDecisions,
+    saleReturns,
+    saleReturnItems,
+    refundPayments,
+    stockTransfers,
+    stockTransferItems,
+    transferEvents,
+    categoriesSearchIdx,
+    productsNameSearchIdx,
+    productsSkuSearchIdx,
+    productBarcodesSearchIdx,
+    stockLocationsBranchIdx,
+    inventoryTransactionsHistoryIdx,
+    inventoryLedgerProductHistoryIdx,
+    inventoryBalancesLowStockIdx,
+    stockCountsStatusIdx,
+    registersBranchIdx,
+    shiftsActiveIdx,
+    cashMovementsShiftIdx,
+    salesHistoryIdx,
+    paymentsShiftIdx,
+    approvalRequestsStatusIdx,
+    saleReturnsHistoryIdx,
+    stockTransfersSourceStatusIdx,
+    stockTransfersDestinationStatusIdx,
+    transferEventsHistoryIdx,
+  ];
+  late final Shape0 localMetadata = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'local_metadata',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY("key")'],
+      columns: [_column_0, _column_1, _column_2],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape40 syncOutbox = Shape40(
+    source: i0.VersionedTable(
+      entityName: 'sync_outbox',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(operation_id)'],
+      columns: [
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_182,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_187,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+        _column_13,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape2 syncCursors = Shape2(
+    source: i0.VersionedTable(
+      entityName: 'sync_cursors',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(cursor_key)'],
+      columns: [
+        _column_15,
+        _column_16,
+        _column_4,
+        _column_5,
+        _column_17,
+        _column_18,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape38 syncConflicts = Shape38(
+    source: i0.VersionedTable(
+      entityName: 'sync_conflicts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_19,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_182,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_23,
+        _column_24,
+        _column_25,
+        _column_14,
+        _column_26,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape39 syncEntityVersions = Shape39(
+    source: i0.VersionedTable(
+      entityName: 'sync_entity_versions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(entity_key)',
+        'UNIQUE(organization_id, entity_type, entity_id)',
+      ],
+      columns: [
+        _column_183,
+        _column_184,
+        _column_5,
+        _column_20,
+        _column_21,
+        _column_185,
+        _column_186,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape4 localAuditLogs = Shape4(
+    source: i0.VersionedTable(
+      entityName: 'local_audit_logs',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_19,
+        _column_27,
+        _column_4,
+        _column_28,
+        _column_5,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_21,
+        _column_32,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape5 organizations = Shape5(
+    source: i0.VersionedTable(
+      entityName: 'organizations',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)', 'UNIQUE(code)'],
+      columns: [
+        _column_19,
+        _column_33,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape47 branches = Shape47(
+    source: i0.VersionedTable(
+      entityName: 'branches',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, code)',
+        'UNIQUE(id, organization_id)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_33,
+        _column_34,
+        _column_35,
+        _column_36,
+        _column_74,
+        _column_75,
+        _column_112,
+        _column_113,
+        _column_114,
+        _column_142,
+        _column_188,
+        _column_189,
+        _column_217,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape7 appUsers = Shape7(
+    source: i0.VersionedTable(
+      entityName: 'app_users',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)', 'UNIQUE(organization_id, email)'],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_41,
+        _column_10,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape8 roles = Shape8(
+    source: i0.VersionedTable(
+      entityName: 'roles',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)', 'UNIQUE(organization_id, code)'],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_33,
+        _column_34,
+        _column_42,
+        _column_36,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape9 permissions = Shape9(
+    source: i0.VersionedTable(
+      entityName: 'permissions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(code)'],
+      columns: [_column_33, _column_34, _column_42, _column_14],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape10 rolePermissions = Shape10(
+    source: i0.VersionedTable(
+      entityName: 'role_permissions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(role_id, permission_code)'],
+      columns: [_column_43, _column_44, _column_45],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape11 userRoleAssignments = Shape11(
+    source: i0.VersionedTable(
+      entityName: 'user_role_assignments',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_50,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape12 categories = Shape12(
+    source: i0.VersionedTable(
+      entityName: 'categories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, normalized_name)',
+        'UNIQUE(id, organization_id)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_34,
+        _column_51,
+        _column_36,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape13 units = Shape13(
+    source: i0.VersionedTable(
+      entityName: 'units',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, code)',
+        'UNIQUE(id, organization_id)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_33,
+        _column_34,
+        _column_52,
+        _column_53,
+        _column_36,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape14 taxCategories = Shape14(
+    source: i0.VersionedTable(
+      entityName: 'tax_categories',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, code)',
+        'UNIQUE(id, organization_id)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_33,
+        _column_34,
+        _column_54,
+        _column_55,
+        _column_36,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape15 products = Shape15(
+    source: i0.VersionedTable(
+      entityName: 'products',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, sku)',
+        'UNIQUE(organization_id, normalized_sku)',
+        'UNIQUE(id, organization_id)',
+        'FOREIGN KEY (category_id, organization_id) REFERENCES categories (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (unit_id, organization_id) REFERENCES units (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (tax_category_id, organization_id) REFERENCES tax_categories (id, organization_id) ON DELETE RESTRICT',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_56,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_34,
+        _column_51,
+        _column_42,
+        _column_36,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape16 productBarcodes = Shape16(
+    source: i0.VersionedTable(
+      entityName: 'product_barcodes',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, barcode)',
+        'UNIQUE(organization_id, normalized_barcode)',
+        'FOREIGN KEY (product_id, organization_id) REFERENCES products (id, organization_id) ON DELETE CASCADE',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_61,
+        _column_62,
+        _column_63,
+        _column_64,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape17 productPrices = Shape17(
+    source: i0.VersionedTable(
+      entityName: 'product_prices',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(product_id, branch_id, effective_from)',
+        'UNIQUE(product_id, branch_scope, effective_from)',
+        'FOREIGN KEY (product_id, organization_id) REFERENCES products (id, organization_id) ON DELETE CASCADE',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'CHECK ((branch_id IS NULL AND branch_scope = \'*\') OR (branch_id IS NOT NULL AND branch_scope = branch_id))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_61,
+        _column_46,
+        _column_65,
+        _column_66,
+        _column_67,
+        _column_68,
+        _column_69,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape18 productImages = Shape18(
+    source: i0.VersionedTable(
+      entityName: 'product_images',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'FOREIGN KEY (product_id, organization_id) REFERENCES products (id, organization_id) ON DELETE CASCADE',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_61,
+        _column_70,
+        _column_71,
+        _column_72,
+        _column_73,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape20 stockLocations = Shape20(
+    source: i0.VersionedTable(
+      entityName: 'stock_locations',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, branch_id, code)',
+        'UNIQUE(id, organization_id, branch_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'CHECK (location_type IN (\'sales_floor\', \'warehouse\', \'returns\', \'damaged\'))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_33,
+        _column_34,
+        _column_77,
+        _column_78,
+        _column_36,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape21 inventoryTransactions = Shape21(
+    source: i0.VersionedTable(
+      entityName: 'inventory_transactions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, operation_id)',
+        'UNIQUE(id, organization_id, branch_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'CHECK (status IN (\'posted\', \'reversed\'))',
+        'CHECK (transaction_type IN (\'opening_balance\', \'purchase_receipt\', \'sale\', \'sale_return\', \'adjustment_increase\', \'adjustment_decrease\', \'transfer_shipment\', \'transfer_receipt\', \'stock_count_correction\', \'reversal\'))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_3,
+        _column_79,
+        _column_80,
+        _column_81,
+        _column_82,
+        _column_83,
+        _column_84,
+        _column_85,
+        _column_86,
+        _column_69,
+        _column_87,
+        _column_88,
+        _column_89,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape22 inventoryLedgerEntries = Shape22(
+    source: i0.VersionedTable(
+      entityName: 'inventory_ledger_entries',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(transaction_id, stock_location_id, product_id)',
+        'FOREIGN KEY (transaction_id, organization_id, branch_id) REFERENCES inventory_transactions (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (stock_location_id, organization_id, branch_id) REFERENCES stock_locations (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (product_id, organization_id) REFERENCES products (id, organization_id) ON DELETE RESTRICT',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_90,
+        _column_91,
+        _column_92,
+        _column_93,
+        _column_94,
+        _column_89,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape23 inventoryBalances = Shape23(
+    source: i0.VersionedTable(
+      entityName: 'inventory_balances',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, branch_id, stock_location_id, product_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (stock_location_id, organization_id, branch_id) REFERENCES stock_locations (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (product_id, organization_id) REFERENCES products (id, organization_id) ON DELETE RESTRICT',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_91,
+        _column_92,
+        _column_95,
+        _column_96,
+        _column_97,
+        _column_98,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape24 stockCounts = Shape24(
+    source: i0.VersionedTable(
+      entityName: 'stock_counts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, operation_id)',
+        'UNIQUE(organization_id, completion_operation_id)',
+        'UNIQUE(id, organization_id)',
+        'UNIQUE(id, organization_id, branch_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (stock_location_id, organization_id, branch_id) REFERENCES stock_locations (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (count_type IN (\'full\', \'cycle\'))',
+        'CHECK (status IN (\'in_progress\', \'completed\', \'cancelled\'))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_91,
+        _column_3,
+        _column_99,
+        _column_100,
+        _column_101,
+        _column_82,
+        _column_102,
+        _column_103,
+        _column_104,
+        _column_105,
+        _column_98,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape25 stockCountItems = Shape25(
+    source: i0.VersionedTable(
+      entityName: 'stock_count_items',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(stock_count_id, product_id)',
+        'FOREIGN KEY (stock_count_id, organization_id) REFERENCES stock_counts (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (product_id, organization_id) REFERENCES products (id, organization_id) ON DELETE RESTRICT',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_106,
+        _column_92,
+        _column_107,
+        _column_108,
+        _column_109,
+        _column_110,
+        _column_111,
+        _column_98,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape27 registers = Shape27(
+    source: i0.VersionedTable(
+      entityName: 'registers',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, branch_id, code)',
+        'UNIQUE(organization_id, branch_id, assigned_device_id)',
+        'UNIQUE(id, organization_id, branch_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_33,
+        _column_34,
+        _column_115,
+        _column_116,
+        _column_117,
+        _column_36,
+        _column_98,
+        _column_14,
+        _column_2,
+        _column_37,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape28 shifts = Shape28(
+    source: i0.VersionedTable(
+      entityName: 'shifts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, operation_id)',
+        'UNIQUE(organization_id, close_operation_id)',
+        'UNIQUE(id, organization_id, branch_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (register_id, organization_id, branch_id) REFERENCES registers (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (status IN (\'open\', \'closed\'))',
+        'CHECK ((status = \'open\' AND closed_at IS NULL AND closed_by_user_id IS NULL) OR (status = \'closed\' AND closed_at IS NOT NULL AND closed_by_user_id IS NOT NULL))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_118,
+        _column_119,
+        _column_3,
+        _column_120,
+        _column_121,
+        _column_122,
+        _column_123,
+        _column_124,
+        _column_125,
+        _column_126,
+        _column_127,
+        _column_128,
+        _column_129,
+        _column_130,
+        _column_131,
+        _column_87,
+        _column_88,
+        _column_132,
+        _column_98,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape29 cashMovements = Shape29(
+    source: i0.VersionedTable(
+      entityName: 'cash_movements',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, operation_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (register_id, organization_id, branch_id) REFERENCES registers (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (shift_id, organization_id, branch_id) REFERENCES shifts (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (movement_type IN (\'cash_in\', \'cash_out\', \'payout\', \'correction\'))',
+        'CHECK ((movement_type = \'cash_in\' AND amount_minor > 0) OR (movement_type IN (\'cash_out\', \'payout\') AND amount_minor < 0) OR (movement_type = \'correction\' AND amount_minor <> 0))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_118,
+        _column_133,
+        _column_3,
+        _column_134,
+        _column_135,
+        _column_24,
+        _column_69,
+        _column_87,
+        _column_88,
+        _column_89,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape30 shiftCounts = Shape30(
+    source: i0.VersionedTable(
+      entityName: 'shift_counts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(shift_id, payment_method)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (shift_id, organization_id, branch_id) REFERENCES shifts (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (payment_method IN (\'cash\', \'card\', \'e_wallet\'))',
+        'CHECK (discrepancy_minor = counted_amount_minor - expected_amount_minor)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_133,
+        _column_136,
+        _column_137,
+        _column_138,
+        _column_139,
+        _column_140,
+        _column_141,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape32 sales = Shape32(
+    source: i0.VersionedTable(
+      entityName: 'sales',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, operation_id)',
+        'UNIQUE(organization_id, branch_id, receipt_number)',
+        'UNIQUE(id, organization_id, branch_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (register_id, organization_id, branch_id) REFERENCES registers (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (shift_id, organization_id, branch_id) REFERENCES shifts (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (inventory_transaction_id, organization_id, branch_id) REFERENCES inventory_transactions (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (status IN (\'draft\', \'completed\', \'voided\', \'partially_returned\', \'returned\', \'sync_rejected\'))',
+        'CHECK ((status = \'draft\' AND completed_at IS NULL) OR (status <> \'draft\' AND completed_at IS NOT NULL))',
+        'CHECK (discount_minor <= subtotal_minor)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_118,
+        _column_143,
+        _column_144,
+        _column_3,
+        _column_145,
+        _column_146,
+        _column_147,
+        _column_148,
+        _column_149,
+        _column_150,
+        _column_151,
+        _column_152,
+        _column_153,
+        _column_154,
+        _column_155,
+        _column_105,
+        _column_98,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape33 saleItems = Shape33(
+    source: i0.VersionedTable(
+      entityName: 'sale_items',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(sale_id, line_number)',
+        'UNIQUE(id, sale_id)',
+        'UNIQUE(id, organization_id, branch_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (sale_id, organization_id, branch_id) REFERENCES sales (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (product_id, organization_id) REFERENCES products (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (stock_location_id, organization_id, branch_id) REFERENCES stock_locations (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (discount_amount_minor <= gross_amount_minor)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_156,
+        _column_92,
+        _column_91,
+        _column_157,
+        _column_158,
+        _column_159,
+        _column_160,
+        _column_161,
+        _column_162,
+        _column_163,
+        _column_164,
+        _column_165,
+        _column_166,
+        _column_167,
+        _column_168,
+        _column_169,
+        _column_170,
+        _column_171,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape34 payments = Shape34(
+    source: i0.VersionedTable(
+      entityName: 'payments',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(sale_id, payment_method)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (sale_id, organization_id, branch_id) REFERENCES sales (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (shift_id, organization_id, branch_id) REFERENCES shifts (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (payment_method IN (\'cash\', \'card\', \'e_wallet\'))',
+        'CHECK (tendered_amount_minor = applied_amount_minor + change_amount_minor)',
+        'CHECK ((payment_method = \'cash\') OR change_amount_minor = 0)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_156,
+        _column_143,
+        _column_136,
+        _column_172,
+        _column_173,
+        _column_174,
+        _column_175,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape35 saleDiscounts = Shape35(
+    source: i0.VersionedTable(
+      entityName: 'sale_discounts',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (sale_id, organization_id, branch_id) REFERENCES sales (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (sale_item_id, sale_id) REFERENCES sale_items (id, sale_id) ON DELETE RESTRICT',
+        'CHECK (discount_scope IN (\'item\', \'sale\'))',
+        'CHECK (discount_type = \'fixed_amount\')',
+        'CHECK ((discount_scope = \'item\' AND sale_item_id IS NOT NULL) OR (discount_scope = \'sale\' AND sale_item_id IS NULL))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_156,
+        _column_176,
+        _column_177,
+        _column_178,
+        _column_179,
+        _column_24,
+        _column_87,
+        _column_88,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape36 receiptSequences = Shape36(
+    source: i0.VersionedTable(
+      entityName: 'receipt_sequences',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, branch_id, register_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (register_id, organization_id, branch_id) REFERENCES registers (id, organization_id, branch_id) ON DELETE RESTRICT',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_118,
+        _column_180,
+        _column_181,
+        _column_98,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape42 approvalRequests = Shape42(
+    source: i0.VersionedTable(
+      entityName: 'approval_requests',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, operation_id)',
+        'UNIQUE(id, organization_id, branch_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'CHECK (request_type IN (\'sale_return\', \'sale_void\'))',
+        'CHECK (status IN (\'pending\', \'approved\', \'rejected\', \'cancelled\'))',
+        'CHECK ((status = \'pending\' AND resolved_at IS NULL) OR (status <> \'pending\' AND resolved_at IS NOT NULL))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_3,
+        _column_190,
+        _column_20,
+        _column_21,
+        _column_191,
+        _column_192,
+        _column_24,
+        _column_193,
+        _column_194,
+        _column_195,
+        _column_26,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape43 approvalDecisions = Shape43(
+    source: i0.VersionedTable(
+      entityName: 'approval_decisions',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(approval_request_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (approval_request_id, organization_id, branch_id) REFERENCES approval_requests (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (decision IN (\'approved\', \'rejected\'))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_196,
+        _column_197,
+        _column_198,
+        _column_82,
+        _column_199,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape44 saleReturns = Shape44(
+    source: i0.VersionedTable(
+      entityName: 'sale_returns',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, operation_id)',
+        'UNIQUE(organization_id, branch_id, return_number)',
+        'UNIQUE(id, organization_id, branch_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (sale_id, organization_id, branch_id) REFERENCES sales (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (inventory_transaction_id, organization_id, branch_id) REFERENCES inventory_transactions (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (approval_request_id, organization_id, branch_id) REFERENCES approval_requests (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (correction_type IN (\'return\', \'void\'))',
+        'CHECK (status IN (\'completed\', \'sync_rejected\'))',
+        'CHECK (discount_minor <= subtotal_minor)',
+        'CHECK ((approval_request_id IS NULL AND approved_by_user_id IS NULL AND approved_at IS NULL) OR (approval_request_id IS NOT NULL AND approved_by_user_id IS NOT NULL AND approved_at IS NOT NULL))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_156,
+        _column_3,
+        _column_200,
+        _column_201,
+        _column_202,
+        _column_203,
+        _column_82,
+        _column_144,
+        _column_204,
+        _column_205,
+        _column_206,
+        _column_207,
+        _column_208,
+        _column_69,
+        _column_87,
+        _column_88,
+        _column_209,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape45 saleReturnItems = Shape45(
+    source: i0.VersionedTable(
+      entityName: 'sale_return_items',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(sale_return_id, sale_item_id)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (sale_return_id, organization_id, branch_id) REFERENCES sale_returns (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (product_id, organization_id) REFERENCES products (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (destination_stock_location_id, organization_id, branch_id) REFERENCES stock_locations (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (disposition IN (\'restock\', \'damaged\', \'non_restock\'))',
+        'CHECK ((disposition = \'non_restock\' AND destination_stock_location_id IS NULL) OR (disposition <> \'non_restock\' AND destination_stock_location_id IS NOT NULL))',
+        'CHECK (discount_minor <= subtotal_minor)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_210,
+        _column_211,
+        _column_92,
+        _column_212,
+        _column_213,
+        _column_162,
+        _column_205,
+        _column_206,
+        _column_207,
+        _column_214,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape46 refundPayments = Shape46(
+    source: i0.VersionedTable(
+      entityName: 'refund_payments',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(sale_return_id, refund_method)',
+        'FOREIGN KEY (branch_id, organization_id) REFERENCES branches (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (sale_return_id, organization_id, branch_id) REFERENCES sale_returns (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (shift_id, organization_id, branch_id) REFERENCES shifts (id, organization_id, branch_id) ON DELETE RESTRICT',
+        'CHECK (refund_method IN (\'cash\', \'card\', \'e_wallet\', \'store_credit\'))',
+        'CHECK ((refund_method = \'cash\' AND shift_id IS NOT NULL AND cash_movement_id IS NOT NULL) OR (refund_method <> \'cash\' AND cash_movement_id IS NULL))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_76,
+        _column_210,
+        _column_143,
+        _column_215,
+        _column_216,
+        _column_179,
+        _column_175,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape48 stockTransfers = Shape48(
+    source: i0.VersionedTable(
+      entityName: 'stock_transfers',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(organization_id, transfer_number)',
+        'UNIQUE(id, organization_id)',
+        'CHECK (source_branch_id <> destination_branch_id)',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_218,
+        _column_219,
+        _column_220,
+        _column_221,
+        _column_222,
+        _column_82,
+        _column_223,
+        _column_224,
+        _column_225,
+        _column_226,
+        _column_227,
+        _column_88,
+        _column_228,
+        _column_229,
+        _column_230,
+        _column_98,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape49 stockTransferItems = Shape49(
+    source: i0.VersionedTable(
+      entityName: 'stock_transfer_items',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'UNIQUE(transfer_id, source_stock_location_id, product_id)',
+        'FOREIGN KEY (transfer_id, organization_id) REFERENCES stock_transfers (id, organization_id) ON DELETE RESTRICT',
+        'FOREIGN KEY (product_id, organization_id) REFERENCES products (id, organization_id) ON DELETE RESTRICT',
+        'CHECK (received_quantity_milli + damaged_quantity_milli <= shipped_quantity_milli)',
+        'CHECK ((damaged_quantity_milli = 0) OR (damaged_stock_location_id IS NOT NULL))',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_231,
+        _column_92,
+        _column_232,
+        _column_233,
+        _column_234,
+        _column_235,
+        _column_236,
+        _column_237,
+        _column_238,
+        _column_239,
+        _column_98,
+        _column_14,
+        _column_2,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape50 transferEvents = Shape50(
+    source: i0.VersionedTable(
+      entityName: 'transfer_events',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'FOREIGN KEY (transfer_id, organization_id) REFERENCES stock_transfers (id, organization_id) ON DELETE RESTRICT',
+      ],
+      columns: [
+        _column_19,
+        _column_38,
+        _column_231,
+        _column_240,
+        _column_241,
+        _column_242,
+        _column_243,
+        _column_244,
+        _column_245,
+        _column_32,
+        _column_89,
+        _column_14,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  final i1.Index categoriesSearchIdx = i1.Index(
+    'categories_search_idx',
+    'CREATE INDEX categories_search_idx ON categories (organization_id, normalized_name)',
+  );
+  final i1.Index productsNameSearchIdx = i1.Index(
+    'products_name_search_idx',
+    'CREATE INDEX products_name_search_idx ON products (organization_id, normalized_name)',
+  );
+  final i1.Index productsSkuSearchIdx = i1.Index(
+    'products_sku_search_idx',
+    'CREATE INDEX products_sku_search_idx ON products (organization_id, normalized_sku)',
+  );
+  final i1.Index productBarcodesSearchIdx = i1.Index(
+    'product_barcodes_search_idx',
+    'CREATE INDEX product_barcodes_search_idx ON product_barcodes (organization_id, normalized_barcode)',
+  );
+  final i1.Index stockLocationsBranchIdx = i1.Index(
+    'stock_locations_branch_idx',
+    'CREATE INDEX stock_locations_branch_idx ON stock_locations (organization_id, branch_id, is_active)',
+  );
+  final i1.Index inventoryTransactionsHistoryIdx = i1.Index(
+    'inventory_transactions_history_idx',
+    'CREATE INDEX inventory_transactions_history_idx ON inventory_transactions (organization_id, branch_id, occurred_at)',
+  );
+  final i1.Index inventoryLedgerProductHistoryIdx = i1.Index(
+    'inventory_ledger_product_history_idx',
+    'CREATE INDEX inventory_ledger_product_history_idx ON inventory_ledger_entries (organization_id, branch_id, product_id, occurred_at)',
+  );
+  final i1.Index inventoryBalancesLowStockIdx = i1.Index(
+    'inventory_balances_low_stock_idx',
+    'CREATE INDEX inventory_balances_low_stock_idx ON inventory_balances (organization_id, branch_id, stock_location_id, on_hand_milli)',
+  );
+  final i1.Index stockCountsStatusIdx = i1.Index(
+    'stock_counts_status_idx',
+    'CREATE INDEX stock_counts_status_idx ON stock_counts (organization_id, branch_id, stock_location_id, status)',
+  );
+  final i1.Index registersBranchIdx = i1.Index(
+    'registers_branch_idx',
+    'CREATE INDEX registers_branch_idx ON registers (organization_id, branch_id, is_active)',
+  );
+  final i1.Index shiftsActiveIdx = i1.Index(
+    'shifts_active_idx',
+    'CREATE INDEX shifts_active_idx ON shifts (organization_id, branch_id, status, opened_by_user_id)',
+  );
+  final i1.Index cashMovementsShiftIdx = i1.Index(
+    'cash_movements_shift_idx',
+    'CREATE INDEX cash_movements_shift_idx ON cash_movements (organization_id, branch_id, shift_id, occurred_at)',
+  );
+  final i1.Index salesHistoryIdx = i1.Index(
+    'sales_history_idx',
+    'CREATE INDEX sales_history_idx ON sales (organization_id, branch_id, completed_at)',
+  );
+  final i1.Index paymentsShiftIdx = i1.Index(
+    'payments_shift_idx',
+    'CREATE INDEX payments_shift_idx ON payments (organization_id, branch_id, shift_id, created_at)',
+  );
+  final i1.Index approvalRequestsStatusIdx = i1.Index(
+    'approval_requests_status_idx',
+    'CREATE INDEX approval_requests_status_idx ON approval_requests (organization_id, branch_id, status, requested_at)',
+  );
+  final i1.Index saleReturnsHistoryIdx = i1.Index(
+    'sale_returns_history_idx',
+    'CREATE INDEX sale_returns_history_idx ON sale_returns (organization_id, branch_id, completed_at)',
+  );
+  final i1.Index stockTransfersSourceStatusIdx = i1.Index(
+    'stock_transfers_source_status_idx',
+    'CREATE INDEX stock_transfers_source_status_idx ON stock_transfers (organization_id, source_branch_id, status, updated_at)',
+  );
+  final i1.Index stockTransfersDestinationStatusIdx = i1.Index(
+    'stock_transfers_destination_status_idx',
+    'CREATE INDEX stock_transfers_destination_status_idx ON stock_transfers (organization_id, destination_branch_id, status, updated_at)',
+  );
+  final i1.Index transferEventsHistoryIdx = i1.Index(
+    'transfer_events_history_idx',
+    'CREATE INDEX transfer_events_history_idx ON transfer_events (organization_id, transfer_id, occurred_at)',
+  );
+}
+
+class Shape47 extends i0.VersionedTable {
+  Shape47({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get organizationId =>
+      columnsByName['organization_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get code =>
+      columnsByName['code']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get name =>
+      columnsByName['name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get timezone =>
+      columnsByName['timezone']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<bool> get isActive =>
+      columnsByName['is_active']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get allowNegativeStock =>
+      columnsByName['allow_negative_stock']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<int> get adjustmentApprovalThresholdMilli =>
+      columnsByName['adjustment_approval_threshold_milli']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<bool> get allowMultipleOpenShiftsPerUser =>
+      columnsByName['allow_multiple_open_shifts_per_user']!
+          as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<bool> get allowSalesWithoutOpenShift =>
+      columnsByName['allow_sales_without_open_shift']!
+          as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<int> get cashDiscrepancyApprovalThresholdMinor =>
+      columnsByName['cash_discrepancy_approval_threshold_minor']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get discountApprovalThresholdBasisPoints =>
+      columnsByName['discount_approval_threshold_basis_points']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get returnApprovalThresholdMinor =>
+      columnsByName['return_approval_threshold_minor']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get voidWindowMinutes =>
+      columnsByName['void_window_minutes']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get transferApprovalThresholdMilli =>
+      columnsByName['transfer_approval_threshold_milli']!
+          as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<DateTime> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get deletedAt =>
+      columnsByName['deleted_at']! as i1.GeneratedColumn<DateTime>;
+}
+
+i1.GeneratedColumn<int> _column_217(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'transfer_approval_threshold_milli',
+      aliasedName,
+      true,
+      check: () => const i2.CustomExpression<bool>(
+        'transfer_approval_threshold_milli IS NULL OR '
+        'transfer_approval_threshold_milli >= 0',
+      ),
+      type: i1.DriftSqlType.int,
+    );
+
+class Shape48 extends i0.VersionedTable {
+  Shape48({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get organizationId =>
+      columnsByName['organization_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get sourceBranchId =>
+      columnsByName['source_branch_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get destinationBranchId =>
+      columnsByName['destination_branch_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get transferNumber =>
+      columnsByName['transfer_number']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get status =>
+      columnsByName['status']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<bool> get approvalRequired =>
+      columnsByName['approval_required']! as i1.GeneratedColumn<bool>;
+  i1.GeneratedColumn<String> get notes =>
+      columnsByName['notes']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get createdByUserId =>
+      columnsByName['created_by_user_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get approvedByUserId =>
+      columnsByName['approved_by_user_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get rejectionReason =>
+      columnsByName['rejection_reason']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get cancellationReason =>
+      columnsByName['cancellation_reason']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<DateTime> get submittedAt =>
+      columnsByName['submitted_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get approvedAt =>
+      columnsByName['approved_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get shippedAt =>
+      columnsByName['shipped_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get receivedAt =>
+      columnsByName['received_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get cancelledAt =>
+      columnsByName['cancelled_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<int> get version =>
+      columnsByName['version']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<DateTime> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<DateTime>;
+}
+
+i1.GeneratedColumn<String> _column_218(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'source_branch_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<String> _column_219(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'destination_branch_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<String> _column_220(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'transfer_number',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<String> _column_221(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'status',
+      aliasedName,
+      false,
+      check: () => const i2.CustomExpression<bool>(
+        "status IN ('draft', 'submitted', 'approved', 'rejected', "
+        "'shipped', 'received', 'cancelled')",
+      ),
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<bool> _column_222(String aliasedName) =>
+    i1.GeneratedColumn<bool>(
+      'approval_required',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.bool,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'CHECK ("approval_required" IN (0, 1))',
+      ),
+      defaultValue: const CustomExpression('0'),
+    );
+i1.GeneratedColumn<String> _column_223(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'created_by_user_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES app_users (id) ON DELETE RESTRICT',
+      ),
+    );
+i1.GeneratedColumn<String> _column_224(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'approved_by_user_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES app_users (id) ON DELETE RESTRICT',
+      ),
+    );
+i1.GeneratedColumn<String> _column_225(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'rejection_reason',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<String> _column_226(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'cancellation_reason',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<DateTime> _column_227(String aliasedName) =>
+    i1.GeneratedColumn<DateTime>(
+      'submitted_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
+i1.GeneratedColumn<DateTime> _column_228(String aliasedName) =>
+    i1.GeneratedColumn<DateTime>(
+      'shipped_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
+i1.GeneratedColumn<DateTime> _column_229(String aliasedName) =>
+    i1.GeneratedColumn<DateTime>(
+      'received_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
+i1.GeneratedColumn<DateTime> _column_230(String aliasedName) =>
+    i1.GeneratedColumn<DateTime>(
+      'cancelled_at',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.dateTime,
+    );
+
+class Shape49 extends i0.VersionedTable {
+  Shape49({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get organizationId =>
+      columnsByName['organization_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get transferId =>
+      columnsByName['transfer_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get productId =>
+      columnsByName['product_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get sourceStockLocationId =>
+      columnsByName['source_stock_location_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get destinationStockLocationId =>
+      columnsByName['destination_stock_location_id']!
+          as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get damagedStockLocationId =>
+      columnsByName['damaged_stock_location_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get requestedQuantityMilli =>
+      columnsByName['requested_quantity_milli']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get shippedQuantityMilli =>
+      columnsByName['shipped_quantity_milli']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get receivedQuantityMilli =>
+      columnsByName['received_quantity_milli']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get damagedQuantityMilli =>
+      columnsByName['damaged_quantity_milli']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get discrepancyQuantityMilli =>
+      columnsByName['discrepancy_quantity_milli']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get version =>
+      columnsByName['version']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<DateTime> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<DateTime>;
+}
+
+i1.GeneratedColumn<String> _column_231(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'transfer_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES stock_transfers (id) ON DELETE RESTRICT',
+      ),
+    );
+i1.GeneratedColumn<String> _column_232(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'source_stock_location_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<String> _column_233(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'destination_stock_location_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<String> _column_234(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'damaged_stock_location_id',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<int> _column_235(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'requested_quantity_milli',
+      aliasedName,
+      false,
+      check: () =>
+          const i2.CustomExpression<bool>('requested_quantity_milli > 0'),
+      type: i1.DriftSqlType.int,
+    );
+i1.GeneratedColumn<int> _column_236(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'shipped_quantity_milli',
+      aliasedName,
+      false,
+      check: () =>
+          const i2.CustomExpression<bool>('shipped_quantity_milli >= 0'),
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
+i1.GeneratedColumn<int> _column_237(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'received_quantity_milli',
+      aliasedName,
+      false,
+      check: () =>
+          const i2.CustomExpression<bool>('received_quantity_milli >= 0'),
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
+i1.GeneratedColumn<int> _column_238(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'damaged_quantity_milli',
+      aliasedName,
+      false,
+      check: () =>
+          const i2.CustomExpression<bool>('damaged_quantity_milli >= 0'),
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
+i1.GeneratedColumn<int> _column_239(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'discrepancy_quantity_milli',
+      aliasedName,
+      false,
+      check: () =>
+          const i2.CustomExpression<bool>('discrepancy_quantity_milli >= 0'),
+      type: i1.DriftSqlType.int,
+      defaultValue: const CustomExpression('0'),
+    );
+
+class Shape50 extends i0.VersionedTable {
+  Shape50({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get organizationId =>
+      columnsByName['organization_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get transferId =>
+      columnsByName['transfer_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get operationId =>
+      columnsByName['operation_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get eventType =>
+      columnsByName['event_type']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get fromStatus =>
+      columnsByName['from_status']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get toStatus =>
+      columnsByName['to_status']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get actorUserId =>
+      columnsByName['actor_user_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get reason =>
+      columnsByName['reason']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get metadataJson =>
+      columnsByName['metadata_json']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<DateTime> get occurredAt =>
+      columnsByName['occurred_at']! as i1.GeneratedColumn<DateTime>;
+  i1.GeneratedColumn<DateTime> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<DateTime>;
+}
+
+i1.GeneratedColumn<String> _column_240(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'operation_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways('UNIQUE'),
+    );
+i1.GeneratedColumn<String> _column_241(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'event_type',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<String> _column_242(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'from_status',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<String> _column_243(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'to_status',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+    );
+i1.GeneratedColumn<String> _column_244(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'actor_user_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      defaultConstraints: i1.GeneratedColumn.constraintIsAlways(
+        'REFERENCES app_users (id) ON DELETE RESTRICT',
+      ),
+    );
+i1.GeneratedColumn<String> _column_245(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'reason',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
@@ -8920,6 +10701,7 @@ i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
   required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
   required Future<void> Function(i1.Migrator m, Schema8 schema) from7To8,
+  required Future<void> Function(i1.Migrator m, Schema9 schema) from8To9,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -8958,6 +10740,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from7To8(migrator, schema);
         return 8;
+      case 8:
+        final schema = Schema9(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from8To9(migrator, schema);
+        return 9;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -8972,6 +10759,7 @@ i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
   required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
   required Future<void> Function(i1.Migrator m, Schema8 schema) from7To8,
+  required Future<void> Function(i1.Migrator m, Schema9 schema) from8To9,
 }) => i0.VersionedSchema.stepByStepHelper(
   step: migrationSteps(
     from1To2: from1To2,
@@ -8981,5 +10769,6 @@ i1.OnUpgrade stepByStep({
     from5To6: from5To6,
     from6To7: from6To7,
     from7To8: from7To8,
+    from8To9: from8To9,
   ),
 );

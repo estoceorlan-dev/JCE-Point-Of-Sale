@@ -127,6 +127,33 @@ export async function applyBranchCommand(
     return {branch: result.rows[0]};
   }
 
+  if (command.commandType === "branch.transfer_policy.configure") {
+    const threshold = optionalInteger(
+      command.payload,
+      "approvalThresholdMilli",
+    );
+    if (threshold !== null && threshold < 0) {
+      throw new RemoteCommandError(
+        "invalid-argument",
+        "The transfer approval threshold is invalid.",
+      );
+    }
+    const result = await client.query(
+      `UPDATE branches SET
+         transfer_approval_threshold_milli = $3,
+         version = version + 1,
+         updated_at = now()
+       WHERE id = $1 AND organization_id = $2
+         AND is_active = true AND deleted_at IS NULL
+       RETURNING id, version`,
+      [command.branchId, command.organizationId, threshold],
+    );
+    if (result.rowCount !== 1) {
+      throw new RemoteCommandError("not-found", "The active branch does not exist.");
+    }
+    return {branch: result.rows[0]};
+  }
+
   throw new RemoteCommandError(
     "invalid-argument",
     `Unsupported branch command: ${command.commandType}.`,

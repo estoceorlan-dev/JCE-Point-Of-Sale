@@ -21,6 +21,7 @@ const permissionByCommandPrefix: ReadonlyArray<[string, string]> = [
   ["register", "registers.manage"],
   ["shift", "sales.process"],
   ["sale", "sales.process"],
+  ["transfer", "inventory.manage"],
 ];
 
 const permissionByCommand: Readonly<Record<string, string>> = {
@@ -28,6 +29,10 @@ const permissionByCommand: Readonly<Record<string, string>> = {
   "branch.shift_policy.update": "registers.manage",
   "branch.discount_policy.update": "settings.manage",
   "branch.correction_policy.update": "settings.manage",
+  "branch.transfer_policy.configure": "settings.manage",
+  "transfer.approve": "transfers.approve",
+  "transfer.reject": "transfers.approve",
+  "transfer.correct_receipt": "transfers.approve",
   "sale.return": "sales.returns.process",
   "sale.void": "sales.returns.process",
 };

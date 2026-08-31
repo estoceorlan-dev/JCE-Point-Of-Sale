@@ -4347,6 +4347,21 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
     requiredDuringInsert: false,
     defaultValue: const Constant<int>(15),
   );
+  static const VerificationMeta _transferApprovalThresholdMilliMeta =
+      const VerificationMeta('transferApprovalThresholdMilli');
+  @override
+  late final GeneratedColumn<int> transferApprovalThresholdMilli =
+      GeneratedColumn<int>(
+        'transfer_approval_threshold_milli',
+        aliasedName,
+        true,
+        check: () => const CustomExpression<bool>(
+          'transfer_approval_threshold_milli IS NULL OR '
+          'transfer_approval_threshold_milli >= 0',
+        ),
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -4396,6 +4411,7 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
     discountApprovalThresholdBasisPoints,
     returnApprovalThresholdMinor,
     voidWindowMinutes,
+    transferApprovalThresholdMilli,
     createdAt,
     updatedAt,
     deletedAt,
@@ -4528,6 +4544,15 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
         ),
       );
     }
+    if (data.containsKey('transfer_approval_threshold_milli')) {
+      context.handle(
+        _transferApprovalThresholdMilliMeta,
+        transferApprovalThresholdMilli.isAcceptableOrUnknown(
+          data['transfer_approval_threshold_milli']!,
+          _transferApprovalThresholdMilliMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -4620,6 +4645,10 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
         DriftSqlType.int,
         data['${effectivePrefix}void_window_minutes'],
       )!,
+      transferApprovalThresholdMilli: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}transfer_approval_threshold_milli'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -4656,6 +4685,7 @@ class Branche extends DataClass implements Insertable<Branche> {
   final int? discountApprovalThresholdBasisPoints;
   final int? returnApprovalThresholdMinor;
   final int voidWindowMinutes;
+  final int? transferApprovalThresholdMilli;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -4674,6 +4704,7 @@ class Branche extends DataClass implements Insertable<Branche> {
     this.discountApprovalThresholdBasisPoints,
     this.returnApprovalThresholdMinor,
     required this.voidWindowMinutes,
+    this.transferApprovalThresholdMilli,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -4715,6 +4746,11 @@ class Branche extends DataClass implements Insertable<Branche> {
       );
     }
     map['void_window_minutes'] = Variable<int>(voidWindowMinutes);
+    if (!nullToAbsent || transferApprovalThresholdMilli != null) {
+      map['transfer_approval_threshold_milli'] = Variable<int>(
+        transferApprovalThresholdMilli,
+      );
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -4751,6 +4787,10 @@ class Branche extends DataClass implements Insertable<Branche> {
           ? const Value.absent()
           : Value(returnApprovalThresholdMinor),
       voidWindowMinutes: Value(voidWindowMinutes),
+      transferApprovalThresholdMilli:
+          transferApprovalThresholdMilli == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transferApprovalThresholdMilli),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -4791,6 +4831,9 @@ class Branche extends DataClass implements Insertable<Branche> {
         json['returnApprovalThresholdMinor'],
       ),
       voidWindowMinutes: serializer.fromJson<int>(json['voidWindowMinutes']),
+      transferApprovalThresholdMilli: serializer.fromJson<int?>(
+        json['transferApprovalThresholdMilli'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -4826,6 +4869,9 @@ class Branche extends DataClass implements Insertable<Branche> {
         returnApprovalThresholdMinor,
       ),
       'voidWindowMinutes': serializer.toJson<int>(voidWindowMinutes),
+      'transferApprovalThresholdMilli': serializer.toJson<int?>(
+        transferApprovalThresholdMilli,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -4847,6 +4893,7 @@ class Branche extends DataClass implements Insertable<Branche> {
     Value<int?> discountApprovalThresholdBasisPoints = const Value.absent(),
     Value<int?> returnApprovalThresholdMinor = const Value.absent(),
     int? voidWindowMinutes,
+    Value<int?> transferApprovalThresholdMilli = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -4877,6 +4924,9 @@ class Branche extends DataClass implements Insertable<Branche> {
         ? returnApprovalThresholdMinor.value
         : this.returnApprovalThresholdMinor,
     voidWindowMinutes: voidWindowMinutes ?? this.voidWindowMinutes,
+    transferApprovalThresholdMilli: transferApprovalThresholdMilli.present
+        ? transferApprovalThresholdMilli.value
+        : this.transferApprovalThresholdMilli,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -4919,6 +4969,10 @@ class Branche extends DataClass implements Insertable<Branche> {
       voidWindowMinutes: data.voidWindowMinutes.present
           ? data.voidWindowMinutes.value
           : this.voidWindowMinutes,
+      transferApprovalThresholdMilli:
+          data.transferApprovalThresholdMilli.present
+          ? data.transferApprovalThresholdMilli.value
+          : this.transferApprovalThresholdMilli,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -4952,6 +5006,9 @@ class Branche extends DataClass implements Insertable<Branche> {
             'returnApprovalThresholdMinor: $returnApprovalThresholdMinor, ',
           )
           ..write('voidWindowMinutes: $voidWindowMinutes, ')
+          ..write(
+            'transferApprovalThresholdMilli: $transferApprovalThresholdMilli, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -4975,6 +5032,7 @@ class Branche extends DataClass implements Insertable<Branche> {
     discountApprovalThresholdBasisPoints,
     returnApprovalThresholdMinor,
     voidWindowMinutes,
+    transferApprovalThresholdMilli,
     createdAt,
     updatedAt,
     deletedAt,
@@ -5002,6 +5060,8 @@ class Branche extends DataClass implements Insertable<Branche> {
           other.returnApprovalThresholdMinor ==
               this.returnApprovalThresholdMinor &&
           other.voidWindowMinutes == this.voidWindowMinutes &&
+          other.transferApprovalThresholdMilli ==
+              this.transferApprovalThresholdMilli &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -5022,6 +5082,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
   final Value<int?> discountApprovalThresholdBasisPoints;
   final Value<int?> returnApprovalThresholdMinor;
   final Value<int> voidWindowMinutes;
+  final Value<int?> transferApprovalThresholdMilli;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -5041,6 +5102,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     this.discountApprovalThresholdBasisPoints = const Value.absent(),
     this.returnApprovalThresholdMinor = const Value.absent(),
     this.voidWindowMinutes = const Value.absent(),
+    this.transferApprovalThresholdMilli = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -5061,6 +5123,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     this.discountApprovalThresholdBasisPoints = const Value.absent(),
     this.returnApprovalThresholdMinor = const Value.absent(),
     this.voidWindowMinutes = const Value.absent(),
+    this.transferApprovalThresholdMilli = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -5086,6 +5149,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     Expression<int>? discountApprovalThresholdBasisPoints,
     Expression<int>? returnApprovalThresholdMinor,
     Expression<int>? voidWindowMinutes,
+    Expression<int>? transferApprovalThresholdMilli,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -5115,6 +5179,8 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
       if (returnApprovalThresholdMinor != null)
         'return_approval_threshold_minor': returnApprovalThresholdMinor,
       if (voidWindowMinutes != null) 'void_window_minutes': voidWindowMinutes,
+      if (transferApprovalThresholdMilli != null)
+        'transfer_approval_threshold_milli': transferApprovalThresholdMilli,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -5137,6 +5203,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     Value<int?>? discountApprovalThresholdBasisPoints,
     Value<int?>? returnApprovalThresholdMinor,
     Value<int>? voidWindowMinutes,
+    Value<int?>? transferApprovalThresholdMilli,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -5166,6 +5233,8 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
       returnApprovalThresholdMinor:
           returnApprovalThresholdMinor ?? this.returnApprovalThresholdMinor,
       voidWindowMinutes: voidWindowMinutes ?? this.voidWindowMinutes,
+      transferApprovalThresholdMilli:
+          transferApprovalThresholdMilli ?? this.transferApprovalThresholdMilli,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -5230,6 +5299,11 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     if (voidWindowMinutes.present) {
       map['void_window_minutes'] = Variable<int>(voidWindowMinutes.value);
     }
+    if (transferApprovalThresholdMilli.present) {
+      map['transfer_approval_threshold_milli'] = Variable<int>(
+        transferApprovalThresholdMilli.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -5272,6 +5346,9 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
             'returnApprovalThresholdMinor: $returnApprovalThresholdMinor, ',
           )
           ..write('voidWindowMinutes: $voidWindowMinutes, ')
+          ..write(
+            'transferApprovalThresholdMilli: $transferApprovalThresholdMilli, ',
+          )
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -29515,6 +29592,2887 @@ class RefundPaymentsCompanion extends UpdateCompanion<RefundPayment> {
   }
 }
 
+class $StockTransfersTable extends StockTransfers
+    with TableInfo<$StockTransfersTable, StockTransfer> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StockTransfersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _sourceBranchIdMeta = const VerificationMeta(
+    'sourceBranchId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceBranchId = GeneratedColumn<String>(
+    'source_branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _destinationBranchIdMeta =
+      const VerificationMeta('destinationBranchId');
+  @override
+  late final GeneratedColumn<String> destinationBranchId =
+      GeneratedColumn<String>(
+        'destination_branch_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _transferNumberMeta = const VerificationMeta(
+    'transferNumber',
+  );
+  @override
+  late final GeneratedColumn<String> transferNumber = GeneratedColumn<String>(
+    'transfer_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>(
+      "status IN ('draft', 'submitted', 'approved', 'rejected', "
+      "'shipped', 'received', 'cancelled')",
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _approvalRequiredMeta = const VerificationMeta(
+    'approvalRequired',
+  );
+  @override
+  late final GeneratedColumn<bool> approvalRequired = GeneratedColumn<bool>(
+    'approval_required',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("approval_required" IN (0, 1))',
+    ),
+    defaultValue: const Constant<bool>(false),
+  );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByUserIdMeta = const VerificationMeta(
+    'createdByUserId',
+  );
+  @override
+  late final GeneratedColumn<String> createdByUserId = GeneratedColumn<String>(
+    'created_by_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES app_users (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _approvedByUserIdMeta = const VerificationMeta(
+    'approvedByUserId',
+  );
+  @override
+  late final GeneratedColumn<String> approvedByUserId = GeneratedColumn<String>(
+    'approved_by_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES app_users (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _rejectionReasonMeta = const VerificationMeta(
+    'rejectionReason',
+  );
+  @override
+  late final GeneratedColumn<String> rejectionReason = GeneratedColumn<String>(
+    'rejection_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cancellationReasonMeta =
+      const VerificationMeta('cancellationReason');
+  @override
+  late final GeneratedColumn<String> cancellationReason =
+      GeneratedColumn<String>(
+        'cancellation_reason',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _submittedAtMeta = const VerificationMeta(
+    'submittedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> submittedAt = GeneratedColumn<DateTime>(
+    'submitted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _approvedAtMeta = const VerificationMeta(
+    'approvedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> approvedAt = GeneratedColumn<DateTime>(
+    'approved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _shippedAtMeta = const VerificationMeta(
+    'shippedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> shippedAt = GeneratedColumn<DateTime>(
+    'shipped_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _receivedAtMeta = const VerificationMeta(
+    'receivedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> receivedAt = GeneratedColumn<DateTime>(
+    'received_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cancelledAtMeta = const VerificationMeta(
+    'cancelledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> cancelledAt = GeneratedColumn<DateTime>(
+    'cancelled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    sourceBranchId,
+    destinationBranchId,
+    transferNumber,
+    status,
+    approvalRequired,
+    notes,
+    createdByUserId,
+    approvedByUserId,
+    rejectionReason,
+    cancellationReason,
+    submittedAt,
+    approvedAt,
+    shippedAt,
+    receivedAt,
+    cancelledAt,
+    version,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stock_transfers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StockTransfer> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('source_branch_id')) {
+      context.handle(
+        _sourceBranchIdMeta,
+        sourceBranchId.isAcceptableOrUnknown(
+          data['source_branch_id']!,
+          _sourceBranchIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceBranchIdMeta);
+    }
+    if (data.containsKey('destination_branch_id')) {
+      context.handle(
+        _destinationBranchIdMeta,
+        destinationBranchId.isAcceptableOrUnknown(
+          data['destination_branch_id']!,
+          _destinationBranchIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_destinationBranchIdMeta);
+    }
+    if (data.containsKey('transfer_number')) {
+      context.handle(
+        _transferNumberMeta,
+        transferNumber.isAcceptableOrUnknown(
+          data['transfer_number']!,
+          _transferNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_transferNumberMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('approval_required')) {
+      context.handle(
+        _approvalRequiredMeta,
+        approvalRequired.isAcceptableOrUnknown(
+          data['approval_required']!,
+          _approvalRequiredMeta,
+        ),
+      );
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
+    if (data.containsKey('created_by_user_id')) {
+      context.handle(
+        _createdByUserIdMeta,
+        createdByUserId.isAcceptableOrUnknown(
+          data['created_by_user_id']!,
+          _createdByUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdByUserIdMeta);
+    }
+    if (data.containsKey('approved_by_user_id')) {
+      context.handle(
+        _approvedByUserIdMeta,
+        approvedByUserId.isAcceptableOrUnknown(
+          data['approved_by_user_id']!,
+          _approvedByUserIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rejection_reason')) {
+      context.handle(
+        _rejectionReasonMeta,
+        rejectionReason.isAcceptableOrUnknown(
+          data['rejection_reason']!,
+          _rejectionReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cancellation_reason')) {
+      context.handle(
+        _cancellationReasonMeta,
+        cancellationReason.isAcceptableOrUnknown(
+          data['cancellation_reason']!,
+          _cancellationReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('submitted_at')) {
+      context.handle(
+        _submittedAtMeta,
+        submittedAt.isAcceptableOrUnknown(
+          data['submitted_at']!,
+          _submittedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('approved_at')) {
+      context.handle(
+        _approvedAtMeta,
+        approvedAt.isAcceptableOrUnknown(data['approved_at']!, _approvedAtMeta),
+      );
+    }
+    if (data.containsKey('shipped_at')) {
+      context.handle(
+        _shippedAtMeta,
+        shippedAt.isAcceptableOrUnknown(data['shipped_at']!, _shippedAtMeta),
+      );
+    }
+    if (data.containsKey('received_at')) {
+      context.handle(
+        _receivedAtMeta,
+        receivedAt.isAcceptableOrUnknown(data['received_at']!, _receivedAtMeta),
+      );
+    }
+    if (data.containsKey('cancelled_at')) {
+      context.handle(
+        _cancelledAtMeta,
+        cancelledAt.isAcceptableOrUnknown(
+          data['cancelled_at']!,
+          _cancelledAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {organizationId, transferNumber},
+    {id, organizationId},
+  ];
+  @override
+  StockTransfer map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StockTransfer(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      sourceBranchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_branch_id'],
+      )!,
+      destinationBranchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}destination_branch_id'],
+      )!,
+      transferNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transfer_number'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      approvalRequired: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}approval_required'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      ),
+      createdByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by_user_id'],
+      )!,
+      approvedByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}approved_by_user_id'],
+      ),
+      rejectionReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rejection_reason'],
+      ),
+      cancellationReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cancellation_reason'],
+      ),
+      submittedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}submitted_at'],
+      ),
+      approvedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}approved_at'],
+      ),
+      shippedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}shipped_at'],
+      ),
+      receivedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}received_at'],
+      ),
+      cancelledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cancelled_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $StockTransfersTable createAlias(String alias) {
+    return $StockTransfersTable(attachedDatabase, alias);
+  }
+}
+
+class StockTransfer extends DataClass implements Insertable<StockTransfer> {
+  final String id;
+  final String organizationId;
+  final String sourceBranchId;
+  final String destinationBranchId;
+  final String transferNumber;
+  final String status;
+  final bool approvalRequired;
+  final String? notes;
+  final String createdByUserId;
+  final String? approvedByUserId;
+  final String? rejectionReason;
+  final String? cancellationReason;
+  final DateTime? submittedAt;
+  final DateTime? approvedAt;
+  final DateTime? shippedAt;
+  final DateTime? receivedAt;
+  final DateTime? cancelledAt;
+  final int version;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const StockTransfer({
+    required this.id,
+    required this.organizationId,
+    required this.sourceBranchId,
+    required this.destinationBranchId,
+    required this.transferNumber,
+    required this.status,
+    required this.approvalRequired,
+    this.notes,
+    required this.createdByUserId,
+    this.approvedByUserId,
+    this.rejectionReason,
+    this.cancellationReason,
+    this.submittedAt,
+    this.approvedAt,
+    this.shippedAt,
+    this.receivedAt,
+    this.cancelledAt,
+    required this.version,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['source_branch_id'] = Variable<String>(sourceBranchId);
+    map['destination_branch_id'] = Variable<String>(destinationBranchId);
+    map['transfer_number'] = Variable<String>(transferNumber);
+    map['status'] = Variable<String>(status);
+    map['approval_required'] = Variable<bool>(approvalRequired);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['created_by_user_id'] = Variable<String>(createdByUserId);
+    if (!nullToAbsent || approvedByUserId != null) {
+      map['approved_by_user_id'] = Variable<String>(approvedByUserId);
+    }
+    if (!nullToAbsent || rejectionReason != null) {
+      map['rejection_reason'] = Variable<String>(rejectionReason);
+    }
+    if (!nullToAbsent || cancellationReason != null) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason);
+    }
+    if (!nullToAbsent || submittedAt != null) {
+      map['submitted_at'] = Variable<DateTime>(submittedAt);
+    }
+    if (!nullToAbsent || approvedAt != null) {
+      map['approved_at'] = Variable<DateTime>(approvedAt);
+    }
+    if (!nullToAbsent || shippedAt != null) {
+      map['shipped_at'] = Variable<DateTime>(shippedAt);
+    }
+    if (!nullToAbsent || receivedAt != null) {
+      map['received_at'] = Variable<DateTime>(receivedAt);
+    }
+    if (!nullToAbsent || cancelledAt != null) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt);
+    }
+    map['version'] = Variable<int>(version);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  StockTransfersCompanion toCompanion(bool nullToAbsent) {
+    return StockTransfersCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      sourceBranchId: Value(sourceBranchId),
+      destinationBranchId: Value(destinationBranchId),
+      transferNumber: Value(transferNumber),
+      status: Value(status),
+      approvalRequired: Value(approvalRequired),
+      notes: notes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(notes),
+      createdByUserId: Value(createdByUserId),
+      approvedByUserId: approvedByUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(approvedByUserId),
+      rejectionReason: rejectionReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rejectionReason),
+      cancellationReason: cancellationReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancellationReason),
+      submittedAt: submittedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(submittedAt),
+      approvedAt: approvedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(approvedAt),
+      shippedAt: shippedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shippedAt),
+      receivedAt: receivedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receivedAt),
+      cancelledAt: cancelledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledAt),
+      version: Value(version),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory StockTransfer.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StockTransfer(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      sourceBranchId: serializer.fromJson<String>(json['sourceBranchId']),
+      destinationBranchId: serializer.fromJson<String>(
+        json['destinationBranchId'],
+      ),
+      transferNumber: serializer.fromJson<String>(json['transferNumber']),
+      status: serializer.fromJson<String>(json['status']),
+      approvalRequired: serializer.fromJson<bool>(json['approvalRequired']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdByUserId: serializer.fromJson<String>(json['createdByUserId']),
+      approvedByUserId: serializer.fromJson<String?>(json['approvedByUserId']),
+      rejectionReason: serializer.fromJson<String?>(json['rejectionReason']),
+      cancellationReason: serializer.fromJson<String?>(
+        json['cancellationReason'],
+      ),
+      submittedAt: serializer.fromJson<DateTime?>(json['submittedAt']),
+      approvedAt: serializer.fromJson<DateTime?>(json['approvedAt']),
+      shippedAt: serializer.fromJson<DateTime?>(json['shippedAt']),
+      receivedAt: serializer.fromJson<DateTime?>(json['receivedAt']),
+      cancelledAt: serializer.fromJson<DateTime?>(json['cancelledAt']),
+      version: serializer.fromJson<int>(json['version']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'sourceBranchId': serializer.toJson<String>(sourceBranchId),
+      'destinationBranchId': serializer.toJson<String>(destinationBranchId),
+      'transferNumber': serializer.toJson<String>(transferNumber),
+      'status': serializer.toJson<String>(status),
+      'approvalRequired': serializer.toJson<bool>(approvalRequired),
+      'notes': serializer.toJson<String?>(notes),
+      'createdByUserId': serializer.toJson<String>(createdByUserId),
+      'approvedByUserId': serializer.toJson<String?>(approvedByUserId),
+      'rejectionReason': serializer.toJson<String?>(rejectionReason),
+      'cancellationReason': serializer.toJson<String?>(cancellationReason),
+      'submittedAt': serializer.toJson<DateTime?>(submittedAt),
+      'approvedAt': serializer.toJson<DateTime?>(approvedAt),
+      'shippedAt': serializer.toJson<DateTime?>(shippedAt),
+      'receivedAt': serializer.toJson<DateTime?>(receivedAt),
+      'cancelledAt': serializer.toJson<DateTime?>(cancelledAt),
+      'version': serializer.toJson<int>(version),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  StockTransfer copyWith({
+    String? id,
+    String? organizationId,
+    String? sourceBranchId,
+    String? destinationBranchId,
+    String? transferNumber,
+    String? status,
+    bool? approvalRequired,
+    Value<String?> notes = const Value.absent(),
+    String? createdByUserId,
+    Value<String?> approvedByUserId = const Value.absent(),
+    Value<String?> rejectionReason = const Value.absent(),
+    Value<String?> cancellationReason = const Value.absent(),
+    Value<DateTime?> submittedAt = const Value.absent(),
+    Value<DateTime?> approvedAt = const Value.absent(),
+    Value<DateTime?> shippedAt = const Value.absent(),
+    Value<DateTime?> receivedAt = const Value.absent(),
+    Value<DateTime?> cancelledAt = const Value.absent(),
+    int? version,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => StockTransfer(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    sourceBranchId: sourceBranchId ?? this.sourceBranchId,
+    destinationBranchId: destinationBranchId ?? this.destinationBranchId,
+    transferNumber: transferNumber ?? this.transferNumber,
+    status: status ?? this.status,
+    approvalRequired: approvalRequired ?? this.approvalRequired,
+    notes: notes.present ? notes.value : this.notes,
+    createdByUserId: createdByUserId ?? this.createdByUserId,
+    approvedByUserId: approvedByUserId.present
+        ? approvedByUserId.value
+        : this.approvedByUserId,
+    rejectionReason: rejectionReason.present
+        ? rejectionReason.value
+        : this.rejectionReason,
+    cancellationReason: cancellationReason.present
+        ? cancellationReason.value
+        : this.cancellationReason,
+    submittedAt: submittedAt.present ? submittedAt.value : this.submittedAt,
+    approvedAt: approvedAt.present ? approvedAt.value : this.approvedAt,
+    shippedAt: shippedAt.present ? shippedAt.value : this.shippedAt,
+    receivedAt: receivedAt.present ? receivedAt.value : this.receivedAt,
+    cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
+    version: version ?? this.version,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  StockTransfer copyWithCompanion(StockTransfersCompanion data) {
+    return StockTransfer(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      sourceBranchId: data.sourceBranchId.present
+          ? data.sourceBranchId.value
+          : this.sourceBranchId,
+      destinationBranchId: data.destinationBranchId.present
+          ? data.destinationBranchId.value
+          : this.destinationBranchId,
+      transferNumber: data.transferNumber.present
+          ? data.transferNumber.value
+          : this.transferNumber,
+      status: data.status.present ? data.status.value : this.status,
+      approvalRequired: data.approvalRequired.present
+          ? data.approvalRequired.value
+          : this.approvalRequired,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdByUserId: data.createdByUserId.present
+          ? data.createdByUserId.value
+          : this.createdByUserId,
+      approvedByUserId: data.approvedByUserId.present
+          ? data.approvedByUserId.value
+          : this.approvedByUserId,
+      rejectionReason: data.rejectionReason.present
+          ? data.rejectionReason.value
+          : this.rejectionReason,
+      cancellationReason: data.cancellationReason.present
+          ? data.cancellationReason.value
+          : this.cancellationReason,
+      submittedAt: data.submittedAt.present
+          ? data.submittedAt.value
+          : this.submittedAt,
+      approvedAt: data.approvedAt.present
+          ? data.approvedAt.value
+          : this.approvedAt,
+      shippedAt: data.shippedAt.present ? data.shippedAt.value : this.shippedAt,
+      receivedAt: data.receivedAt.present
+          ? data.receivedAt.value
+          : this.receivedAt,
+      cancelledAt: data.cancelledAt.present
+          ? data.cancelledAt.value
+          : this.cancelledAt,
+      version: data.version.present ? data.version.value : this.version,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockTransfer(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('sourceBranchId: $sourceBranchId, ')
+          ..write('destinationBranchId: $destinationBranchId, ')
+          ..write('transferNumber: $transferNumber, ')
+          ..write('status: $status, ')
+          ..write('approvalRequired: $approvalRequired, ')
+          ..write('notes: $notes, ')
+          ..write('createdByUserId: $createdByUserId, ')
+          ..write('approvedByUserId: $approvedByUserId, ')
+          ..write('rejectionReason: $rejectionReason, ')
+          ..write('cancellationReason: $cancellationReason, ')
+          ..write('submittedAt: $submittedAt, ')
+          ..write('approvedAt: $approvedAt, ')
+          ..write('shippedAt: $shippedAt, ')
+          ..write('receivedAt: $receivedAt, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    sourceBranchId,
+    destinationBranchId,
+    transferNumber,
+    status,
+    approvalRequired,
+    notes,
+    createdByUserId,
+    approvedByUserId,
+    rejectionReason,
+    cancellationReason,
+    submittedAt,
+    approvedAt,
+    shippedAt,
+    receivedAt,
+    cancelledAt,
+    version,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StockTransfer &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.sourceBranchId == this.sourceBranchId &&
+          other.destinationBranchId == this.destinationBranchId &&
+          other.transferNumber == this.transferNumber &&
+          other.status == this.status &&
+          other.approvalRequired == this.approvalRequired &&
+          other.notes == this.notes &&
+          other.createdByUserId == this.createdByUserId &&
+          other.approvedByUserId == this.approvedByUserId &&
+          other.rejectionReason == this.rejectionReason &&
+          other.cancellationReason == this.cancellationReason &&
+          other.submittedAt == this.submittedAt &&
+          other.approvedAt == this.approvedAt &&
+          other.shippedAt == this.shippedAt &&
+          other.receivedAt == this.receivedAt &&
+          other.cancelledAt == this.cancelledAt &&
+          other.version == this.version &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class StockTransfersCompanion extends UpdateCompanion<StockTransfer> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String> sourceBranchId;
+  final Value<String> destinationBranchId;
+  final Value<String> transferNumber;
+  final Value<String> status;
+  final Value<bool> approvalRequired;
+  final Value<String?> notes;
+  final Value<String> createdByUserId;
+  final Value<String?> approvedByUserId;
+  final Value<String?> rejectionReason;
+  final Value<String?> cancellationReason;
+  final Value<DateTime?> submittedAt;
+  final Value<DateTime?> approvedAt;
+  final Value<DateTime?> shippedAt;
+  final Value<DateTime?> receivedAt;
+  final Value<DateTime?> cancelledAt;
+  final Value<int> version;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const StockTransfersCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.sourceBranchId = const Value.absent(),
+    this.destinationBranchId = const Value.absent(),
+    this.transferNumber = const Value.absent(),
+    this.status = const Value.absent(),
+    this.approvalRequired = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdByUserId = const Value.absent(),
+    this.approvedByUserId = const Value.absent(),
+    this.rejectionReason = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
+    this.submittedAt = const Value.absent(),
+    this.approvedAt = const Value.absent(),
+    this.shippedAt = const Value.absent(),
+    this.receivedAt = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StockTransfersCompanion.insert({
+    required String id,
+    required String organizationId,
+    required String sourceBranchId,
+    required String destinationBranchId,
+    required String transferNumber,
+    required String status,
+    this.approvalRequired = const Value.absent(),
+    this.notes = const Value.absent(),
+    required String createdByUserId,
+    this.approvedByUserId = const Value.absent(),
+    this.rejectionReason = const Value.absent(),
+    this.cancellationReason = const Value.absent(),
+    this.submittedAt = const Value.absent(),
+    this.approvedAt = const Value.absent(),
+    this.shippedAt = const Value.absent(),
+    this.receivedAt = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.version = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       sourceBranchId = Value(sourceBranchId),
+       destinationBranchId = Value(destinationBranchId),
+       transferNumber = Value(transferNumber),
+       status = Value(status),
+       createdByUserId = Value(createdByUserId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<StockTransfer> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? sourceBranchId,
+    Expression<String>? destinationBranchId,
+    Expression<String>? transferNumber,
+    Expression<String>? status,
+    Expression<bool>? approvalRequired,
+    Expression<String>? notes,
+    Expression<String>? createdByUserId,
+    Expression<String>? approvedByUserId,
+    Expression<String>? rejectionReason,
+    Expression<String>? cancellationReason,
+    Expression<DateTime>? submittedAt,
+    Expression<DateTime>? approvedAt,
+    Expression<DateTime>? shippedAt,
+    Expression<DateTime>? receivedAt,
+    Expression<DateTime>? cancelledAt,
+    Expression<int>? version,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (sourceBranchId != null) 'source_branch_id': sourceBranchId,
+      if (destinationBranchId != null)
+        'destination_branch_id': destinationBranchId,
+      if (transferNumber != null) 'transfer_number': transferNumber,
+      if (status != null) 'status': status,
+      if (approvalRequired != null) 'approval_required': approvalRequired,
+      if (notes != null) 'notes': notes,
+      if (createdByUserId != null) 'created_by_user_id': createdByUserId,
+      if (approvedByUserId != null) 'approved_by_user_id': approvedByUserId,
+      if (rejectionReason != null) 'rejection_reason': rejectionReason,
+      if (cancellationReason != null) 'cancellation_reason': cancellationReason,
+      if (submittedAt != null) 'submitted_at': submittedAt,
+      if (approvedAt != null) 'approved_at': approvedAt,
+      if (shippedAt != null) 'shipped_at': shippedAt,
+      if (receivedAt != null) 'received_at': receivedAt,
+      if (cancelledAt != null) 'cancelled_at': cancelledAt,
+      if (version != null) 'version': version,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StockTransfersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String>? sourceBranchId,
+    Value<String>? destinationBranchId,
+    Value<String>? transferNumber,
+    Value<String>? status,
+    Value<bool>? approvalRequired,
+    Value<String?>? notes,
+    Value<String>? createdByUserId,
+    Value<String?>? approvedByUserId,
+    Value<String?>? rejectionReason,
+    Value<String?>? cancellationReason,
+    Value<DateTime?>? submittedAt,
+    Value<DateTime?>? approvedAt,
+    Value<DateTime?>? shippedAt,
+    Value<DateTime?>? receivedAt,
+    Value<DateTime?>? cancelledAt,
+    Value<int>? version,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return StockTransfersCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      sourceBranchId: sourceBranchId ?? this.sourceBranchId,
+      destinationBranchId: destinationBranchId ?? this.destinationBranchId,
+      transferNumber: transferNumber ?? this.transferNumber,
+      status: status ?? this.status,
+      approvalRequired: approvalRequired ?? this.approvalRequired,
+      notes: notes ?? this.notes,
+      createdByUserId: createdByUserId ?? this.createdByUserId,
+      approvedByUserId: approvedByUserId ?? this.approvedByUserId,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+      cancellationReason: cancellationReason ?? this.cancellationReason,
+      submittedAt: submittedAt ?? this.submittedAt,
+      approvedAt: approvedAt ?? this.approvedAt,
+      shippedAt: shippedAt ?? this.shippedAt,
+      receivedAt: receivedAt ?? this.receivedAt,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
+      version: version ?? this.version,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (sourceBranchId.present) {
+      map['source_branch_id'] = Variable<String>(sourceBranchId.value);
+    }
+    if (destinationBranchId.present) {
+      map['destination_branch_id'] = Variable<String>(
+        destinationBranchId.value,
+      );
+    }
+    if (transferNumber.present) {
+      map['transfer_number'] = Variable<String>(transferNumber.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (approvalRequired.present) {
+      map['approval_required'] = Variable<bool>(approvalRequired.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdByUserId.present) {
+      map['created_by_user_id'] = Variable<String>(createdByUserId.value);
+    }
+    if (approvedByUserId.present) {
+      map['approved_by_user_id'] = Variable<String>(approvedByUserId.value);
+    }
+    if (rejectionReason.present) {
+      map['rejection_reason'] = Variable<String>(rejectionReason.value);
+    }
+    if (cancellationReason.present) {
+      map['cancellation_reason'] = Variable<String>(cancellationReason.value);
+    }
+    if (submittedAt.present) {
+      map['submitted_at'] = Variable<DateTime>(submittedAt.value);
+    }
+    if (approvedAt.present) {
+      map['approved_at'] = Variable<DateTime>(approvedAt.value);
+    }
+    if (shippedAt.present) {
+      map['shipped_at'] = Variable<DateTime>(shippedAt.value);
+    }
+    if (receivedAt.present) {
+      map['received_at'] = Variable<DateTime>(receivedAt.value);
+    }
+    if (cancelledAt.present) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockTransfersCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('sourceBranchId: $sourceBranchId, ')
+          ..write('destinationBranchId: $destinationBranchId, ')
+          ..write('transferNumber: $transferNumber, ')
+          ..write('status: $status, ')
+          ..write('approvalRequired: $approvalRequired, ')
+          ..write('notes: $notes, ')
+          ..write('createdByUserId: $createdByUserId, ')
+          ..write('approvedByUserId: $approvedByUserId, ')
+          ..write('rejectionReason: $rejectionReason, ')
+          ..write('cancellationReason: $cancellationReason, ')
+          ..write('submittedAt: $submittedAt, ')
+          ..write('approvedAt: $approvedAt, ')
+          ..write('shippedAt: $shippedAt, ')
+          ..write('receivedAt: $receivedAt, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $StockTransferItemsTable extends StockTransferItems
+    with TableInfo<$StockTransferItemsTable, StockTransferItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StockTransferItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _transferIdMeta = const VerificationMeta(
+    'transferId',
+  );
+  @override
+  late final GeneratedColumn<String> transferId = GeneratedColumn<String>(
+    'transfer_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES stock_transfers (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<String> productId = GeneratedColumn<String>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES products (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _sourceStockLocationIdMeta =
+      const VerificationMeta('sourceStockLocationId');
+  @override
+  late final GeneratedColumn<String> sourceStockLocationId =
+      GeneratedColumn<String>(
+        'source_stock_location_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _destinationStockLocationIdMeta =
+      const VerificationMeta('destinationStockLocationId');
+  @override
+  late final GeneratedColumn<String> destinationStockLocationId =
+      GeneratedColumn<String>(
+        'destination_stock_location_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _damagedStockLocationIdMeta =
+      const VerificationMeta('damagedStockLocationId');
+  @override
+  late final GeneratedColumn<String> damagedStockLocationId =
+      GeneratedColumn<String>(
+        'damaged_stock_location_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _requestedQuantityMilliMeta =
+      const VerificationMeta('requestedQuantityMilli');
+  @override
+  late final GeneratedColumn<int> requestedQuantityMilli = GeneratedColumn<int>(
+    'requested_quantity_milli',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('requested_quantity_milli > 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shippedQuantityMilliMeta =
+      const VerificationMeta('shippedQuantityMilli');
+  @override
+  late final GeneratedColumn<int> shippedQuantityMilli = GeneratedColumn<int>(
+    'shipped_quantity_milli',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('shipped_quantity_milli >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _receivedQuantityMilliMeta =
+      const VerificationMeta('receivedQuantityMilli');
+  @override
+  late final GeneratedColumn<int> receivedQuantityMilli = GeneratedColumn<int>(
+    'received_quantity_milli',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('received_quantity_milli >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _damagedQuantityMilliMeta =
+      const VerificationMeta('damagedQuantityMilli');
+  @override
+  late final GeneratedColumn<int> damagedQuantityMilli = GeneratedColumn<int>(
+    'damaged_quantity_milli',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('damaged_quantity_milli >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _discrepancyQuantityMilliMeta =
+      const VerificationMeta('discrepancyQuantityMilli');
+  @override
+  late final GeneratedColumn<int> discrepancyQuantityMilli =
+      GeneratedColumn<int>(
+        'discrepancy_quantity_milli',
+        aliasedName,
+        false,
+        check: () =>
+            const CustomExpression<bool>('discrepancy_quantity_milli >= 0'),
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant<int>(0),
+      );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    transferId,
+    productId,
+    sourceStockLocationId,
+    destinationStockLocationId,
+    damagedStockLocationId,
+    requestedQuantityMilli,
+    shippedQuantityMilli,
+    receivedQuantityMilli,
+    damagedQuantityMilli,
+    discrepancyQuantityMilli,
+    version,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'stock_transfer_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StockTransferItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('transfer_id')) {
+      context.handle(
+        _transferIdMeta,
+        transferId.isAcceptableOrUnknown(data['transfer_id']!, _transferIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_transferIdMeta);
+    }
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productIdMeta);
+    }
+    if (data.containsKey('source_stock_location_id')) {
+      context.handle(
+        _sourceStockLocationIdMeta,
+        sourceStockLocationId.isAcceptableOrUnknown(
+          data['source_stock_location_id']!,
+          _sourceStockLocationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceStockLocationIdMeta);
+    }
+    if (data.containsKey('destination_stock_location_id')) {
+      context.handle(
+        _destinationStockLocationIdMeta,
+        destinationStockLocationId.isAcceptableOrUnknown(
+          data['destination_stock_location_id']!,
+          _destinationStockLocationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_destinationStockLocationIdMeta);
+    }
+    if (data.containsKey('damaged_stock_location_id')) {
+      context.handle(
+        _damagedStockLocationIdMeta,
+        damagedStockLocationId.isAcceptableOrUnknown(
+          data['damaged_stock_location_id']!,
+          _damagedStockLocationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('requested_quantity_milli')) {
+      context.handle(
+        _requestedQuantityMilliMeta,
+        requestedQuantityMilli.isAcceptableOrUnknown(
+          data['requested_quantity_milli']!,
+          _requestedQuantityMilliMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_requestedQuantityMilliMeta);
+    }
+    if (data.containsKey('shipped_quantity_milli')) {
+      context.handle(
+        _shippedQuantityMilliMeta,
+        shippedQuantityMilli.isAcceptableOrUnknown(
+          data['shipped_quantity_milli']!,
+          _shippedQuantityMilliMeta,
+        ),
+      );
+    }
+    if (data.containsKey('received_quantity_milli')) {
+      context.handle(
+        _receivedQuantityMilliMeta,
+        receivedQuantityMilli.isAcceptableOrUnknown(
+          data['received_quantity_milli']!,
+          _receivedQuantityMilliMeta,
+        ),
+      );
+    }
+    if (data.containsKey('damaged_quantity_milli')) {
+      context.handle(
+        _damagedQuantityMilliMeta,
+        damagedQuantityMilli.isAcceptableOrUnknown(
+          data['damaged_quantity_milli']!,
+          _damagedQuantityMilliMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discrepancy_quantity_milli')) {
+      context.handle(
+        _discrepancyQuantityMilliMeta,
+        discrepancyQuantityMilli.isAcceptableOrUnknown(
+          data['discrepancy_quantity_milli']!,
+          _discrepancyQuantityMilliMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {transferId, sourceStockLocationId, productId},
+  ];
+  @override
+  StockTransferItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StockTransferItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      transferId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transfer_id'],
+      )!,
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_id'],
+      )!,
+      sourceStockLocationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_stock_location_id'],
+      )!,
+      destinationStockLocationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}destination_stock_location_id'],
+      )!,
+      damagedStockLocationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}damaged_stock_location_id'],
+      ),
+      requestedQuantityMilli: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}requested_quantity_milli'],
+      )!,
+      shippedQuantityMilli: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}shipped_quantity_milli'],
+      )!,
+      receivedQuantityMilli: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}received_quantity_milli'],
+      )!,
+      damagedQuantityMilli: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}damaged_quantity_milli'],
+      )!,
+      discrepancyQuantityMilli: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}discrepancy_quantity_milli'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $StockTransferItemsTable createAlias(String alias) {
+    return $StockTransferItemsTable(attachedDatabase, alias);
+  }
+}
+
+class StockTransferItem extends DataClass
+    implements Insertable<StockTransferItem> {
+  final String id;
+  final String organizationId;
+  final String transferId;
+  final String productId;
+  final String sourceStockLocationId;
+  final String destinationStockLocationId;
+  final String? damagedStockLocationId;
+  final int requestedQuantityMilli;
+  final int shippedQuantityMilli;
+  final int receivedQuantityMilli;
+  final int damagedQuantityMilli;
+  final int discrepancyQuantityMilli;
+  final int version;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const StockTransferItem({
+    required this.id,
+    required this.organizationId,
+    required this.transferId,
+    required this.productId,
+    required this.sourceStockLocationId,
+    required this.destinationStockLocationId,
+    this.damagedStockLocationId,
+    required this.requestedQuantityMilli,
+    required this.shippedQuantityMilli,
+    required this.receivedQuantityMilli,
+    required this.damagedQuantityMilli,
+    required this.discrepancyQuantityMilli,
+    required this.version,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['transfer_id'] = Variable<String>(transferId);
+    map['product_id'] = Variable<String>(productId);
+    map['source_stock_location_id'] = Variable<String>(sourceStockLocationId);
+    map['destination_stock_location_id'] = Variable<String>(
+      destinationStockLocationId,
+    );
+    if (!nullToAbsent || damagedStockLocationId != null) {
+      map['damaged_stock_location_id'] = Variable<String>(
+        damagedStockLocationId,
+      );
+    }
+    map['requested_quantity_milli'] = Variable<int>(requestedQuantityMilli);
+    map['shipped_quantity_milli'] = Variable<int>(shippedQuantityMilli);
+    map['received_quantity_milli'] = Variable<int>(receivedQuantityMilli);
+    map['damaged_quantity_milli'] = Variable<int>(damagedQuantityMilli);
+    map['discrepancy_quantity_milli'] = Variable<int>(discrepancyQuantityMilli);
+    map['version'] = Variable<int>(version);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  StockTransferItemsCompanion toCompanion(bool nullToAbsent) {
+    return StockTransferItemsCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      transferId: Value(transferId),
+      productId: Value(productId),
+      sourceStockLocationId: Value(sourceStockLocationId),
+      destinationStockLocationId: Value(destinationStockLocationId),
+      damagedStockLocationId: damagedStockLocationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(damagedStockLocationId),
+      requestedQuantityMilli: Value(requestedQuantityMilli),
+      shippedQuantityMilli: Value(shippedQuantityMilli),
+      receivedQuantityMilli: Value(receivedQuantityMilli),
+      damagedQuantityMilli: Value(damagedQuantityMilli),
+      discrepancyQuantityMilli: Value(discrepancyQuantityMilli),
+      version: Value(version),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory StockTransferItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StockTransferItem(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      transferId: serializer.fromJson<String>(json['transferId']),
+      productId: serializer.fromJson<String>(json['productId']),
+      sourceStockLocationId: serializer.fromJson<String>(
+        json['sourceStockLocationId'],
+      ),
+      destinationStockLocationId: serializer.fromJson<String>(
+        json['destinationStockLocationId'],
+      ),
+      damagedStockLocationId: serializer.fromJson<String?>(
+        json['damagedStockLocationId'],
+      ),
+      requestedQuantityMilli: serializer.fromJson<int>(
+        json['requestedQuantityMilli'],
+      ),
+      shippedQuantityMilli: serializer.fromJson<int>(
+        json['shippedQuantityMilli'],
+      ),
+      receivedQuantityMilli: serializer.fromJson<int>(
+        json['receivedQuantityMilli'],
+      ),
+      damagedQuantityMilli: serializer.fromJson<int>(
+        json['damagedQuantityMilli'],
+      ),
+      discrepancyQuantityMilli: serializer.fromJson<int>(
+        json['discrepancyQuantityMilli'],
+      ),
+      version: serializer.fromJson<int>(json['version']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'transferId': serializer.toJson<String>(transferId),
+      'productId': serializer.toJson<String>(productId),
+      'sourceStockLocationId': serializer.toJson<String>(sourceStockLocationId),
+      'destinationStockLocationId': serializer.toJson<String>(
+        destinationStockLocationId,
+      ),
+      'damagedStockLocationId': serializer.toJson<String?>(
+        damagedStockLocationId,
+      ),
+      'requestedQuantityMilli': serializer.toJson<int>(requestedQuantityMilli),
+      'shippedQuantityMilli': serializer.toJson<int>(shippedQuantityMilli),
+      'receivedQuantityMilli': serializer.toJson<int>(receivedQuantityMilli),
+      'damagedQuantityMilli': serializer.toJson<int>(damagedQuantityMilli),
+      'discrepancyQuantityMilli': serializer.toJson<int>(
+        discrepancyQuantityMilli,
+      ),
+      'version': serializer.toJson<int>(version),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  StockTransferItem copyWith({
+    String? id,
+    String? organizationId,
+    String? transferId,
+    String? productId,
+    String? sourceStockLocationId,
+    String? destinationStockLocationId,
+    Value<String?> damagedStockLocationId = const Value.absent(),
+    int? requestedQuantityMilli,
+    int? shippedQuantityMilli,
+    int? receivedQuantityMilli,
+    int? damagedQuantityMilli,
+    int? discrepancyQuantityMilli,
+    int? version,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => StockTransferItem(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    transferId: transferId ?? this.transferId,
+    productId: productId ?? this.productId,
+    sourceStockLocationId: sourceStockLocationId ?? this.sourceStockLocationId,
+    destinationStockLocationId:
+        destinationStockLocationId ?? this.destinationStockLocationId,
+    damagedStockLocationId: damagedStockLocationId.present
+        ? damagedStockLocationId.value
+        : this.damagedStockLocationId,
+    requestedQuantityMilli:
+        requestedQuantityMilli ?? this.requestedQuantityMilli,
+    shippedQuantityMilli: shippedQuantityMilli ?? this.shippedQuantityMilli,
+    receivedQuantityMilli: receivedQuantityMilli ?? this.receivedQuantityMilli,
+    damagedQuantityMilli: damagedQuantityMilli ?? this.damagedQuantityMilli,
+    discrepancyQuantityMilli:
+        discrepancyQuantityMilli ?? this.discrepancyQuantityMilli,
+    version: version ?? this.version,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  StockTransferItem copyWithCompanion(StockTransferItemsCompanion data) {
+    return StockTransferItem(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      transferId: data.transferId.present
+          ? data.transferId.value
+          : this.transferId,
+      productId: data.productId.present ? data.productId.value : this.productId,
+      sourceStockLocationId: data.sourceStockLocationId.present
+          ? data.sourceStockLocationId.value
+          : this.sourceStockLocationId,
+      destinationStockLocationId: data.destinationStockLocationId.present
+          ? data.destinationStockLocationId.value
+          : this.destinationStockLocationId,
+      damagedStockLocationId: data.damagedStockLocationId.present
+          ? data.damagedStockLocationId.value
+          : this.damagedStockLocationId,
+      requestedQuantityMilli: data.requestedQuantityMilli.present
+          ? data.requestedQuantityMilli.value
+          : this.requestedQuantityMilli,
+      shippedQuantityMilli: data.shippedQuantityMilli.present
+          ? data.shippedQuantityMilli.value
+          : this.shippedQuantityMilli,
+      receivedQuantityMilli: data.receivedQuantityMilli.present
+          ? data.receivedQuantityMilli.value
+          : this.receivedQuantityMilli,
+      damagedQuantityMilli: data.damagedQuantityMilli.present
+          ? data.damagedQuantityMilli.value
+          : this.damagedQuantityMilli,
+      discrepancyQuantityMilli: data.discrepancyQuantityMilli.present
+          ? data.discrepancyQuantityMilli.value
+          : this.discrepancyQuantityMilli,
+      version: data.version.present ? data.version.value : this.version,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockTransferItem(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('transferId: $transferId, ')
+          ..write('productId: $productId, ')
+          ..write('sourceStockLocationId: $sourceStockLocationId, ')
+          ..write('destinationStockLocationId: $destinationStockLocationId, ')
+          ..write('damagedStockLocationId: $damagedStockLocationId, ')
+          ..write('requestedQuantityMilli: $requestedQuantityMilli, ')
+          ..write('shippedQuantityMilli: $shippedQuantityMilli, ')
+          ..write('receivedQuantityMilli: $receivedQuantityMilli, ')
+          ..write('damagedQuantityMilli: $damagedQuantityMilli, ')
+          ..write('discrepancyQuantityMilli: $discrepancyQuantityMilli, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    transferId,
+    productId,
+    sourceStockLocationId,
+    destinationStockLocationId,
+    damagedStockLocationId,
+    requestedQuantityMilli,
+    shippedQuantityMilli,
+    receivedQuantityMilli,
+    damagedQuantityMilli,
+    discrepancyQuantityMilli,
+    version,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StockTransferItem &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.transferId == this.transferId &&
+          other.productId == this.productId &&
+          other.sourceStockLocationId == this.sourceStockLocationId &&
+          other.destinationStockLocationId == this.destinationStockLocationId &&
+          other.damagedStockLocationId == this.damagedStockLocationId &&
+          other.requestedQuantityMilli == this.requestedQuantityMilli &&
+          other.shippedQuantityMilli == this.shippedQuantityMilli &&
+          other.receivedQuantityMilli == this.receivedQuantityMilli &&
+          other.damagedQuantityMilli == this.damagedQuantityMilli &&
+          other.discrepancyQuantityMilli == this.discrepancyQuantityMilli &&
+          other.version == this.version &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class StockTransferItemsCompanion extends UpdateCompanion<StockTransferItem> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String> transferId;
+  final Value<String> productId;
+  final Value<String> sourceStockLocationId;
+  final Value<String> destinationStockLocationId;
+  final Value<String?> damagedStockLocationId;
+  final Value<int> requestedQuantityMilli;
+  final Value<int> shippedQuantityMilli;
+  final Value<int> receivedQuantityMilli;
+  final Value<int> damagedQuantityMilli;
+  final Value<int> discrepancyQuantityMilli;
+  final Value<int> version;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const StockTransferItemsCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.transferId = const Value.absent(),
+    this.productId = const Value.absent(),
+    this.sourceStockLocationId = const Value.absent(),
+    this.destinationStockLocationId = const Value.absent(),
+    this.damagedStockLocationId = const Value.absent(),
+    this.requestedQuantityMilli = const Value.absent(),
+    this.shippedQuantityMilli = const Value.absent(),
+    this.receivedQuantityMilli = const Value.absent(),
+    this.damagedQuantityMilli = const Value.absent(),
+    this.discrepancyQuantityMilli = const Value.absent(),
+    this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StockTransferItemsCompanion.insert({
+    required String id,
+    required String organizationId,
+    required String transferId,
+    required String productId,
+    required String sourceStockLocationId,
+    required String destinationStockLocationId,
+    this.damagedStockLocationId = const Value.absent(),
+    required int requestedQuantityMilli,
+    this.shippedQuantityMilli = const Value.absent(),
+    this.receivedQuantityMilli = const Value.absent(),
+    this.damagedQuantityMilli = const Value.absent(),
+    this.discrepancyQuantityMilli = const Value.absent(),
+    this.version = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       transferId = Value(transferId),
+       productId = Value(productId),
+       sourceStockLocationId = Value(sourceStockLocationId),
+       destinationStockLocationId = Value(destinationStockLocationId),
+       requestedQuantityMilli = Value(requestedQuantityMilli),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<StockTransferItem> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? transferId,
+    Expression<String>? productId,
+    Expression<String>? sourceStockLocationId,
+    Expression<String>? destinationStockLocationId,
+    Expression<String>? damagedStockLocationId,
+    Expression<int>? requestedQuantityMilli,
+    Expression<int>? shippedQuantityMilli,
+    Expression<int>? receivedQuantityMilli,
+    Expression<int>? damagedQuantityMilli,
+    Expression<int>? discrepancyQuantityMilli,
+    Expression<int>? version,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (transferId != null) 'transfer_id': transferId,
+      if (productId != null) 'product_id': productId,
+      if (sourceStockLocationId != null)
+        'source_stock_location_id': sourceStockLocationId,
+      if (destinationStockLocationId != null)
+        'destination_stock_location_id': destinationStockLocationId,
+      if (damagedStockLocationId != null)
+        'damaged_stock_location_id': damagedStockLocationId,
+      if (requestedQuantityMilli != null)
+        'requested_quantity_milli': requestedQuantityMilli,
+      if (shippedQuantityMilli != null)
+        'shipped_quantity_milli': shippedQuantityMilli,
+      if (receivedQuantityMilli != null)
+        'received_quantity_milli': receivedQuantityMilli,
+      if (damagedQuantityMilli != null)
+        'damaged_quantity_milli': damagedQuantityMilli,
+      if (discrepancyQuantityMilli != null)
+        'discrepancy_quantity_milli': discrepancyQuantityMilli,
+      if (version != null) 'version': version,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StockTransferItemsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String>? transferId,
+    Value<String>? productId,
+    Value<String>? sourceStockLocationId,
+    Value<String>? destinationStockLocationId,
+    Value<String?>? damagedStockLocationId,
+    Value<int>? requestedQuantityMilli,
+    Value<int>? shippedQuantityMilli,
+    Value<int>? receivedQuantityMilli,
+    Value<int>? damagedQuantityMilli,
+    Value<int>? discrepancyQuantityMilli,
+    Value<int>? version,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return StockTransferItemsCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      transferId: transferId ?? this.transferId,
+      productId: productId ?? this.productId,
+      sourceStockLocationId:
+          sourceStockLocationId ?? this.sourceStockLocationId,
+      destinationStockLocationId:
+          destinationStockLocationId ?? this.destinationStockLocationId,
+      damagedStockLocationId:
+          damagedStockLocationId ?? this.damagedStockLocationId,
+      requestedQuantityMilli:
+          requestedQuantityMilli ?? this.requestedQuantityMilli,
+      shippedQuantityMilli: shippedQuantityMilli ?? this.shippedQuantityMilli,
+      receivedQuantityMilli:
+          receivedQuantityMilli ?? this.receivedQuantityMilli,
+      damagedQuantityMilli: damagedQuantityMilli ?? this.damagedQuantityMilli,
+      discrepancyQuantityMilli:
+          discrepancyQuantityMilli ?? this.discrepancyQuantityMilli,
+      version: version ?? this.version,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (transferId.present) {
+      map['transfer_id'] = Variable<String>(transferId.value);
+    }
+    if (productId.present) {
+      map['product_id'] = Variable<String>(productId.value);
+    }
+    if (sourceStockLocationId.present) {
+      map['source_stock_location_id'] = Variable<String>(
+        sourceStockLocationId.value,
+      );
+    }
+    if (destinationStockLocationId.present) {
+      map['destination_stock_location_id'] = Variable<String>(
+        destinationStockLocationId.value,
+      );
+    }
+    if (damagedStockLocationId.present) {
+      map['damaged_stock_location_id'] = Variable<String>(
+        damagedStockLocationId.value,
+      );
+    }
+    if (requestedQuantityMilli.present) {
+      map['requested_quantity_milli'] = Variable<int>(
+        requestedQuantityMilli.value,
+      );
+    }
+    if (shippedQuantityMilli.present) {
+      map['shipped_quantity_milli'] = Variable<int>(shippedQuantityMilli.value);
+    }
+    if (receivedQuantityMilli.present) {
+      map['received_quantity_milli'] = Variable<int>(
+        receivedQuantityMilli.value,
+      );
+    }
+    if (damagedQuantityMilli.present) {
+      map['damaged_quantity_milli'] = Variable<int>(damagedQuantityMilli.value);
+    }
+    if (discrepancyQuantityMilli.present) {
+      map['discrepancy_quantity_milli'] = Variable<int>(
+        discrepancyQuantityMilli.value,
+      );
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StockTransferItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('transferId: $transferId, ')
+          ..write('productId: $productId, ')
+          ..write('sourceStockLocationId: $sourceStockLocationId, ')
+          ..write('destinationStockLocationId: $destinationStockLocationId, ')
+          ..write('damagedStockLocationId: $damagedStockLocationId, ')
+          ..write('requestedQuantityMilli: $requestedQuantityMilli, ')
+          ..write('shippedQuantityMilli: $shippedQuantityMilli, ')
+          ..write('receivedQuantityMilli: $receivedQuantityMilli, ')
+          ..write('damagedQuantityMilli: $damagedQuantityMilli, ')
+          ..write('discrepancyQuantityMilli: $discrepancyQuantityMilli, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TransferEventsTable extends TransferEvents
+    with TableInfo<$TransferEventsTable, TransferEvent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TransferEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _transferIdMeta = const VerificationMeta(
+    'transferId',
+  );
+  @override
+  late final GeneratedColumn<String> transferId = GeneratedColumn<String>(
+    'transfer_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES stock_transfers (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _operationIdMeta = const VerificationMeta(
+    'operationId',
+  );
+  @override
+  late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
+    'operation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _eventTypeMeta = const VerificationMeta(
+    'eventType',
+  );
+  @override
+  late final GeneratedColumn<String> eventType = GeneratedColumn<String>(
+    'event_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fromStatusMeta = const VerificationMeta(
+    'fromStatus',
+  );
+  @override
+  late final GeneratedColumn<String> fromStatus = GeneratedColumn<String>(
+    'from_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _toStatusMeta = const VerificationMeta(
+    'toStatus',
+  );
+  @override
+  late final GeneratedColumn<String> toStatus = GeneratedColumn<String>(
+    'to_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _actorUserIdMeta = const VerificationMeta(
+    'actorUserId',
+  );
+  @override
+  late final GeneratedColumn<String> actorUserId = GeneratedColumn<String>(
+    'actor_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES app_users (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _reasonMeta = const VerificationMeta('reason');
+  @override
+  late final GeneratedColumn<String> reason = GeneratedColumn<String>(
+    'reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _metadataJsonMeta = const VerificationMeta(
+    'metadataJson',
+  );
+  @override
+  late final GeneratedColumn<String> metadataJson = GeneratedColumn<String>(
+    'metadata_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<String>('{}'),
+  );
+  static const VerificationMeta _occurredAtMeta = const VerificationMeta(
+    'occurredAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> occurredAt = GeneratedColumn<DateTime>(
+    'occurred_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    transferId,
+    operationId,
+    eventType,
+    fromStatus,
+    toStatus,
+    actorUserId,
+    reason,
+    metadataJson,
+    occurredAt,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'transfer_events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TransferEvent> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('transfer_id')) {
+      context.handle(
+        _transferIdMeta,
+        transferId.isAcceptableOrUnknown(data['transfer_id']!, _transferIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_transferIdMeta);
+    }
+    if (data.containsKey('operation_id')) {
+      context.handle(
+        _operationIdMeta,
+        operationId.isAcceptableOrUnknown(
+          data['operation_id']!,
+          _operationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_operationIdMeta);
+    }
+    if (data.containsKey('event_type')) {
+      context.handle(
+        _eventTypeMeta,
+        eventType.isAcceptableOrUnknown(data['event_type']!, _eventTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_eventTypeMeta);
+    }
+    if (data.containsKey('from_status')) {
+      context.handle(
+        _fromStatusMeta,
+        fromStatus.isAcceptableOrUnknown(data['from_status']!, _fromStatusMeta),
+      );
+    }
+    if (data.containsKey('to_status')) {
+      context.handle(
+        _toStatusMeta,
+        toStatus.isAcceptableOrUnknown(data['to_status']!, _toStatusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_toStatusMeta);
+    }
+    if (data.containsKey('actor_user_id')) {
+      context.handle(
+        _actorUserIdMeta,
+        actorUserId.isAcceptableOrUnknown(
+          data['actor_user_id']!,
+          _actorUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_actorUserIdMeta);
+    }
+    if (data.containsKey('reason')) {
+      context.handle(
+        _reasonMeta,
+        reason.isAcceptableOrUnknown(data['reason']!, _reasonMeta),
+      );
+    }
+    if (data.containsKey('metadata_json')) {
+      context.handle(
+        _metadataJsonMeta,
+        metadataJson.isAcceptableOrUnknown(
+          data['metadata_json']!,
+          _metadataJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('occurred_at')) {
+      context.handle(
+        _occurredAtMeta,
+        occurredAt.isAcceptableOrUnknown(data['occurred_at']!, _occurredAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_occurredAtMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TransferEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TransferEvent(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      transferId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}transfer_id'],
+      )!,
+      operationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation_id'],
+      )!,
+      eventType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}event_type'],
+      )!,
+      fromStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}from_status'],
+      ),
+      toStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}to_status'],
+      )!,
+      actorUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}actor_user_id'],
+      )!,
+      reason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reason'],
+      ),
+      metadataJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}metadata_json'],
+      )!,
+      occurredAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}occurred_at'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TransferEventsTable createAlias(String alias) {
+    return $TransferEventsTable(attachedDatabase, alias);
+  }
+}
+
+class TransferEvent extends DataClass implements Insertable<TransferEvent> {
+  final String id;
+  final String organizationId;
+  final String transferId;
+  final String operationId;
+  final String eventType;
+  final String? fromStatus;
+  final String toStatus;
+  final String actorUserId;
+  final String? reason;
+  final String metadataJson;
+  final DateTime occurredAt;
+  final DateTime createdAt;
+  const TransferEvent({
+    required this.id,
+    required this.organizationId,
+    required this.transferId,
+    required this.operationId,
+    required this.eventType,
+    this.fromStatus,
+    required this.toStatus,
+    required this.actorUserId,
+    this.reason,
+    required this.metadataJson,
+    required this.occurredAt,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['transfer_id'] = Variable<String>(transferId);
+    map['operation_id'] = Variable<String>(operationId);
+    map['event_type'] = Variable<String>(eventType);
+    if (!nullToAbsent || fromStatus != null) {
+      map['from_status'] = Variable<String>(fromStatus);
+    }
+    map['to_status'] = Variable<String>(toStatus);
+    map['actor_user_id'] = Variable<String>(actorUserId);
+    if (!nullToAbsent || reason != null) {
+      map['reason'] = Variable<String>(reason);
+    }
+    map['metadata_json'] = Variable<String>(metadataJson);
+    map['occurred_at'] = Variable<DateTime>(occurredAt);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  TransferEventsCompanion toCompanion(bool nullToAbsent) {
+    return TransferEventsCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      transferId: Value(transferId),
+      operationId: Value(operationId),
+      eventType: Value(eventType),
+      fromStatus: fromStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fromStatus),
+      toStatus: Value(toStatus),
+      actorUserId: Value(actorUserId),
+      reason: reason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reason),
+      metadataJson: Value(metadataJson),
+      occurredAt: Value(occurredAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory TransferEvent.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TransferEvent(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      transferId: serializer.fromJson<String>(json['transferId']),
+      operationId: serializer.fromJson<String>(json['operationId']),
+      eventType: serializer.fromJson<String>(json['eventType']),
+      fromStatus: serializer.fromJson<String?>(json['fromStatus']),
+      toStatus: serializer.fromJson<String>(json['toStatus']),
+      actorUserId: serializer.fromJson<String>(json['actorUserId']),
+      reason: serializer.fromJson<String?>(json['reason']),
+      metadataJson: serializer.fromJson<String>(json['metadataJson']),
+      occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'transferId': serializer.toJson<String>(transferId),
+      'operationId': serializer.toJson<String>(operationId),
+      'eventType': serializer.toJson<String>(eventType),
+      'fromStatus': serializer.toJson<String?>(fromStatus),
+      'toStatus': serializer.toJson<String>(toStatus),
+      'actorUserId': serializer.toJson<String>(actorUserId),
+      'reason': serializer.toJson<String?>(reason),
+      'metadataJson': serializer.toJson<String>(metadataJson),
+      'occurredAt': serializer.toJson<DateTime>(occurredAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  TransferEvent copyWith({
+    String? id,
+    String? organizationId,
+    String? transferId,
+    String? operationId,
+    String? eventType,
+    Value<String?> fromStatus = const Value.absent(),
+    String? toStatus,
+    String? actorUserId,
+    Value<String?> reason = const Value.absent(),
+    String? metadataJson,
+    DateTime? occurredAt,
+    DateTime? createdAt,
+  }) => TransferEvent(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    transferId: transferId ?? this.transferId,
+    operationId: operationId ?? this.operationId,
+    eventType: eventType ?? this.eventType,
+    fromStatus: fromStatus.present ? fromStatus.value : this.fromStatus,
+    toStatus: toStatus ?? this.toStatus,
+    actorUserId: actorUserId ?? this.actorUserId,
+    reason: reason.present ? reason.value : this.reason,
+    metadataJson: metadataJson ?? this.metadataJson,
+    occurredAt: occurredAt ?? this.occurredAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  TransferEvent copyWithCompanion(TransferEventsCompanion data) {
+    return TransferEvent(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      transferId: data.transferId.present
+          ? data.transferId.value
+          : this.transferId,
+      operationId: data.operationId.present
+          ? data.operationId.value
+          : this.operationId,
+      eventType: data.eventType.present ? data.eventType.value : this.eventType,
+      fromStatus: data.fromStatus.present
+          ? data.fromStatus.value
+          : this.fromStatus,
+      toStatus: data.toStatus.present ? data.toStatus.value : this.toStatus,
+      actorUserId: data.actorUserId.present
+          ? data.actorUserId.value
+          : this.actorUserId,
+      reason: data.reason.present ? data.reason.value : this.reason,
+      metadataJson: data.metadataJson.present
+          ? data.metadataJson.value
+          : this.metadataJson,
+      occurredAt: data.occurredAt.present
+          ? data.occurredAt.value
+          : this.occurredAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransferEvent(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('transferId: $transferId, ')
+          ..write('operationId: $operationId, ')
+          ..write('eventType: $eventType, ')
+          ..write('fromStatus: $fromStatus, ')
+          ..write('toStatus: $toStatus, ')
+          ..write('actorUserId: $actorUserId, ')
+          ..write('reason: $reason, ')
+          ..write('metadataJson: $metadataJson, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    transferId,
+    operationId,
+    eventType,
+    fromStatus,
+    toStatus,
+    actorUserId,
+    reason,
+    metadataJson,
+    occurredAt,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TransferEvent &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.transferId == this.transferId &&
+          other.operationId == this.operationId &&
+          other.eventType == this.eventType &&
+          other.fromStatus == this.fromStatus &&
+          other.toStatus == this.toStatus &&
+          other.actorUserId == this.actorUserId &&
+          other.reason == this.reason &&
+          other.metadataJson == this.metadataJson &&
+          other.occurredAt == this.occurredAt &&
+          other.createdAt == this.createdAt);
+}
+
+class TransferEventsCompanion extends UpdateCompanion<TransferEvent> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String> transferId;
+  final Value<String> operationId;
+  final Value<String> eventType;
+  final Value<String?> fromStatus;
+  final Value<String> toStatus;
+  final Value<String> actorUserId;
+  final Value<String?> reason;
+  final Value<String> metadataJson;
+  final Value<DateTime> occurredAt;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const TransferEventsCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.transferId = const Value.absent(),
+    this.operationId = const Value.absent(),
+    this.eventType = const Value.absent(),
+    this.fromStatus = const Value.absent(),
+    this.toStatus = const Value.absent(),
+    this.actorUserId = const Value.absent(),
+    this.reason = const Value.absent(),
+    this.metadataJson = const Value.absent(),
+    this.occurredAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TransferEventsCompanion.insert({
+    required String id,
+    required String organizationId,
+    required String transferId,
+    required String operationId,
+    required String eventType,
+    this.fromStatus = const Value.absent(),
+    required String toStatus,
+    required String actorUserId,
+    this.reason = const Value.absent(),
+    this.metadataJson = const Value.absent(),
+    required DateTime occurredAt,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       transferId = Value(transferId),
+       operationId = Value(operationId),
+       eventType = Value(eventType),
+       toStatus = Value(toStatus),
+       actorUserId = Value(actorUserId),
+       occurredAt = Value(occurredAt),
+       createdAt = Value(createdAt);
+  static Insertable<TransferEvent> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? transferId,
+    Expression<String>? operationId,
+    Expression<String>? eventType,
+    Expression<String>? fromStatus,
+    Expression<String>? toStatus,
+    Expression<String>? actorUserId,
+    Expression<String>? reason,
+    Expression<String>? metadataJson,
+    Expression<DateTime>? occurredAt,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (transferId != null) 'transfer_id': transferId,
+      if (operationId != null) 'operation_id': operationId,
+      if (eventType != null) 'event_type': eventType,
+      if (fromStatus != null) 'from_status': fromStatus,
+      if (toStatus != null) 'to_status': toStatus,
+      if (actorUserId != null) 'actor_user_id': actorUserId,
+      if (reason != null) 'reason': reason,
+      if (metadataJson != null) 'metadata_json': metadataJson,
+      if (occurredAt != null) 'occurred_at': occurredAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TransferEventsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String>? transferId,
+    Value<String>? operationId,
+    Value<String>? eventType,
+    Value<String?>? fromStatus,
+    Value<String>? toStatus,
+    Value<String>? actorUserId,
+    Value<String?>? reason,
+    Value<String>? metadataJson,
+    Value<DateTime>? occurredAt,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return TransferEventsCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      transferId: transferId ?? this.transferId,
+      operationId: operationId ?? this.operationId,
+      eventType: eventType ?? this.eventType,
+      fromStatus: fromStatus ?? this.fromStatus,
+      toStatus: toStatus ?? this.toStatus,
+      actorUserId: actorUserId ?? this.actorUserId,
+      reason: reason ?? this.reason,
+      metadataJson: metadataJson ?? this.metadataJson,
+      occurredAt: occurredAt ?? this.occurredAt,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (transferId.present) {
+      map['transfer_id'] = Variable<String>(transferId.value);
+    }
+    if (operationId.present) {
+      map['operation_id'] = Variable<String>(operationId.value);
+    }
+    if (eventType.present) {
+      map['event_type'] = Variable<String>(eventType.value);
+    }
+    if (fromStatus.present) {
+      map['from_status'] = Variable<String>(fromStatus.value);
+    }
+    if (toStatus.present) {
+      map['to_status'] = Variable<String>(toStatus.value);
+    }
+    if (actorUserId.present) {
+      map['actor_user_id'] = Variable<String>(actorUserId.value);
+    }
+    if (reason.present) {
+      map['reason'] = Variable<String>(reason.value);
+    }
+    if (metadataJson.present) {
+      map['metadata_json'] = Variable<String>(metadataJson.value);
+    }
+    if (occurredAt.present) {
+      map['occurred_at'] = Variable<DateTime>(occurredAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransferEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('transferId: $transferId, ')
+          ..write('operationId: $operationId, ')
+          ..write('eventType: $eventType, ')
+          ..write('fromStatus: $fromStatus, ')
+          ..write('toStatus: $toStatus, ')
+          ..write('actorUserId: $actorUserId, ')
+          ..write('reason: $reason, ')
+          ..write('metadataJson: $metadataJson, ')
+          ..write('occurredAt: $occurredAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -29577,6 +32535,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $RefundPaymentsTable refundPayments = $RefundPaymentsTable(this);
+  late final $StockTransfersTable stockTransfers = $StockTransfersTable(this);
+  late final $StockTransferItemsTable stockTransferItems =
+      $StockTransferItemsTable(this);
+  late final $TransferEventsTable transferEvents = $TransferEventsTable(this);
   late final Index categoriesSearchIdx = Index(
     'categories_search_idx',
     'CREATE INDEX categories_search_idx ON categories (organization_id, normalized_name)',
@@ -29641,6 +32603,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'sale_returns_history_idx',
     'CREATE INDEX sale_returns_history_idx ON sale_returns (organization_id, branch_id, completed_at)',
   );
+  late final Index stockTransfersSourceStatusIdx = Index(
+    'stock_transfers_source_status_idx',
+    'CREATE INDEX stock_transfers_source_status_idx ON stock_transfers (organization_id, source_branch_id, status, updated_at)',
+  );
+  late final Index stockTransfersDestinationStatusIdx = Index(
+    'stock_transfers_destination_status_idx',
+    'CREATE INDEX stock_transfers_destination_status_idx ON stock_transfers (organization_id, destination_branch_id, status, updated_at)',
+  );
+  late final Index transferEventsHistoryIdx = Index(
+    'transfer_events_history_idx',
+    'CREATE INDEX transfer_events_history_idx ON transfer_events (organization_id, transfer_id, occurred_at)',
+  );
   late final MetadataDao metadataDao = MetadataDao(this as AppDatabase);
   late final OutboxDao outboxDao = OutboxDao(this as AppDatabase);
   late final SyncCursorDao syncCursorDao = SyncCursorDao(this as AppDatabase);
@@ -29696,6 +32670,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     saleReturns,
     saleReturnItems,
     refundPayments,
+    stockTransfers,
+    stockTransferItems,
+    transferEvents,
     categoriesSearchIdx,
     productsNameSearchIdx,
     productsSkuSearchIdx,
@@ -29712,6 +32689,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     paymentsShiftIdx,
     approvalRequestsStatusIdx,
     saleReturnsHistoryIdx,
+    stockTransfersSourceStatusIdx,
+    stockTransfersDestinationStatusIdx,
+    transferEventsHistoryIdx,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -32274,6 +35254,72 @@ final class $$OrganizationsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$StockTransfersTable, List<StockTransfer>>
+  _stockTransfersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.stockTransfers,
+    aliasName: $_aliasNameGenerator(
+      db.organizations.id,
+      db.stockTransfers.organizationId,
+    ),
+  );
+
+  $$StockTransfersTableProcessedTableManager get stockTransfersRefs {
+    final manager = $$StockTransfersTableTableManager(
+      $_db,
+      $_db.stockTransfers,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_stockTransfersRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$StockTransferItemsTable, List<StockTransferItem>>
+  _stockTransferItemsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.stockTransferItems,
+        aliasName: $_aliasNameGenerator(
+          db.organizations.id,
+          db.stockTransferItems.organizationId,
+        ),
+      );
+
+  $$StockTransferItemsTableProcessedTableManager get stockTransferItemsRefs {
+    final manager = $$StockTransferItemsTableTableManager(
+      $_db,
+      $_db.stockTransferItems,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _stockTransferItemsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$TransferEventsTable, List<TransferEvent>>
+  _transferEventsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.transferEvents,
+    aliasName: $_aliasNameGenerator(
+      db.organizations.id,
+      db.transferEvents.organizationId,
+    ),
+  );
+
+  $$TransferEventsTableProcessedTableManager get transferEventsRefs {
+    final manager = $$TransferEventsTableTableManager(
+      $_db,
+      $_db.transferEvents,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transferEventsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$OrganizationsTableFilterComposer
@@ -33093,6 +36139,81 @@ class $$OrganizationsTableFilterComposer
           }) => $$RefundPaymentsTableFilterComposer(
             $db: $db,
             $table: $db.refundPayments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> stockTransfersRefs(
+    Expression<bool> Function($$StockTransfersTableFilterComposer f) f,
+  ) {
+    final $$StockTransfersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableFilterComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> stockTransferItemsRefs(
+    Expression<bool> Function($$StockTransferItemsTableFilterComposer f) f,
+  ) {
+    final $$StockTransferItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stockTransferItems,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransferItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.stockTransferItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> transferEventsRefs(
+    Expression<bool> Function($$TransferEventsTableFilterComposer f) f,
+  ) {
+    final $$TransferEventsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transferEvents,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransferEventsTableFilterComposer(
+            $db: $db,
+            $table: $db.transferEvents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -33965,6 +37086,82 @@ class $$OrganizationsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> stockTransfersRefs<T extends Object>(
+    Expression<T> Function($$StockTransfersTableAnnotationComposer a) f,
+  ) {
+    final $$StockTransfersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> stockTransferItemsRefs<T extends Object>(
+    Expression<T> Function($$StockTransferItemsTableAnnotationComposer a) f,
+  ) {
+    final $$StockTransferItemsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.stockTransferItems,
+          getReferencedColumn: (t) => t.organizationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$StockTransferItemsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.stockTransferItems,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> transferEventsRefs<T extends Object>(
+    Expression<T> Function($$TransferEventsTableAnnotationComposer a) f,
+  ) {
+    final $$TransferEventsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transferEvents,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransferEventsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transferEvents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$OrganizationsTableTableManager
@@ -34012,6 +37209,9 @@ class $$OrganizationsTableTableManager
             bool saleReturnsRefs,
             bool saleReturnItemsRefs,
             bool refundPaymentsRefs,
+            bool stockTransfersRefs,
+            bool stockTransferItemsRefs,
+            bool transferEventsRefs,
           })
         > {
   $$OrganizationsTableTableManager(_$AppDatabase db, $OrganizationsTable table)
@@ -34110,6 +37310,9 @@ class $$OrganizationsTableTableManager
                 saleReturnsRefs = false,
                 saleReturnItemsRefs = false,
                 refundPaymentsRefs = false,
+                stockTransfersRefs = false,
+                stockTransferItemsRefs = false,
+                transferEventsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -34145,6 +37348,9 @@ class $$OrganizationsTableTableManager
                     if (saleReturnsRefs) db.saleReturns,
                     if (saleReturnItemsRefs) db.saleReturnItems,
                     if (refundPaymentsRefs) db.refundPayments,
+                    if (stockTransfersRefs) db.stockTransfers,
+                    if (stockTransferItemsRefs) db.stockTransferItems,
+                    if (transferEventsRefs) db.transferEvents,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -34800,6 +38006,69 @@ class $$OrganizationsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (stockTransfersRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          StockTransfer
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._stockTransfersRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).stockTransfersRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (stockTransferItemsRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          StockTransferItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._stockTransferItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).stockTransferItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (transferEventsRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          TransferEvent
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._transferEventsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transferEventsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -34852,6 +38121,9 @@ typedef $$OrganizationsTableProcessedTableManager =
         bool saleReturnsRefs,
         bool saleReturnItemsRefs,
         bool refundPaymentsRefs,
+        bool stockTransfersRefs,
+        bool stockTransferItemsRefs,
+        bool transferEventsRefs,
       })
     >;
 typedef $$BranchesTableCreateCompanionBuilder =
@@ -34870,6 +38142,7 @@ typedef $$BranchesTableCreateCompanionBuilder =
       Value<int?> discountApprovalThresholdBasisPoints,
       Value<int?> returnApprovalThresholdMinor,
       Value<int> voidWindowMinutes,
+      Value<int?> transferApprovalThresholdMilli,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -34891,6 +38164,7 @@ typedef $$BranchesTableUpdateCompanionBuilder =
       Value<int?> discountApprovalThresholdBasisPoints,
       Value<int?> returnApprovalThresholdMinor,
       Value<int> voidWindowMinutes,
+      Value<int?> transferApprovalThresholdMilli,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -35431,6 +38705,11 @@ class $$BranchesTableFilterComposer
 
   ColumnFilters<int> get voidWindowMinutes => $composableBuilder(
     column: $table.voidWindowMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get transferApprovalThresholdMilli => $composableBuilder(
+    column: $table.transferApprovalThresholdMilli,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -36078,6 +39357,11 @@ class $$BranchesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get transferApprovalThresholdMilli => $composableBuilder(
+    column: $table.transferApprovalThresholdMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -36182,6 +39466,11 @@ class $$BranchesTableAnnotationComposer
 
   GeneratedColumn<int> get voidWindowMinutes => $composableBuilder(
     column: $table.voidWindowMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get transferApprovalThresholdMilli => $composableBuilder(
+    column: $table.transferApprovalThresholdMilli,
     builder: (column) => column,
   );
 
@@ -36817,6 +40106,8 @@ class $$BranchesTableTableManager
                     const Value.absent(),
                 Value<int?> returnApprovalThresholdMinor = const Value.absent(),
                 Value<int> voidWindowMinutes = const Value.absent(),
+                Value<int?> transferApprovalThresholdMilli =
+                    const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -36839,6 +40130,7 @@ class $$BranchesTableTableManager
                     discountApprovalThresholdBasisPoints,
                 returnApprovalThresholdMinor: returnApprovalThresholdMinor,
                 voidWindowMinutes: voidWindowMinutes,
+                transferApprovalThresholdMilli: transferApprovalThresholdMilli,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -36864,6 +40156,8 @@ class $$BranchesTableTableManager
                     const Value.absent(),
                 Value<int?> returnApprovalThresholdMinor = const Value.absent(),
                 Value<int> voidWindowMinutes = const Value.absent(),
+                Value<int?> transferApprovalThresholdMilli =
+                    const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -36886,6 +40180,7 @@ class $$BranchesTableTableManager
                     discountApprovalThresholdBasisPoints,
                 returnApprovalThresholdMinor: returnApprovalThresholdMinor,
                 voidWindowMinutes: voidWindowMinutes,
+                transferApprovalThresholdMilli: transferApprovalThresholdMilli,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -37545,6 +40840,69 @@ final class $$AppUsersTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$StockTransfersTable, List<StockTransfer>>
+  _createdTransfersTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.stockTransfers,
+    aliasName: $_aliasNameGenerator(
+      db.appUsers.id,
+      db.stockTransfers.createdByUserId,
+    ),
+  );
+
+  $$StockTransfersTableProcessedTableManager get createdTransfers {
+    final manager = $$StockTransfersTableTableManager($_db, $_db.stockTransfers)
+        .filter(
+          (f) => f.createdByUserId.id.sqlEquals($_itemColumn<String>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(_createdTransfersTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$StockTransfersTable, List<StockTransfer>>
+  _approvedTransfersTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.stockTransfers,
+    aliasName: $_aliasNameGenerator(
+      db.appUsers.id,
+      db.stockTransfers.approvedByUserId,
+    ),
+  );
+
+  $$StockTransfersTableProcessedTableManager get approvedTransfers {
+    final manager = $$StockTransfersTableTableManager($_db, $_db.stockTransfers)
+        .filter(
+          (f) => f.approvedByUserId.id.sqlEquals($_itemColumn<String>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(_approvedTransfersTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$TransferEventsTable, List<TransferEvent>>
+  _transferEventsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.transferEvents,
+    aliasName: $_aliasNameGenerator(
+      db.appUsers.id,
+      db.transferEvents.actorUserId,
+    ),
+  );
+
+  $$TransferEventsTableProcessedTableManager get transferEventsRefs {
+    final manager = $$TransferEventsTableTableManager(
+      $_db,
+      $_db.transferEvents,
+    ).filter((f) => f.actorUserId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transferEventsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$AppUsersTableFilterComposer
@@ -37635,6 +40993,81 @@ class $$AppUsersTableFilterComposer
           }) => $$UserRoleAssignmentsTableFilterComposer(
             $db: $db,
             $table: $db.userRoleAssignments,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> createdTransfers(
+    Expression<bool> Function($$StockTransfersTableFilterComposer f) f,
+  ) {
+    final $$StockTransfersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.createdByUserId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableFilterComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> approvedTransfers(
+    Expression<bool> Function($$StockTransfersTableFilterComposer f) f,
+  ) {
+    final $$StockTransfersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.approvedByUserId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableFilterComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> transferEventsRefs(
+    Expression<bool> Function($$TransferEventsTableFilterComposer f) f,
+  ) {
+    final $$TransferEventsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transferEvents,
+      getReferencedColumn: (t) => t.actorUserId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransferEventsTableFilterComposer(
+            $db: $db,
+            $table: $db.transferEvents,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -37803,6 +41236,81 @@ class $$AppUsersTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> createdTransfers<T extends Object>(
+    Expression<T> Function($$StockTransfersTableAnnotationComposer a) f,
+  ) {
+    final $$StockTransfersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.createdByUserId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> approvedTransfers<T extends Object>(
+    Expression<T> Function($$StockTransfersTableAnnotationComposer a) f,
+  ) {
+    final $$StockTransfersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.approvedByUserId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> transferEventsRefs<T extends Object>(
+    Expression<T> Function($$TransferEventsTableAnnotationComposer a) f,
+  ) {
+    final $$TransferEventsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transferEvents,
+      getReferencedColumn: (t) => t.actorUserId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransferEventsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transferEvents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$AppUsersTableTableManager
@@ -37821,6 +41329,9 @@ class $$AppUsersTableTableManager
           PrefetchHooks Function({
             bool organizationId,
             bool userRoleAssignmentsRefs,
+            bool createdTransfers,
+            bool approvedTransfers,
+            bool transferEventsRefs,
           })
         > {
   $$AppUsersTableTableManager(_$AppDatabase db, $AppUsersTable table)
@@ -37891,11 +41402,20 @@ class $$AppUsersTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({organizationId = false, userRoleAssignmentsRefs = false}) {
+              ({
+                organizationId = false,
+                userRoleAssignmentsRefs = false,
+                createdTransfers = false,
+                approvedTransfers = false,
+                transferEventsRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (userRoleAssignmentsRefs) db.userRoleAssignments,
+                    if (createdTransfers) db.stockTransfers,
+                    if (approvedTransfers) db.stockTransfers,
+                    if (transferEventsRefs) db.transferEvents,
                   ],
                   addJoins:
                       <
@@ -37952,6 +41472,69 @@ class $$AppUsersTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (createdTransfers)
+                        await $_getPrefetchedData<
+                          AppUser,
+                          $AppUsersTable,
+                          StockTransfer
+                        >(
+                          currentTable: table,
+                          referencedTable: $$AppUsersTableReferences
+                              ._createdTransfersTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$AppUsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).createdTransfers,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.createdByUserId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (approvedTransfers)
+                        await $_getPrefetchedData<
+                          AppUser,
+                          $AppUsersTable,
+                          StockTransfer
+                        >(
+                          currentTable: table,
+                          referencedTable: $$AppUsersTableReferences
+                              ._approvedTransfersTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$AppUsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).approvedTransfers,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.approvedByUserId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (transferEventsRefs)
+                        await $_getPrefetchedData<
+                          AppUser,
+                          $AppUsersTable,
+                          TransferEvent
+                        >(
+                          currentTable: table,
+                          referencedTable: $$AppUsersTableReferences
+                              ._transferEventsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$AppUsersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transferEventsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.actorUserId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -37975,6 +41558,9 @@ typedef $$AppUsersTableProcessedTableManager =
       PrefetchHooks Function({
         bool organizationId,
         bool userRoleAssignmentsRefs,
+        bool createdTransfers,
+        bool approvedTransfers,
+        bool transferEventsRefs,
       })
     >;
 typedef $$RolesTableCreateCompanionBuilder =
@@ -41705,6 +45291,30 @@ final class $$ProductsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$StockTransferItemsTable, List<StockTransferItem>>
+  _stockTransferItemsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.stockTransferItems,
+        aliasName: $_aliasNameGenerator(
+          db.products.id,
+          db.stockTransferItems.productId,
+        ),
+      );
+
+  $$StockTransferItemsTableProcessedTableManager get stockTransferItemsRefs {
+    final manager = $$StockTransferItemsTableTableManager(
+      $_db,
+      $_db.stockTransferItems,
+    ).filter((f) => f.productId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _stockTransferItemsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$ProductsTableFilterComposer
@@ -42050,6 +45660,31 @@ class $$ProductsTableFilterComposer
           }) => $$SaleReturnItemsTableFilterComposer(
             $db: $db,
             $table: $db.saleReturnItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> stockTransferItemsRefs(
+    Expression<bool> Function($$StockTransferItemsTableFilterComposer f) f,
+  ) {
+    final $$StockTransferItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stockTransferItems,
+      getReferencedColumn: (t) => t.productId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransferItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.stockTransferItems,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -42550,6 +46185,32 @@ class $$ProductsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> stockTransferItemsRefs<T extends Object>(
+    Expression<T> Function($$StockTransferItemsTableAnnotationComposer a) f,
+  ) {
+    final $$StockTransferItemsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.stockTransferItems,
+          getReferencedColumn: (t) => t.productId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$StockTransferItemsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.stockTransferItems,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$ProductsTableTableManager
@@ -42578,6 +46239,7 @@ class $$ProductsTableTableManager
             bool stockCountItemsRefs,
             bool saleItemsRefs,
             bool saleReturnItemsRefs,
+            bool stockTransferItemsRefs,
           })
         > {
   $$ProductsTableTableManager(_$AppDatabase db, $ProductsTable table)
@@ -42681,6 +46343,7 @@ class $$ProductsTableTableManager
                 stockCountItemsRefs = false,
                 saleItemsRefs = false,
                 saleReturnItemsRefs = false,
+                stockTransferItemsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -42693,6 +46356,7 @@ class $$ProductsTableTableManager
                     if (stockCountItemsRefs) db.stockCountItems,
                     if (saleItemsRefs) db.saleItems,
                     if (saleReturnItemsRefs) db.saleReturnItems,
+                    if (stockTransferItemsRefs) db.stockTransferItems,
                   ],
                   addJoins:
                       <
@@ -42935,6 +46599,27 @@ class $$ProductsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (stockTransferItemsRefs)
+                        await $_getPrefetchedData<
+                          Product,
+                          $ProductsTable,
+                          StockTransferItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ProductsTableReferences
+                              ._stockTransferItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ProductsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).stockTransferItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.productId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -42968,6 +46653,7 @@ typedef $$ProductsTableProcessedTableManager =
         bool stockCountItemsRefs,
         bool saleItemsRefs,
         bool saleReturnItemsRefs,
+        bool stockTransferItemsRefs,
       })
     >;
 typedef $$ProductBarcodesTableCreateCompanionBuilder =
@@ -62906,6 +66592,2442 @@ typedef $$RefundPaymentsTableProcessedTableManager =
         bool cashMovementId,
       })
     >;
+typedef $$StockTransfersTableCreateCompanionBuilder =
+    StockTransfersCompanion Function({
+      required String id,
+      required String organizationId,
+      required String sourceBranchId,
+      required String destinationBranchId,
+      required String transferNumber,
+      required String status,
+      Value<bool> approvalRequired,
+      Value<String?> notes,
+      required String createdByUserId,
+      Value<String?> approvedByUserId,
+      Value<String?> rejectionReason,
+      Value<String?> cancellationReason,
+      Value<DateTime?> submittedAt,
+      Value<DateTime?> approvedAt,
+      Value<DateTime?> shippedAt,
+      Value<DateTime?> receivedAt,
+      Value<DateTime?> cancelledAt,
+      Value<int> version,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$StockTransfersTableUpdateCompanionBuilder =
+    StockTransfersCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String> sourceBranchId,
+      Value<String> destinationBranchId,
+      Value<String> transferNumber,
+      Value<String> status,
+      Value<bool> approvalRequired,
+      Value<String?> notes,
+      Value<String> createdByUserId,
+      Value<String?> approvedByUserId,
+      Value<String?> rejectionReason,
+      Value<String?> cancellationReason,
+      Value<DateTime?> submittedAt,
+      Value<DateTime?> approvedAt,
+      Value<DateTime?> shippedAt,
+      Value<DateTime?> receivedAt,
+      Value<DateTime?> cancelledAt,
+      Value<int> version,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$StockTransfersTableReferences
+    extends BaseReferences<_$AppDatabase, $StockTransfersTable, StockTransfer> {
+  $$StockTransfersTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.stockTransfers.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $AppUsersTable _createdByUserIdTable(_$AppDatabase db) =>
+      db.appUsers.createAlias(
+        $_aliasNameGenerator(db.stockTransfers.createdByUserId, db.appUsers.id),
+      );
+
+  $$AppUsersTableProcessedTableManager get createdByUserId {
+    final $_column = $_itemColumn<String>('created_by_user_id')!;
+
+    final manager = $$AppUsersTableTableManager(
+      $_db,
+      $_db.appUsers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_createdByUserIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $AppUsersTable _approvedByUserIdTable(_$AppDatabase db) =>
+      db.appUsers.createAlias(
+        $_aliasNameGenerator(
+          db.stockTransfers.approvedByUserId,
+          db.appUsers.id,
+        ),
+      );
+
+  $$AppUsersTableProcessedTableManager? get approvedByUserId {
+    final $_column = $_itemColumn<String>('approved_by_user_id');
+    if ($_column == null) return null;
+    final manager = $$AppUsersTableTableManager(
+      $_db,
+      $_db.appUsers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_approvedByUserIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$StockTransferItemsTable, List<StockTransferItem>>
+  _stockTransferItemsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.stockTransferItems,
+        aliasName: $_aliasNameGenerator(
+          db.stockTransfers.id,
+          db.stockTransferItems.transferId,
+        ),
+      );
+
+  $$StockTransferItemsTableProcessedTableManager get stockTransferItemsRefs {
+    final manager = $$StockTransferItemsTableTableManager(
+      $_db,
+      $_db.stockTransferItems,
+    ).filter((f) => f.transferId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _stockTransferItemsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$TransferEventsTable, List<TransferEvent>>
+  _transferEventsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.transferEvents,
+    aliasName: $_aliasNameGenerator(
+      db.stockTransfers.id,
+      db.transferEvents.transferId,
+    ),
+  );
+
+  $$TransferEventsTableProcessedTableManager get transferEventsRefs {
+    final manager = $$TransferEventsTableTableManager(
+      $_db,
+      $_db.transferEvents,
+    ).filter((f) => f.transferId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transferEventsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$StockTransfersTableFilterComposer
+    extends Composer<_$AppDatabase, $StockTransfersTable> {
+  $$StockTransfersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceBranchId => $composableBuilder(
+    column: $table.sourceBranchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get destinationBranchId => $composableBuilder(
+    column: $table.destinationBranchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get transferNumber => $composableBuilder(
+    column: $table.transferNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get approvalRequired => $composableBuilder(
+    column: $table.approvalRequired,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rejectionReason => $composableBuilder(
+    column: $table.rejectionReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get submittedAt => $composableBuilder(
+    column: $table.submittedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get approvedAt => $composableBuilder(
+    column: $table.approvedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get shippedAt => $composableBuilder(
+    column: $table.shippedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppUsersTableFilterComposer get createdByUserId {
+    final $$AppUsersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.createdByUserId,
+      referencedTable: $db.appUsers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppUsersTableFilterComposer(
+            $db: $db,
+            $table: $db.appUsers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppUsersTableFilterComposer get approvedByUserId {
+    final $$AppUsersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.approvedByUserId,
+      referencedTable: $db.appUsers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppUsersTableFilterComposer(
+            $db: $db,
+            $table: $db.appUsers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> stockTransferItemsRefs(
+    Expression<bool> Function($$StockTransferItemsTableFilterComposer f) f,
+  ) {
+    final $$StockTransferItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.stockTransferItems,
+      getReferencedColumn: (t) => t.transferId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransferItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.stockTransferItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> transferEventsRefs(
+    Expression<bool> Function($$TransferEventsTableFilterComposer f) f,
+  ) {
+    final $$TransferEventsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transferEvents,
+      getReferencedColumn: (t) => t.transferId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransferEventsTableFilterComposer(
+            $db: $db,
+            $table: $db.transferEvents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$StockTransfersTableOrderingComposer
+    extends Composer<_$AppDatabase, $StockTransfersTable> {
+  $$StockTransfersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceBranchId => $composableBuilder(
+    column: $table.sourceBranchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get destinationBranchId => $composableBuilder(
+    column: $table.destinationBranchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get transferNumber => $composableBuilder(
+    column: $table.transferNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get approvalRequired => $composableBuilder(
+    column: $table.approvalRequired,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rejectionReason => $composableBuilder(
+    column: $table.rejectionReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get submittedAt => $composableBuilder(
+    column: $table.submittedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get approvedAt => $composableBuilder(
+    column: $table.approvedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get shippedAt => $composableBuilder(
+    column: $table.shippedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppUsersTableOrderingComposer get createdByUserId {
+    final $$AppUsersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.createdByUserId,
+      referencedTable: $db.appUsers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppUsersTableOrderingComposer(
+            $db: $db,
+            $table: $db.appUsers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppUsersTableOrderingComposer get approvedByUserId {
+    final $$AppUsersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.approvedByUserId,
+      referencedTable: $db.appUsers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppUsersTableOrderingComposer(
+            $db: $db,
+            $table: $db.appUsers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StockTransfersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StockTransfersTable> {
+  $$StockTransfersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceBranchId => $composableBuilder(
+    column: $table.sourceBranchId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get destinationBranchId => $composableBuilder(
+    column: $table.destinationBranchId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get transferNumber => $composableBuilder(
+    column: $table.transferNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<bool> get approvalRequired => $composableBuilder(
+    column: $table.approvalRequired,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get rejectionReason => $composableBuilder(
+    column: $table.rejectionReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get cancellationReason => $composableBuilder(
+    column: $table.cancellationReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get submittedAt => $composableBuilder(
+    column: $table.submittedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get approvedAt => $composableBuilder(
+    column: $table.approvedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get shippedAt =>
+      $composableBuilder(column: $table.shippedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get receivedAt => $composableBuilder(
+    column: $table.receivedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppUsersTableAnnotationComposer get createdByUserId {
+    final $$AppUsersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.createdByUserId,
+      referencedTable: $db.appUsers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppUsersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.appUsers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppUsersTableAnnotationComposer get approvedByUserId {
+    final $$AppUsersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.approvedByUserId,
+      referencedTable: $db.appUsers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppUsersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.appUsers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> stockTransferItemsRefs<T extends Object>(
+    Expression<T> Function($$StockTransferItemsTableAnnotationComposer a) f,
+  ) {
+    final $$StockTransferItemsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.stockTransferItems,
+          getReferencedColumn: (t) => t.transferId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$StockTransferItemsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.stockTransferItems,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> transferEventsRefs<T extends Object>(
+    Expression<T> Function($$TransferEventsTableAnnotationComposer a) f,
+  ) {
+    final $$TransferEventsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transferEvents,
+      getReferencedColumn: (t) => t.transferId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransferEventsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transferEvents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$StockTransfersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StockTransfersTable,
+          StockTransfer,
+          $$StockTransfersTableFilterComposer,
+          $$StockTransfersTableOrderingComposer,
+          $$StockTransfersTableAnnotationComposer,
+          $$StockTransfersTableCreateCompanionBuilder,
+          $$StockTransfersTableUpdateCompanionBuilder,
+          (StockTransfer, $$StockTransfersTableReferences),
+          StockTransfer,
+          PrefetchHooks Function({
+            bool organizationId,
+            bool createdByUserId,
+            bool approvedByUserId,
+            bool stockTransferItemsRefs,
+            bool transferEventsRefs,
+          })
+        > {
+  $$StockTransfersTableTableManager(
+    _$AppDatabase db,
+    $StockTransfersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StockTransfersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StockTransfersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StockTransfersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> sourceBranchId = const Value.absent(),
+                Value<String> destinationBranchId = const Value.absent(),
+                Value<String> transferNumber = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<bool> approvalRequired = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                Value<String> createdByUserId = const Value.absent(),
+                Value<String?> approvedByUserId = const Value.absent(),
+                Value<String?> rejectionReason = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
+                Value<DateTime?> submittedAt = const Value.absent(),
+                Value<DateTime?> approvedAt = const Value.absent(),
+                Value<DateTime?> shippedAt = const Value.absent(),
+                Value<DateTime?> receivedAt = const Value.absent(),
+                Value<DateTime?> cancelledAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StockTransfersCompanion(
+                id: id,
+                organizationId: organizationId,
+                sourceBranchId: sourceBranchId,
+                destinationBranchId: destinationBranchId,
+                transferNumber: transferNumber,
+                status: status,
+                approvalRequired: approvalRequired,
+                notes: notes,
+                createdByUserId: createdByUserId,
+                approvedByUserId: approvedByUserId,
+                rejectionReason: rejectionReason,
+                cancellationReason: cancellationReason,
+                submittedAt: submittedAt,
+                approvedAt: approvedAt,
+                shippedAt: shippedAt,
+                receivedAt: receivedAt,
+                cancelledAt: cancelledAt,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                required String sourceBranchId,
+                required String destinationBranchId,
+                required String transferNumber,
+                required String status,
+                Value<bool> approvalRequired = const Value.absent(),
+                Value<String?> notes = const Value.absent(),
+                required String createdByUserId,
+                Value<String?> approvedByUserId = const Value.absent(),
+                Value<String?> rejectionReason = const Value.absent(),
+                Value<String?> cancellationReason = const Value.absent(),
+                Value<DateTime?> submittedAt = const Value.absent(),
+                Value<DateTime?> approvedAt = const Value.absent(),
+                Value<DateTime?> shippedAt = const Value.absent(),
+                Value<DateTime?> receivedAt = const Value.absent(),
+                Value<DateTime?> cancelledAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => StockTransfersCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                sourceBranchId: sourceBranchId,
+                destinationBranchId: destinationBranchId,
+                transferNumber: transferNumber,
+                status: status,
+                approvalRequired: approvalRequired,
+                notes: notes,
+                createdByUserId: createdByUserId,
+                approvedByUserId: approvedByUserId,
+                rejectionReason: rejectionReason,
+                cancellationReason: cancellationReason,
+                submittedAt: submittedAt,
+                approvedAt: approvedAt,
+                shippedAt: shippedAt,
+                receivedAt: receivedAt,
+                cancelledAt: cancelledAt,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$StockTransfersTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                organizationId = false,
+                createdByUserId = false,
+                approvedByUserId = false,
+                stockTransferItemsRefs = false,
+                transferEventsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (stockTransferItemsRefs) db.stockTransferItems,
+                    if (transferEventsRefs) db.transferEvents,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (organizationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.organizationId,
+                                    referencedTable:
+                                        $$StockTransfersTableReferences
+                                            ._organizationIdTable(db),
+                                    referencedColumn:
+                                        $$StockTransfersTableReferences
+                                            ._organizationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (createdByUserId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.createdByUserId,
+                                    referencedTable:
+                                        $$StockTransfersTableReferences
+                                            ._createdByUserIdTable(db),
+                                    referencedColumn:
+                                        $$StockTransfersTableReferences
+                                            ._createdByUserIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (approvedByUserId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.approvedByUserId,
+                                    referencedTable:
+                                        $$StockTransfersTableReferences
+                                            ._approvedByUserIdTable(db),
+                                    referencedColumn:
+                                        $$StockTransfersTableReferences
+                                            ._approvedByUserIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (stockTransferItemsRefs)
+                        await $_getPrefetchedData<
+                          StockTransfer,
+                          $StockTransfersTable,
+                          StockTransferItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$StockTransfersTableReferences
+                              ._stockTransferItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$StockTransfersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).stockTransferItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.transferId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (transferEventsRefs)
+                        await $_getPrefetchedData<
+                          StockTransfer,
+                          $StockTransfersTable,
+                          TransferEvent
+                        >(
+                          currentTable: table,
+                          referencedTable: $$StockTransfersTableReferences
+                              ._transferEventsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$StockTransfersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transferEventsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.transferId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$StockTransfersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StockTransfersTable,
+      StockTransfer,
+      $$StockTransfersTableFilterComposer,
+      $$StockTransfersTableOrderingComposer,
+      $$StockTransfersTableAnnotationComposer,
+      $$StockTransfersTableCreateCompanionBuilder,
+      $$StockTransfersTableUpdateCompanionBuilder,
+      (StockTransfer, $$StockTransfersTableReferences),
+      StockTransfer,
+      PrefetchHooks Function({
+        bool organizationId,
+        bool createdByUserId,
+        bool approvedByUserId,
+        bool stockTransferItemsRefs,
+        bool transferEventsRefs,
+      })
+    >;
+typedef $$StockTransferItemsTableCreateCompanionBuilder =
+    StockTransferItemsCompanion Function({
+      required String id,
+      required String organizationId,
+      required String transferId,
+      required String productId,
+      required String sourceStockLocationId,
+      required String destinationStockLocationId,
+      Value<String?> damagedStockLocationId,
+      required int requestedQuantityMilli,
+      Value<int> shippedQuantityMilli,
+      Value<int> receivedQuantityMilli,
+      Value<int> damagedQuantityMilli,
+      Value<int> discrepancyQuantityMilli,
+      Value<int> version,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$StockTransferItemsTableUpdateCompanionBuilder =
+    StockTransferItemsCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String> transferId,
+      Value<String> productId,
+      Value<String> sourceStockLocationId,
+      Value<String> destinationStockLocationId,
+      Value<String?> damagedStockLocationId,
+      Value<int> requestedQuantityMilli,
+      Value<int> shippedQuantityMilli,
+      Value<int> receivedQuantityMilli,
+      Value<int> damagedQuantityMilli,
+      Value<int> discrepancyQuantityMilli,
+      Value<int> version,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$StockTransferItemsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $StockTransferItemsTable,
+          StockTransferItem
+        > {
+  $$StockTransferItemsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.stockTransferItems.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $StockTransfersTable _transferIdTable(_$AppDatabase db) =>
+      db.stockTransfers.createAlias(
+        $_aliasNameGenerator(
+          db.stockTransferItems.transferId,
+          db.stockTransfers.id,
+        ),
+      );
+
+  $$StockTransfersTableProcessedTableManager get transferId {
+    final $_column = $_itemColumn<String>('transfer_id')!;
+
+    final manager = $$StockTransfersTableTableManager(
+      $_db,
+      $_db.stockTransfers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_transferIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $ProductsTable _productIdTable(_$AppDatabase db) =>
+      db.products.createAlias(
+        $_aliasNameGenerator(db.stockTransferItems.productId, db.products.id),
+      );
+
+  $$ProductsTableProcessedTableManager get productId {
+    final $_column = $_itemColumn<String>('product_id')!;
+
+    final manager = $$ProductsTableTableManager(
+      $_db,
+      $_db.products,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$StockTransferItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $StockTransferItemsTable> {
+  $$StockTransferItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceStockLocationId => $composableBuilder(
+    column: $table.sourceStockLocationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get destinationStockLocationId => $composableBuilder(
+    column: $table.destinationStockLocationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get damagedStockLocationId => $composableBuilder(
+    column: $table.damagedStockLocationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get requestedQuantityMilli => $composableBuilder(
+    column: $table.requestedQuantityMilli,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get shippedQuantityMilli => $composableBuilder(
+    column: $table.shippedQuantityMilli,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get receivedQuantityMilli => $composableBuilder(
+    column: $table.receivedQuantityMilli,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get damagedQuantityMilli => $composableBuilder(
+    column: $table.damagedQuantityMilli,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get discrepancyQuantityMilli => $composableBuilder(
+    column: $table.discrepancyQuantityMilli,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$StockTransfersTableFilterComposer get transferId {
+    final $$StockTransfersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transferId,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableFilterComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productId {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableFilterComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StockTransferItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $StockTransferItemsTable> {
+  $$StockTransferItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceStockLocationId => $composableBuilder(
+    column: $table.sourceStockLocationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get destinationStockLocationId => $composableBuilder(
+    column: $table.destinationStockLocationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get damagedStockLocationId => $composableBuilder(
+    column: $table.damagedStockLocationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get requestedQuantityMilli => $composableBuilder(
+    column: $table.requestedQuantityMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get shippedQuantityMilli => $composableBuilder(
+    column: $table.shippedQuantityMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get receivedQuantityMilli => $composableBuilder(
+    column: $table.receivedQuantityMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get damagedQuantityMilli => $composableBuilder(
+    column: $table.damagedQuantityMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get discrepancyQuantityMilli => $composableBuilder(
+    column: $table.discrepancyQuantityMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$StockTransfersTableOrderingComposer get transferId {
+    final $$StockTransfersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transferId,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableOrderingComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productId {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableOrderingComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StockTransferItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StockTransferItemsTable> {
+  $$StockTransferItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceStockLocationId => $composableBuilder(
+    column: $table.sourceStockLocationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get destinationStockLocationId => $composableBuilder(
+    column: $table.destinationStockLocationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get damagedStockLocationId => $composableBuilder(
+    column: $table.damagedStockLocationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get requestedQuantityMilli => $composableBuilder(
+    column: $table.requestedQuantityMilli,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get shippedQuantityMilli => $composableBuilder(
+    column: $table.shippedQuantityMilli,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get receivedQuantityMilli => $composableBuilder(
+    column: $table.receivedQuantityMilli,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get damagedQuantityMilli => $composableBuilder(
+    column: $table.damagedQuantityMilli,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get discrepancyQuantityMilli => $composableBuilder(
+    column: $table.discrepancyQuantityMilli,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$StockTransfersTableAnnotationComposer get transferId {
+    final $$StockTransfersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transferId,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productId {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.productId,
+      referencedTable: $db.products,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProductsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.products,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$StockTransferItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StockTransferItemsTable,
+          StockTransferItem,
+          $$StockTransferItemsTableFilterComposer,
+          $$StockTransferItemsTableOrderingComposer,
+          $$StockTransferItemsTableAnnotationComposer,
+          $$StockTransferItemsTableCreateCompanionBuilder,
+          $$StockTransferItemsTableUpdateCompanionBuilder,
+          (StockTransferItem, $$StockTransferItemsTableReferences),
+          StockTransferItem,
+          PrefetchHooks Function({
+            bool organizationId,
+            bool transferId,
+            bool productId,
+          })
+        > {
+  $$StockTransferItemsTableTableManager(
+    _$AppDatabase db,
+    $StockTransferItemsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StockTransferItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StockTransferItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StockTransferItemsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> transferId = const Value.absent(),
+                Value<String> productId = const Value.absent(),
+                Value<String> sourceStockLocationId = const Value.absent(),
+                Value<String> destinationStockLocationId = const Value.absent(),
+                Value<String?> damagedStockLocationId = const Value.absent(),
+                Value<int> requestedQuantityMilli = const Value.absent(),
+                Value<int> shippedQuantityMilli = const Value.absent(),
+                Value<int> receivedQuantityMilli = const Value.absent(),
+                Value<int> damagedQuantityMilli = const Value.absent(),
+                Value<int> discrepancyQuantityMilli = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StockTransferItemsCompanion(
+                id: id,
+                organizationId: organizationId,
+                transferId: transferId,
+                productId: productId,
+                sourceStockLocationId: sourceStockLocationId,
+                destinationStockLocationId: destinationStockLocationId,
+                damagedStockLocationId: damagedStockLocationId,
+                requestedQuantityMilli: requestedQuantityMilli,
+                shippedQuantityMilli: shippedQuantityMilli,
+                receivedQuantityMilli: receivedQuantityMilli,
+                damagedQuantityMilli: damagedQuantityMilli,
+                discrepancyQuantityMilli: discrepancyQuantityMilli,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                required String transferId,
+                required String productId,
+                required String sourceStockLocationId,
+                required String destinationStockLocationId,
+                Value<String?> damagedStockLocationId = const Value.absent(),
+                required int requestedQuantityMilli,
+                Value<int> shippedQuantityMilli = const Value.absent(),
+                Value<int> receivedQuantityMilli = const Value.absent(),
+                Value<int> damagedQuantityMilli = const Value.absent(),
+                Value<int> discrepancyQuantityMilli = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => StockTransferItemsCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                transferId: transferId,
+                productId: productId,
+                sourceStockLocationId: sourceStockLocationId,
+                destinationStockLocationId: destinationStockLocationId,
+                damagedStockLocationId: damagedStockLocationId,
+                requestedQuantityMilli: requestedQuantityMilli,
+                shippedQuantityMilli: shippedQuantityMilli,
+                receivedQuantityMilli: receivedQuantityMilli,
+                damagedQuantityMilli: damagedQuantityMilli,
+                discrepancyQuantityMilli: discrepancyQuantityMilli,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$StockTransferItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                organizationId = false,
+                transferId = false,
+                productId = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (organizationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.organizationId,
+                                    referencedTable:
+                                        $$StockTransferItemsTableReferences
+                                            ._organizationIdTable(db),
+                                    referencedColumn:
+                                        $$StockTransferItemsTableReferences
+                                            ._organizationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (transferId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.transferId,
+                                    referencedTable:
+                                        $$StockTransferItemsTableReferences
+                                            ._transferIdTable(db),
+                                    referencedColumn:
+                                        $$StockTransferItemsTableReferences
+                                            ._transferIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (productId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.productId,
+                                    referencedTable:
+                                        $$StockTransferItemsTableReferences
+                                            ._productIdTable(db),
+                                    referencedColumn:
+                                        $$StockTransferItemsTableReferences
+                                            ._productIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$StockTransferItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StockTransferItemsTable,
+      StockTransferItem,
+      $$StockTransferItemsTableFilterComposer,
+      $$StockTransferItemsTableOrderingComposer,
+      $$StockTransferItemsTableAnnotationComposer,
+      $$StockTransferItemsTableCreateCompanionBuilder,
+      $$StockTransferItemsTableUpdateCompanionBuilder,
+      (StockTransferItem, $$StockTransferItemsTableReferences),
+      StockTransferItem,
+      PrefetchHooks Function({
+        bool organizationId,
+        bool transferId,
+        bool productId,
+      })
+    >;
+typedef $$TransferEventsTableCreateCompanionBuilder =
+    TransferEventsCompanion Function({
+      required String id,
+      required String organizationId,
+      required String transferId,
+      required String operationId,
+      required String eventType,
+      Value<String?> fromStatus,
+      required String toStatus,
+      required String actorUserId,
+      Value<String?> reason,
+      Value<String> metadataJson,
+      required DateTime occurredAt,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$TransferEventsTableUpdateCompanionBuilder =
+    TransferEventsCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String> transferId,
+      Value<String> operationId,
+      Value<String> eventType,
+      Value<String?> fromStatus,
+      Value<String> toStatus,
+      Value<String> actorUserId,
+      Value<String?> reason,
+      Value<String> metadataJson,
+      Value<DateTime> occurredAt,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$TransferEventsTableReferences
+    extends BaseReferences<_$AppDatabase, $TransferEventsTable, TransferEvent> {
+  $$TransferEventsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.transferEvents.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $StockTransfersTable _transferIdTable(_$AppDatabase db) =>
+      db.stockTransfers.createAlias(
+        $_aliasNameGenerator(
+          db.transferEvents.transferId,
+          db.stockTransfers.id,
+        ),
+      );
+
+  $$StockTransfersTableProcessedTableManager get transferId {
+    final $_column = $_itemColumn<String>('transfer_id')!;
+
+    final manager = $$StockTransfersTableTableManager(
+      $_db,
+      $_db.stockTransfers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_transferIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $AppUsersTable _actorUserIdTable(_$AppDatabase db) =>
+      db.appUsers.createAlias(
+        $_aliasNameGenerator(db.transferEvents.actorUserId, db.appUsers.id),
+      );
+
+  $$AppUsersTableProcessedTableManager get actorUserId {
+    final $_column = $_itemColumn<String>('actor_user_id')!;
+
+    final manager = $$AppUsersTableTableManager(
+      $_db,
+      $_db.appUsers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_actorUserIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TransferEventsTableFilterComposer
+    extends Composer<_$AppDatabase, $TransferEventsTable> {
+  $$TransferEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get eventType => $composableBuilder(
+    column: $table.eventType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fromStatus => $composableBuilder(
+    column: $table.fromStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get toStatus => $composableBuilder(
+    column: $table.toStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get metadataJson => $composableBuilder(
+    column: $table.metadataJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$StockTransfersTableFilterComposer get transferId {
+    final $$StockTransfersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transferId,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableFilterComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppUsersTableFilterComposer get actorUserId {
+    final $$AppUsersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.actorUserId,
+      referencedTable: $db.appUsers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppUsersTableFilterComposer(
+            $db: $db,
+            $table: $db.appUsers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TransferEventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TransferEventsTable> {
+  $$TransferEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get eventType => $composableBuilder(
+    column: $table.eventType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fromStatus => $composableBuilder(
+    column: $table.fromStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get toStatus => $composableBuilder(
+    column: $table.toStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get reason => $composableBuilder(
+    column: $table.reason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get metadataJson => $composableBuilder(
+    column: $table.metadataJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$StockTransfersTableOrderingComposer get transferId {
+    final $$StockTransfersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transferId,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableOrderingComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppUsersTableOrderingComposer get actorUserId {
+    final $$AppUsersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.actorUserId,
+      referencedTable: $db.appUsers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppUsersTableOrderingComposer(
+            $db: $db,
+            $table: $db.appUsers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TransferEventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TransferEventsTable> {
+  $$TransferEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get operationId => $composableBuilder(
+    column: $table.operationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get eventType =>
+      $composableBuilder(column: $table.eventType, builder: (column) => column);
+
+  GeneratedColumn<String> get fromStatus => $composableBuilder(
+    column: $table.fromStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get toStatus =>
+      $composableBuilder(column: $table.toStatus, builder: (column) => column);
+
+  GeneratedColumn<String> get reason =>
+      $composableBuilder(column: $table.reason, builder: (column) => column);
+
+  GeneratedColumn<String> get metadataJson => $composableBuilder(
+    column: $table.metadataJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get occurredAt => $composableBuilder(
+    column: $table.occurredAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$StockTransfersTableAnnotationComposer get transferId {
+    final $$StockTransfersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.transferId,
+      referencedTable: $db.stockTransfers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$StockTransfersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.stockTransfers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$AppUsersTableAnnotationComposer get actorUserId {
+    final $$AppUsersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.actorUserId,
+      referencedTable: $db.appUsers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AppUsersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.appUsers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TransferEventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TransferEventsTable,
+          TransferEvent,
+          $$TransferEventsTableFilterComposer,
+          $$TransferEventsTableOrderingComposer,
+          $$TransferEventsTableAnnotationComposer,
+          $$TransferEventsTableCreateCompanionBuilder,
+          $$TransferEventsTableUpdateCompanionBuilder,
+          (TransferEvent, $$TransferEventsTableReferences),
+          TransferEvent,
+          PrefetchHooks Function({
+            bool organizationId,
+            bool transferId,
+            bool actorUserId,
+          })
+        > {
+  $$TransferEventsTableTableManager(
+    _$AppDatabase db,
+    $TransferEventsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TransferEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TransferEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TransferEventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> transferId = const Value.absent(),
+                Value<String> operationId = const Value.absent(),
+                Value<String> eventType = const Value.absent(),
+                Value<String?> fromStatus = const Value.absent(),
+                Value<String> toStatus = const Value.absent(),
+                Value<String> actorUserId = const Value.absent(),
+                Value<String?> reason = const Value.absent(),
+                Value<String> metadataJson = const Value.absent(),
+                Value<DateTime> occurredAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => TransferEventsCompanion(
+                id: id,
+                organizationId: organizationId,
+                transferId: transferId,
+                operationId: operationId,
+                eventType: eventType,
+                fromStatus: fromStatus,
+                toStatus: toStatus,
+                actorUserId: actorUserId,
+                reason: reason,
+                metadataJson: metadataJson,
+                occurredAt: occurredAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                required String transferId,
+                required String operationId,
+                required String eventType,
+                Value<String?> fromStatus = const Value.absent(),
+                required String toStatus,
+                required String actorUserId,
+                Value<String?> reason = const Value.absent(),
+                Value<String> metadataJson = const Value.absent(),
+                required DateTime occurredAt,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => TransferEventsCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                transferId: transferId,
+                operationId: operationId,
+                eventType: eventType,
+                fromStatus: fromStatus,
+                toStatus: toStatus,
+                actorUserId: actorUserId,
+                reason: reason,
+                metadataJson: metadataJson,
+                occurredAt: occurredAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$TransferEventsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                organizationId = false,
+                transferId = false,
+                actorUserId = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (organizationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.organizationId,
+                                    referencedTable:
+                                        $$TransferEventsTableReferences
+                                            ._organizationIdTable(db),
+                                    referencedColumn:
+                                        $$TransferEventsTableReferences
+                                            ._organizationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (transferId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.transferId,
+                                    referencedTable:
+                                        $$TransferEventsTableReferences
+                                            ._transferIdTable(db),
+                                    referencedColumn:
+                                        $$TransferEventsTableReferences
+                                            ._transferIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (actorUserId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.actorUserId,
+                                    referencedTable:
+                                        $$TransferEventsTableReferences
+                                            ._actorUserIdTable(db),
+                                    referencedColumn:
+                                        $$TransferEventsTableReferences
+                                            ._actorUserIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$TransferEventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TransferEventsTable,
+      TransferEvent,
+      $$TransferEventsTableFilterComposer,
+      $$TransferEventsTableOrderingComposer,
+      $$TransferEventsTableAnnotationComposer,
+      $$TransferEventsTableCreateCompanionBuilder,
+      $$TransferEventsTableUpdateCompanionBuilder,
+      (TransferEvent, $$TransferEventsTableReferences),
+      TransferEvent,
+      PrefetchHooks Function({
+        bool organizationId,
+        bool transferId,
+        bool actorUserId,
+      })
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -62993,4 +69115,10 @@ class $AppDatabaseManager {
       $$SaleReturnItemsTableTableManager(_db, _db.saleReturnItems);
   $$RefundPaymentsTableTableManager get refundPayments =>
       $$RefundPaymentsTableTableManager(_db, _db.refundPayments);
+  $$StockTransfersTableTableManager get stockTransfers =>
+      $$StockTransfersTableTableManager(_db, _db.stockTransfers);
+  $$StockTransferItemsTableTableManager get stockTransferItems =>
+      $$StockTransferItemsTableTableManager(_db, _db.stockTransferItems);
+  $$TransferEventsTableTableManager get transferEvents =>
+      $$TransferEventsTableTableManager(_db, _db.transferEvents);
 }

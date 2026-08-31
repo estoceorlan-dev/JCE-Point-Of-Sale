@@ -48,6 +48,12 @@ class Branches extends Table {
   IntColumn get voidWindowMinutes => integer()
       .withDefault(const Constant<int>(15))
       .check(const CustomExpression<bool>('void_window_minutes >= 0'))();
+  IntColumn get transferApprovalThresholdMilli => integer().nullable().check(
+    const CustomExpression<bool>(
+      'transfer_approval_threshold_milli IS NULL OR '
+      'transfer_approval_threshold_milli >= 0',
+    ),
+  )();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();

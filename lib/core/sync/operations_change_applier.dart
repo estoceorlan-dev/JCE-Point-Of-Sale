@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
+import '../remote/remote_sync_data_source.dart';
 import 'remote_change_envelope.dart';
 
 class OperationsChangeApplier {
@@ -26,6 +29,8 @@ class OperationsChangeApplier {
       await _sale(envelope);
     } else if (type == 'sale.return' || type == 'sale.void') {
       await _saleCorrection(envelope);
+    } else if (type.startsWith('transfer.')) {
+      await _transfer(envelope);
     } else if (type == 'device.register') {
       // Device registration has no local business projection.
     } else {
@@ -77,6 +82,15 @@ class OperationsChangeApplier {
               _nullableInt(payload['returnApprovalThresholdMinor']),
             ),
             voidWindowMinutes: Value(_integer(payload['voidWindowMinutes'])),
+          ),
+        );
+      case 'branch.transfer_policy.configure':
+        await _updateBranch(
+          envelope,
+          update.copyWith(
+            transferApprovalThresholdMilli: Value(
+              _nullableInt(payload['approvalThresholdMilli']),
+            ),
           ),
         );
       case 'inventory.policy.configure':
@@ -295,7 +309,11 @@ class OperationsChangeApplier {
             onHandMilli: Value(
               _integer(value['onHandMilli'] ?? value['on_hand_milli']),
             ),
-            reservedMilli: Value(existing?.reservedMilli ?? 0),
+            reservedMilli: Value(
+              _nullableInt(value['reservedMilli']) ??
+                  existing?.reservedMilli ??
+                  0,
+            ),
             reorderPointMilli: Value(
               _nullableInt(
                     value['reorder_point_milli'] ?? value['reorderPointMilli'],
@@ -991,6 +1009,237 @@ class OperationsChangeApplier {
           );
     }
   }
+
+  Future<void> _transfer(RemoteChangeEnvelope envelope) async {
+    final transfer = _requiredMap(envelope.result['transfer'], 'transfer');
+    final transferId = _requiredString(transfer, 'id');
+    final sourceBranchId = _requiredString(transfer, 'sourceBranchId');
+    final destinationBranchId = _requiredString(
+      transfer,
+      'destinationBranchId',
+    );
+    final existing =
+        await (database.select(database.stockTransfers)..where(
+              (row) =>
+                  row.id.equals(transferId) &
+                  row.organizationId.equals(envelope.change.organizationId),
+            ))
+            .getSingleOrNull();
+    final occurredAt = envelope.change.occurredAt;
+    await database
+        .into(database.stockTransfers)
+        .insertOnConflictUpdate(
+          StockTransfersCompanion.insert(
+            id: transferId,
+            organizationId: envelope.change.organizationId,
+            sourceBranchId: sourceBranchId,
+            destinationBranchId: destinationBranchId,
+            transferNumber: _requiredString(transfer, 'transferNumber'),
+            status: _requiredString(transfer, 'status'),
+            approvalRequired: Value(transfer['approvalRequired'] == true),
+            notes: Value(_string(transfer['notes'])),
+            createdByUserId:
+                _string(transfer['createdByUserId']) ?? envelope.actorUserId,
+            approvedByUserId: Value(_string(transfer['approvedByUserId'])),
+            rejectionReason: Value(_string(transfer['rejectionReason'])),
+            cancellationReason: Value(_string(transfer['cancellationReason'])),
+            submittedAt: Value(_date(transfer['submittedAt'])),
+            approvedAt: Value(_date(transfer['approvedAt'])),
+            shippedAt: Value(_date(transfer['shippedAt'])),
+            receivedAt: Value(_date(transfer['receivedAt'])),
+            cancelledAt: Value(_date(transfer['cancelledAt'])),
+            version: Value(_integer(transfer['version'])),
+            createdAt:
+                _date(transfer['createdAt']) ??
+                existing?.createdAt ??
+                occurredAt,
+            updatedAt: _date(transfer['updatedAt']) ?? occurredAt,
+          ),
+        );
+
+    final itemValues = envelope.result['items'];
+    if (itemValues is! List) {
+      throw const FormatException('Transfer items are missing.');
+    }
+    for (final value in itemValues) {
+      final item = _requiredMap(value, 'transfer item');
+      final itemId = _requiredString(item, 'id');
+      final local = await (database.select(
+        database.stockTransferItems,
+      )..where((row) => row.id.equals(itemId))).getSingleOrNull();
+      await database
+          .into(database.stockTransferItems)
+          .insertOnConflictUpdate(
+            StockTransferItemsCompanion.insert(
+              id: itemId,
+              organizationId: envelope.change.organizationId,
+              transferId: transferId,
+              productId: _requiredString(item, 'productId'),
+              sourceStockLocationId: _requiredString(
+                item,
+                'sourceStockLocationId',
+              ),
+              destinationStockLocationId: _requiredString(
+                item,
+                'destinationStockLocationId',
+              ),
+              damagedStockLocationId: Value(
+                _string(item['damagedStockLocationId']),
+              ),
+              requestedQuantityMilli: _integer(item['requestedQuantityMilli']),
+              shippedQuantityMilli: Value(
+                _integer(item['shippedQuantityMilli']),
+              ),
+              receivedQuantityMilli: Value(
+                _integer(item['receivedQuantityMilli']),
+              ),
+              damagedQuantityMilli: Value(
+                _integer(item['damagedQuantityMilli']),
+              ),
+              discrepancyQuantityMilli: Value(
+                _integer(item['discrepancyQuantityMilli']),
+              ),
+              version: Value(_integer(item['version'])),
+              createdAt: local?.createdAt ?? occurredAt,
+              updatedAt: occurredAt,
+            ),
+          );
+    }
+
+    final event = _requiredMap(envelope.result['event'], 'transfer event');
+    final priorEvent =
+        await (database.select(database.transferEvents)..where(
+              (row) => row.operationId.equals(envelope.change.operationId),
+            ))
+            .getSingleOrNull();
+    if (priorEvent == null) {
+      await database
+          .into(database.transferEvents)
+          .insert(
+            TransferEventsCompanion.insert(
+              id: _requiredString(event, 'id'),
+              organizationId: envelope.change.organizationId,
+              transferId: transferId,
+              operationId: envelope.change.operationId,
+              eventType: _requiredString(event, 'eventType'),
+              fromStatus: Value(_string(event['fromStatus'])),
+              toStatus: _requiredString(event, 'toStatus'),
+              actorUserId:
+                  _string(event['actorUserId']) ?? envelope.actorUserId,
+              reason: Value(_string(event['reason'])),
+              metadataJson: Value(
+                jsonEncode(
+                  _map(event['metadata']) ?? const <String, Object?>{},
+                ),
+              ),
+              occurredAt: _date(event['occurredAt']) ?? occurredAt,
+              createdAt: occurredAt,
+            ),
+          );
+    }
+
+    await _applyTransferBalances(
+      envelope,
+      envelope.result['balances'],
+      sourceBranchId,
+    );
+    await _applyTransferBalances(
+      envelope,
+      envelope.result['reservationBalances'],
+      sourceBranchId,
+    );
+    final inventory = _map(envelope.result['inventory']);
+    if (inventory != null) {
+      final transaction = _map(inventory['inventoryTransaction']);
+      final lines = inventory['lines'];
+      if (transaction != null && lines is List) {
+        final branchId = envelope.commandType == 'transfer.ship'
+            ? sourceBranchId
+            : destinationBranchId;
+        final canApply = await _hasLocalLocations(lines);
+        if (canApply) {
+          final scoped = _withBranch(envelope, branchId);
+          await _applyInventoryTransaction(
+            scoped,
+            result: inventory,
+            payload: {
+              'transactionType': _requiredString(
+                transaction,
+                'transactionType',
+              ),
+              'occurredAt': _string(transaction['occurredAt']),
+              'referenceType':
+                  envelope.commandType == 'transfer.correct_receipt'
+                  ? 'stock_transfer_correction'
+                  : 'stock_transfer',
+              'referenceId': transferId,
+              'lines': lines,
+            },
+            operationId: '${envelope.change.operationId}:inventory',
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _applyTransferBalances(
+    RemoteChangeEnvelope envelope,
+    Object? values,
+    String branchId,
+  ) async {
+    if (values is! List) return;
+    final scoped = _withBranch(envelope, branchId);
+    for (final value in values) {
+      final balance = _requiredMap(value, 'transfer balance');
+      final locationId = _requiredString(balance, 'stockLocationId');
+      final available = await (database.select(
+        database.stockLocations,
+      )..where((row) => row.id.equals(locationId))).getSingleOrNull();
+      if (available == null) continue;
+      await _applyBalance(
+        scoped,
+        balance,
+        stockLocationId: locationId,
+        productId: _requiredString(balance, 'productId'),
+      );
+    }
+  }
+
+  Future<bool> _hasLocalLocations(List<Object?> lines) async {
+    for (final value in lines) {
+      final line = _requiredMap(value, 'inventory line');
+      final location =
+          await (database.select(database.stockLocations)..where(
+                (row) =>
+                    row.id.equals(_requiredString(line, 'stockLocationId')),
+              ))
+              .getSingleOrNull();
+      if (location == null) return false;
+    }
+    return true;
+  }
+
+  RemoteChangeEnvelope _withBranch(
+    RemoteChangeEnvelope envelope,
+    String branchId,
+  ) => RemoteChangeEnvelope(
+    change: RemoteChange(
+      sequence: envelope.change.sequence,
+      organizationId: envelope.change.organizationId,
+      branchId: branchId,
+      aggregateType: envelope.change.aggregateType,
+      aggregateId: envelope.change.aggregateId,
+      operationId: envelope.change.operationId,
+      changeType: envelope.change.changeType,
+      version: envelope.change.version,
+      payload: envelope.change.payload,
+      occurredAt: envelope.change.occurredAt,
+    ),
+    commandType: envelope.commandType,
+    actorUserId: envelope.actorUserId,
+    commandPayload: envelope.commandPayload,
+    result: envelope.result,
+  );
 
   Future<void> _insertDiscount(
     RemoteChangeEnvelope envelope,

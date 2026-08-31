@@ -275,4 +275,47 @@ entity_name, entity_id, metadata_json, created_at) VALUES
     await database.close();
     schema.close();
   });
+
+  test('released version 8 corrections migrate to stock transfers', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(8);
+    final database = AppDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(
+      database,
+      AppDatabase.currentSchemaVersion,
+    );
+    final now = DateTime.utc(2026, 8, 31);
+    await database
+        .into(database.organizations)
+        .insert(
+          OrganizationsCompanion.insert(
+            id: 'org-v9',
+            code: 'V9',
+            name: 'Version 9',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await database
+        .into(database.branches)
+        .insert(
+          BranchesCompanion.insert(
+            id: 'branch-v9',
+            organizationId: 'org-v9',
+            code: 'MAIN',
+            name: 'Main',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+    final branch = await database.select(database.branches).getSingle();
+    expect(branch.transferApprovalThresholdMilli, isNull);
+    expect(await database.select(database.stockTransfers).get(), isEmpty);
+    expect(await database.select(database.stockTransferItems).get(), isEmpty);
+    expect(await database.select(database.transferEvents).get(), isEmpty);
+
+    await database.close();
+    schema.close();
+  });
 }

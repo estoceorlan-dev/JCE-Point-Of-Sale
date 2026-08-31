@@ -63,7 +63,7 @@ extension AppRouteInfo on AppRoute {
     AppRoute.pos => AppPermission.processSales,
     AppRoute.products => AppPermission.manageProducts,
     AppRoute.inventory => AppPermission.manageInventory,
-    AppRoute.transfers => AppPermission.approveTransfers,
+    AppRoute.transfers => AppPermission.manageInventory,
     AppRoute.purchases => AppPermission.createPurchases,
     AppRoute.reports => AppPermission.viewReports,
     AppRoute.logs => AppPermission.viewAuditLogs,

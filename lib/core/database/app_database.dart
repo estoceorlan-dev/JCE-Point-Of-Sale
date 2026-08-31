@@ -46,11 +46,14 @@ import 'tables/sync_outbox_table.dart';
 import 'tables/stock_count_items_table.dart';
 import 'tables/stock_counts_table.dart';
 import 'tables/stock_locations_table.dart';
+import 'tables/stock_transfer_items_table.dart';
+import 'tables/stock_transfers_table.dart';
 import 'tables/shift_counts_table.dart';
 import 'tables/shifts_table.dart';
 import 'tables/tax_categories_table.dart';
 import 'tables/units_table.dart';
 import 'tables/user_role_assignments_table.dart';
+import 'tables/transfer_events_table.dart';
 
 part 'app_database.g.dart';
 
@@ -96,6 +99,9 @@ part 'app_database.g.dart';
     SaleReturns,
     SaleReturnItems,
     RefundPayments,
+    StockTransfers,
+    StockTransferItems,
+    TransferEvents,
   ],
   daos: [
     MetadataDao,
@@ -112,7 +118,7 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 8;
+  static const int currentSchemaVersion = 9;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -185,6 +191,8 @@ class AppDatabase extends _$AppDatabase {
               branches.returnApprovalThresholdMinor:
                   const CustomExpression<int>('NULL'),
               branches.voidWindowMinutes: const Constant<int>(15),
+              branches.transferApprovalThresholdMilli:
+                  const CustomExpression<int>('NULL'),
             },
           ),
         );
@@ -321,6 +329,22 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(refundPayments);
         await migrator.createIndex(approvalRequestsStatusIdx);
         await migrator.createIndex(saleReturnsHistoryIdx);
+      case 9:
+        if (!await _tableHasColumn(
+          'branches',
+          'transfer_approval_threshold_milli',
+        )) {
+          await migrator.addColumn(
+            branches,
+            branches.transferApprovalThresholdMilli,
+          );
+        }
+        await migrator.createTable(stockTransfers);
+        await migrator.createTable(stockTransferItems);
+        await migrator.createTable(transferEvents);
+        await migrator.createIndex(stockTransfersSourceStatusIdx);
+        await migrator.createIndex(stockTransfersDestinationStatusIdx);
+        await migrator.createIndex(transferEventsHistoryIdx);
       default:
         throw StateError('Missing migration for schema version $version.');
     }
