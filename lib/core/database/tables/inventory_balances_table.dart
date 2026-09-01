@@ -26,6 +26,11 @@ class InventoryBalances extends Table {
   IntColumn get reorderPointMilli => integer()
       .withDefault(const Constant<int>(0))
       .check(const CustomExpression<bool>('reorder_point_milli >= 0'))();
+  IntColumn get weightedAverageCostMinor => integer()
+      .withDefault(const Constant<int>(0))
+      .check(
+        const CustomExpression<bool>('weighted_average_cost_minor >= 0'),
+      )();
   IntColumn get version => integer()
       .withDefault(const Constant<int>(0))
       .check(const CustomExpression<bool>('version >= 0'))();

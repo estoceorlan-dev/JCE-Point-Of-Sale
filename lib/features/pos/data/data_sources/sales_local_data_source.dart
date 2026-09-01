@@ -121,7 +121,7 @@ class SalesLocalDataSource {
       stockLocationId: location.id,
       stockLocationName: location.name,
       unitPriceMinor: effectivePrices.first.unitPriceMinor,
-      unitCostMinor: 0,
+      unitCostMinor: balance?.weightedAverageCostMinor ?? 0,
       taxRateBasisPoints: tax?.rateBasisPoints ?? 0,
       taxInclusive: tax?.isInclusive ?? true,
       availableQuantityMilli: balance?.onHandMilli ?? 0,
@@ -150,6 +150,7 @@ SELECT
   sl.name AS stock_location_name,
   COALESCE(ib.on_hand_milli, 0) AS available_quantity_milli,
   COALESCE(ib.version, 0) AS inventory_version,
+  COALESCE(ib.weighted_average_cost_minor, 0) AS unit_cost_minor,
   (
     SELECT pb.barcode FROM product_barcodes pb
     WHERE pb.product_id = p.id AND pb.deleted_at IS NULL
@@ -255,7 +256,7 @@ LIMIT 100
                   stockLocationId: row.read<String>('stock_location_id'),
                   stockLocationName: row.read<String>('stock_location_name'),
                   unitPriceMinor: row.read<int>('unit_price_minor'),
-                  unitCostMinor: 0,
+                  unitCostMinor: row.read<int>('unit_cost_minor'),
                   taxRateBasisPoints: row.read<int>('tax_rate_basis_points'),
                   taxInclusive: row.read<bool>('tax_inclusive'),
                   availableQuantityMilli: row.read<int>(

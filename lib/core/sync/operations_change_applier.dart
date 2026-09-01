@@ -31,6 +31,10 @@ class OperationsChangeApplier {
       await _saleCorrection(envelope);
     } else if (type.startsWith('transfer.')) {
       await _transfer(envelope);
+    } else if (type.startsWith('supplier.')) {
+      await _supplier(envelope);
+    } else if (type.startsWith('purchase_order.')) {
+      await _purchaseOrder(envelope);
     } else if (type == 'device.register') {
       // Device registration has no local business projection.
     } else {
@@ -319,6 +323,11 @@ class OperationsChangeApplier {
                     value['reorder_point_milli'] ?? value['reorderPointMilli'],
                   ) ??
                   existing?.reorderPointMilli ??
+                  0,
+            ),
+            weightedAverageCostMinor: Value(
+              _nullableInt(value['weightedAverageCostMinor']) ??
+                  existing?.weightedAverageCostMinor ??
                   0,
             ),
             version: Value(_integer(value['version'])),
@@ -1010,6 +1019,239 @@ class OperationsChangeApplier {
     }
   }
 
+  Future<void> _supplier(RemoteChangeEnvelope envelope) async {
+    final supplier = _requiredMap(envelope.result['supplier'], 'supplier');
+    final id = _requiredString(supplier, 'id');
+    final existing =
+        await (database.select(database.suppliers)..where(
+              (row) =>
+                  row.id.equals(id) &
+                  row.organizationId.equals(envelope.change.organizationId),
+            ))
+            .getSingleOrNull();
+    final occurredAt = envelope.change.occurredAt;
+    final deletedAt = _date(supplier['deletedAt']);
+    final code = _requiredString(supplier, 'code');
+    final name = _requiredString(supplier, 'name');
+    await database
+        .into(database.suppliers)
+        .insertOnConflictUpdate(
+          SuppliersCompanion.insert(
+            id: id,
+            organizationId: envelope.change.organizationId,
+            code: code,
+            normalizedCode: _normalizeSyncSearch(code),
+            name: name,
+            normalizedName: _normalizeSyncSearch(name),
+            taxIdentifier: Value(_string(supplier['taxIdentifier'])),
+            paymentTermsDays: Value(_integer(supplier['paymentTermsDays'])),
+            isActive: Value(supplier['isActive'] == true),
+            version: Value(_integer(supplier['version'])),
+            createdAt:
+                _date(supplier['createdAt']) ??
+                existing?.createdAt ??
+                occurredAt,
+            updatedAt: _date(supplier['updatedAt']) ?? occurredAt,
+            deletedAt: Value(deletedAt),
+          ),
+        );
+    final contacts = envelope.result['contacts'];
+    if (contacts is! List) return;
+    for (final value in contacts) {
+      final contact = _requiredMap(value, 'supplier contact');
+      final contactId = _requiredString(contact, 'id');
+      final local = await (database.select(
+        database.supplierContacts,
+      )..where((row) => row.id.equals(contactId))).getSingleOrNull();
+      await database
+          .into(database.supplierContacts)
+          .insertOnConflictUpdate(
+            SupplierContactsCompanion.insert(
+              id: contactId,
+              organizationId: envelope.change.organizationId,
+              supplierId: id,
+              name: _requiredString(contact, 'name'),
+              role: Value(_string(contact['role'])),
+              email: Value(_string(contact['email'])),
+              phone: Value(_string(contact['phone'])),
+              isPrimary: Value(contact['isPrimary'] == true),
+              createdAt: local?.createdAt ?? occurredAt,
+              updatedAt: occurredAt,
+            ),
+          );
+    }
+  }
+
+  Future<void> _purchaseOrder(RemoteChangeEnvelope envelope) async {
+    final order = _requiredMap(
+      envelope.result['purchaseOrder'],
+      'purchase order',
+    );
+    final orderId = _requiredString(order, 'id');
+    final existing =
+        await (database.select(database.purchaseOrders)..where(
+              (row) =>
+                  row.id.equals(orderId) &
+                  row.organizationId.equals(envelope.change.organizationId),
+            ))
+            .getSingleOrNull();
+    final occurredAt = envelope.change.occurredAt;
+    await database
+        .into(database.purchaseOrders)
+        .insertOnConflictUpdate(
+          PurchaseOrdersCompanion.insert(
+            id: orderId,
+            organizationId: envelope.change.organizationId,
+            branchId: _branchId(envelope),
+            supplierId: _requiredString(order, 'supplierId'),
+            orderNumber: _requiredString(order, 'orderNumber'),
+            status: _requiredString(order, 'status'),
+            notes: Value(_string(order['notes'])),
+            expectedDeliveryAt: Value(_date(order['expectedDeliveryAt'])),
+            createdByUserId:
+                _string(order['createdByUserId']) ?? envelope.actorUserId,
+            approvedByUserId: Value(_string(order['approvedByUserId'])),
+            cancellationReason: Value(_string(order['cancellationReason'])),
+            submittedAt: Value(_date(order['submittedAt'])),
+            approvedAt: Value(_date(order['approvedAt'])),
+            cancelledAt: Value(_date(order['cancelledAt'])),
+            version: Value(_integer(order['version'])),
+            createdAt:
+                _date(order['createdAt']) ?? existing?.createdAt ?? occurredAt,
+            updatedAt: _date(order['updatedAt']) ?? occurredAt,
+          ),
+        );
+
+    final itemValues = envelope.result['items'];
+    if (itemValues is! List) {
+      throw const FormatException('Purchase order items are missing.');
+    }
+    for (final value in itemValues) {
+      final item = _requiredMap(value, 'purchase order item');
+      final itemId = _requiredString(item, 'id');
+      final local = await (database.select(
+        database.purchaseOrderItems,
+      )..where((row) => row.id.equals(itemId))).getSingleOrNull();
+      await database
+          .into(database.purchaseOrderItems)
+          .insertOnConflictUpdate(
+            PurchaseOrderItemsCompanion.insert(
+              id: itemId,
+              organizationId: envelope.change.organizationId,
+              branchId: _branchId(envelope),
+              purchaseOrderId: orderId,
+              productId: _requiredString(item, 'productId'),
+              orderedQuantityMilli: _integer(item['orderedQuantityMilli']),
+              receivedQuantityMilli: Value(
+                _integer(item['receivedQuantityMilli']),
+              ),
+              cancelledQuantityMilli: Value(
+                _integer(item['cancelledQuantityMilli']),
+              ),
+              unitCostMinor: Value(_integer(item['unitCostMinor'])),
+              estimatedLandedCostMinor: Value(
+                _integer(item['estimatedLandedCostMinor']),
+              ),
+              version: Value(_integer(item['version'])),
+              createdAt: local?.createdAt ?? occurredAt,
+              updatedAt: occurredAt,
+            ),
+          );
+    }
+
+    final receipts = envelope.result['receipts'];
+    if (receipts is List) {
+      for (final value in receipts) {
+        final receipt = _requiredMap(value, 'goods receipt');
+        final receiptId = _requiredString(receipt, 'id');
+        final local = await (database.select(
+          database.goodsReceipts,
+        )..where((row) => row.id.equals(receiptId))).getSingleOrNull();
+        await database
+            .into(database.goodsReceipts)
+            .insertOnConflictUpdate(
+              GoodsReceiptsCompanion.insert(
+                id: receiptId,
+                organizationId: envelope.change.organizationId,
+                branchId: _branchId(envelope),
+                purchaseOrderId: orderId,
+                supplierId: _requiredString(order, 'supplierId'),
+                stockLocationId: _requiredString(receipt, 'stockLocationId'),
+                receiptNumber: _requiredString(receipt, 'receiptNumber'),
+                operationId:
+                    _string(receipt['operationId']) ??
+                    local?.operationId ??
+                    envelope.change.operationId,
+                supplierDocumentNumber: Value(
+                  _string(receipt['supplierDocumentNumber']),
+                ),
+                notes: Value(_string(receipt['notes'])),
+                receivedByUserId:
+                    _string(receipt['receivedByUserId']) ??
+                    envelope.actorUserId,
+                receivedAt: _date(receipt['receivedAt']) ?? occurredAt,
+                createdAt: local?.createdAt ?? occurredAt,
+              ),
+            );
+      }
+    }
+
+    final inventory = _map(envelope.result['inventory']);
+    if (inventory != null) {
+      final inventoryLines = inventory['lines'];
+      if (inventoryLines is List && await _hasLocalLocations(inventoryLines)) {
+        await _applyInventoryTransaction(
+          envelope,
+          result: inventory,
+          payload: {
+            'transactionType': 'purchase_receipt',
+            'reasonCode': 'purchase_receipt',
+            'referenceType': 'goods_receipt',
+            'referenceId': _string(envelope.commandPayload['receiptId']),
+            'occurredAt': _string(envelope.commandPayload['receivedAt']),
+            'lines': inventoryLines,
+          },
+          operationId: '${envelope.change.operationId}:inventory',
+        );
+      }
+    }
+
+    final receiptItems = envelope.result['receiptItems'];
+    if (receiptItems is! List) return;
+    for (final value in receiptItems) {
+      final item = _requiredMap(value, 'goods receipt item');
+      await database
+          .into(database.goodsReceiptItems)
+          .insert(
+            GoodsReceiptItemsCompanion.insert(
+              id: _requiredString(item, 'id'),
+              organizationId: envelope.change.organizationId,
+              branchId: _branchId(envelope),
+              goodsReceiptId: _requiredString(item, 'goodsReceiptId'),
+              purchaseOrderItemId: _requiredString(item, 'purchaseOrderItemId'),
+              productId: _requiredString(item, 'productId'),
+              inventoryTransactionId: _requiredString(
+                item,
+                'inventoryTransactionId',
+              ),
+              receivedQuantityMilli: _integer(item['receivedQuantityMilli']),
+              unitCostMinor: _integer(item['unitCostMinor']),
+              freightCostMinor: Value(_integer(item['freightCostMinor'])),
+              dutyCostMinor: Value(_integer(item['dutyCostMinor'])),
+              otherLandedCostMinor: Value(
+                _integer(item['otherLandedCostMinor']),
+              ),
+              landedUnitCostMinor: _integer(item['landedUnitCostMinor']),
+              weightedAverageCostMinorAfter: _integer(
+                item['weightedAverageCostMinorAfter'],
+              ),
+              createdAt: occurredAt,
+            ),
+            mode: InsertMode.insertOrIgnore,
+          );
+    }
+  }
+
   Future<void> _transfer(RemoteChangeEnvelope envelope) async {
     final transfer = _requiredMap(envelope.result['transfer'], 'transfer');
     final transferId = _requiredString(transfer, 'id');
@@ -1306,6 +1548,9 @@ int? _nullableInt(Object? value) => value == null ? null : _integer(value);
 
 DateTime? _date(Object? value) =>
     value == null ? null : DateTime.parse(value.toString()).toUtc();
+
+String _normalizeSyncSearch(String value) =>
+    value.trim().toUpperCase().replaceAll(RegExp('[^A-Z0-9]'), '');
 
 int _refundAmount(Map<String, Object?> result, String method) {
   final refunds = result['refunds'];

@@ -12,6 +12,7 @@ import {
 } from "./command_types";
 import {applyInventoryCommand} from "./inventory_commands";
 import {applyProductCommand} from "./product_commands";
+import {applyPurchaseCommand} from "./purchase_commands";
 import {completeSale} from "./sale_commands";
 import {correctSale} from "./sale_correction_commands";
 import {applyShiftCommand} from "./shift_commands";
@@ -158,6 +159,10 @@ function handlerFor(commandType: string): CommandHandler {
   }
   if (commandType.startsWith("stock_count.")) return applyStockCountCommand;
   if (commandType.startsWith("transfer.")) return applyTransferCommand;
+  if (commandType.startsWith("supplier.") ||
+      commandType.startsWith("purchase_order.")) {
+    return applyPurchaseCommand;
+  }
   if (commandType.startsWith("inventory.") || commandType.startsWith("stock_location.")) {
     return applyInventoryCommand;
   }
@@ -179,7 +184,8 @@ function resultVersion(result: CommandResult): number {
 }
 
 function changeFeedBranchId(command: AuthorizedCommand): string | null {
-  if (command.aggregateType === "stock_transfer") return null;
+  if (command.aggregateType === "stock_transfer" ||
+      command.aggregateType === "supplier") return null;
   if (["product", "category", "unit", "product_image"].includes(command.aggregateType)) {
     return null;
   }

@@ -45,6 +45,9 @@ The canonical application and bundle identifier is `com.jce.pos`.
 - Authenticated, idempotent product, inventory, shift, and sale transactions
 - Generated typed SQL Connect change-feed and operation-result reads
 - Retriable authenticated product-image finalization through Cloud Storage
+- Auditable inter-branch transfer custody, reservations, shipment, and receipt
+- Offline suppliers, approval-ready purchase orders, partial goods receipts,
+  landed costs, and weighted-average inventory cost projections
 
 ## Environment configuration
 
@@ -133,6 +136,16 @@ drawer reconciliation, manager approval evidence, correction receipts, and
 offline ordering guarantees. See
 [Phase 9 sale corrections](docs/phase_9_sale_corrections.md) for its policy and
 deployment requirements.
+
+Phase 10 adds source reservation, shipment, in-transit custody, destination
+receipt, discrepancies, and approved receipt corrections for stock transfers.
+See [Phase 10 stock transfers](docs/phase_10_stock_transfers.md).
+
+Phase 11 adds supplier management, purchase-order approval, partial and multiple
+goods receipts, receipt-only inventory posting, and deterministic weighted-
+average landed costs. Apply `backend/sql/migrations/0006_phase11_purchasing.sql`
+before deploying the updated Functions and client. See
+[Phase 11 purchasing](docs/phase_11_purchasing.md).
 
 ## Code generation
 

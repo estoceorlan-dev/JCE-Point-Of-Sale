@@ -318,4 +318,46 @@ entity_name, entity_id, metadata_json, created_at) VALUES
     await database.close();
     schema.close();
   });
+
+  test('released version 9 transfers migrate to purchasing', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(9);
+    final database = AppDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(
+      database,
+      AppDatabase.currentSchemaVersion,
+    );
+    final now = DateTime.utc(2026, 8, 31);
+    await database
+        .into(database.organizations)
+        .insert(
+          OrganizationsCompanion.insert(
+            id: 'org-v10',
+            code: 'V10',
+            name: 'Version 10',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await database
+        .into(database.branches)
+        .insert(
+          BranchesCompanion.insert(
+            id: 'branch-v10',
+            organizationId: 'org-v10',
+            code: 'MAIN',
+            name: 'Main',
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+    expect(await database.select(database.suppliers).get(), isEmpty);
+    expect(await database.select(database.purchaseOrders).get(), isEmpty);
+    expect(await database.select(database.goodsReceipts).get(), isEmpty);
+    expect(await database.select(database.goodsReceiptItems).get(), isEmpty);
+
+    await database.close();
+    schema.close();
+  });
 }

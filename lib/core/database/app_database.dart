@@ -17,6 +17,8 @@ import 'tables/approval_requests_table.dart';
 import 'tables/branches_table.dart';
 import 'tables/cash_movements_table.dart';
 import 'tables/categories_table.dart';
+import 'tables/goods_receipt_items_table.dart';
+import 'tables/goods_receipts_table.dart';
 import 'tables/inventory_balances_table.dart';
 import 'tables/inventory_ledger_entries_table.dart';
 import 'tables/inventory_transactions_table.dart';
@@ -28,6 +30,8 @@ import 'tables/product_barcodes_table.dart';
 import 'tables/product_images_table.dart';
 import 'tables/product_prices_table.dart';
 import 'tables/products_table.dart';
+import 'tables/purchase_order_items_table.dart';
+import 'tables/purchase_orders_table.dart';
 import 'tables/payments_table.dart';
 import 'tables/receipt_sequences_table.dart';
 import 'tables/registers_table.dart';
@@ -48,6 +52,9 @@ import 'tables/stock_counts_table.dart';
 import 'tables/stock_locations_table.dart';
 import 'tables/stock_transfer_items_table.dart';
 import 'tables/stock_transfers_table.dart';
+import 'tables/supplier_contacts_table.dart';
+import 'tables/supplier_products_table.dart';
+import 'tables/suppliers_table.dart';
 import 'tables/shift_counts_table.dart';
 import 'tables/shifts_table.dart';
 import 'tables/tax_categories_table.dart';
@@ -102,6 +109,13 @@ part 'app_database.g.dart';
     StockTransfers,
     StockTransferItems,
     TransferEvents,
+    Suppliers,
+    SupplierContacts,
+    SupplierProducts,
+    PurchaseOrders,
+    PurchaseOrderItems,
+    GoodsReceipts,
+    GoodsReceiptItems,
   ],
   daos: [
     MetadataDao,
@@ -118,7 +132,7 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 9;
+  static const int currentSchemaVersion = 10;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -345,6 +359,26 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createIndex(stockTransfersSourceStatusIdx);
         await migrator.createIndex(stockTransfersDestinationStatusIdx);
         await migrator.createIndex(transferEventsHistoryIdx);
+      case 10:
+        if (!await _tableHasColumn(
+          'inventory_balances',
+          'weighted_average_cost_minor',
+        )) {
+          await migrator.addColumn(
+            inventoryBalances,
+            inventoryBalances.weightedAverageCostMinor,
+          );
+        }
+        await migrator.createTable(suppliers);
+        await migrator.createTable(supplierContacts);
+        await migrator.createTable(supplierProducts);
+        await migrator.createTable(purchaseOrders);
+        await migrator.createTable(purchaseOrderItems);
+        await migrator.createTable(goodsReceipts);
+        await migrator.createTable(goodsReceiptItems);
+        await migrator.createIndex(suppliersSearchIdx);
+        await migrator.createIndex(purchaseOrdersBranchStatusIdx);
+        await migrator.createIndex(goodsReceiptsHistoryIdx);
       default:
         throw StateError('Missing migration for schema version $version.');
     }

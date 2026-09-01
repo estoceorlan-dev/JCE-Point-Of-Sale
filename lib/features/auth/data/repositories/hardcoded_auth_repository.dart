@@ -191,6 +191,9 @@ class HardcodedAuthRepository implements AuthRepository {
         AppPermission.approveShiftDiscrepancies,
         AppPermission.approveTransfers,
         AppPermission.createPurchases,
+        AppPermission.approvePurchases,
+        AppPermission.receivePurchases,
+        AppPermission.manageSuppliers,
         AppPermission.viewReports,
         AppPermission.viewAuditLogs,
       },
@@ -205,6 +208,8 @@ class HardcodedAuthRepository implements AuthRepository {
         AppPermission.manageInventory,
         AppPermission.approveTransfers,
         AppPermission.createPurchases,
+        AppPermission.receivePurchases,
+        AppPermission.manageSuppliers,
       },
       UserRole.auditor => {
         AppPermission.viewDashboard,
