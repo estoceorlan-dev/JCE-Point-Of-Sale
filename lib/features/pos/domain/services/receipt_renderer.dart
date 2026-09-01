@@ -22,6 +22,7 @@ class PlainTextReceiptRenderer implements ReceiptRenderer {
       'Receipt ${sale.receiptNumber}',
       'Register: ${sale.registerName}',
       'Date: ${sale.completedAt.toLocal()}',
+      if (sale.customerDisplayName case final customer?) 'Customer: $customer',
       '--------------------------------',
       for (final item in sale.items) ...[
         '${item.productName} (${item.sku})',

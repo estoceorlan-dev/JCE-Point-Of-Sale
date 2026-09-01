@@ -51,6 +51,11 @@ const appNavigationItems = <AppNavigationItem>[
     selectedIcon: Icons.shopping_cart_checkout,
   ),
   AppNavigationItem(
+    route: AppRoute.customers,
+    icon: Icons.people_outline,
+    selectedIcon: Icons.people,
+  ),
+  AppNavigationItem(
     route: AppRoute.reports,
     icon: Icons.bar_chart_outlined,
     selectedIcon: Icons.bar_chart,

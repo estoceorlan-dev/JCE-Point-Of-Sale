@@ -7,6 +7,7 @@ import '../../../../core/constants/app_breakpoints.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/models/permission.dart';
 import '../../../shifts/presentation/providers/shift_providers.dart';
+import '../../../customers/presentation/widgets/customer_checkout_selector.dart';
 import '../../domain/entities/sale.dart';
 import '../controllers/cart_controller.dart';
 import '../providers/pos_providers.dart';
@@ -44,6 +45,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     final checkoutAllowed =
         shift != null || (shiftPolicy?.allowSalesWithoutOpenShift ?? false);
     final canManagePolicy = session?.can(AppPermission.manageSettings) ?? false;
+    final canViewCustomers = session?.can(AppPermission.viewCustomers) ?? false;
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < AppBreakpoints.compact;
@@ -76,6 +78,10 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                     onPolicy: _openPolicy,
                   ),
                   const SizedBox(height: AppSpacing.xl),
+                  if (canViewCustomers) ...[
+                    const CustomerCheckoutSelector(),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                   if (compact)
                     Column(
                       children: [

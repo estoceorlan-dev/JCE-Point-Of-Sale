@@ -86,6 +86,8 @@ class SaleRecord {
     required this.items,
     required this.payments,
     this.shiftId,
+    this.customerId,
+    this.customerDisplayName,
     this.discountApprovedByUserId,
     this.corrections = const [],
   });
@@ -95,6 +97,8 @@ class SaleRecord {
   final String registerId;
   final String registerName;
   final String? shiftId;
+  final String? customerId;
+  final String? customerDisplayName;
   final String receiptNumber;
   final SaleStatus status;
   final String cashierUserId;
@@ -116,12 +120,14 @@ class CheckoutDraft {
     required this.cart,
     required this.tenders,
     required this.deviceId,
+    this.customerId,
     this.operationId,
   });
 
   final Cart cart;
   final List<PaymentTender> tenders;
   final String deviceId;
+  final String? customerId;
   final String? operationId;
 }
 

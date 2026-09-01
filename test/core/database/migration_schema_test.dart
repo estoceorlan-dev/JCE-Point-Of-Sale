@@ -360,4 +360,52 @@ entity_name, entity_id, metadata_json, created_at) VALUES
     await database.close();
     schema.close();
   });
+
+  test('released version 10 purchasing migrates to customers', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(10);
+    const timestamp = '2026-09-01T00:00:00.000Z';
+    schema.rawDatabase.execute('''INSERT INTO organizations
+(id, code, name, timezone, is_active, created_at, updated_at)
+VALUES ('org-v11', 'V11', 'Version 11', 'Asia/Manila', 1,
+'$timestamp', '$timestamp')''');
+    schema.rawDatabase.execute('''INSERT INTO branches
+(id, organization_id, code, name, timezone, is_active, created_at, updated_at)
+VALUES ('branch-v11', 'org-v11', 'MAIN', 'Main', 'Asia/Manila', 1,
+'$timestamp', '$timestamp')''');
+    schema.rawDatabase.execute('''INSERT INTO registers
+(id, organization_id, branch_id, code, name, is_active, version,
+created_at, updated_at)
+VALUES ('register-v11', 'org-v11', 'branch-v11', 'REG', 'Register', 1, 0,
+'$timestamp', '$timestamp')''');
+    schema.rawDatabase.execute('''INSERT INTO sales
+(id, organization_id, branch_id, register_id, operation_id, status,
+cashier_user_id, completed_at, created_at, updated_at)
+VALUES ('sale-v11', 'org-v11', 'branch-v11', 'register-v11', 'operation-v11',
+'completed', 'cashier-v11', '$timestamp', '$timestamp', '$timestamp')''');
+    final database = AppDatabase.forTesting(schema.newConnection());
+    await verifier.migrateAndValidate(
+      database,
+      AppDatabase.currentSchemaVersion,
+    );
+
+    expect(await database.select(database.customers).get(), isEmpty);
+    expect(await database.select(database.customerAddresses).get(), isEmpty);
+    expect(await database.select(database.customerNotes).get(), isEmpty);
+    expect(await database.select(database.loyaltyAccounts).get(), isEmpty);
+    expect(await database.select(database.loyaltyLedgerEntries).get(), isEmpty);
+    final salesColumns = await database
+        .customSelect('PRAGMA table_info(sales)')
+        .get();
+    expect(
+      salesColumns.map((row) => row.read<String>('name')),
+      contains('customer_id'),
+    );
+    final preservedSale = await database.select(database.sales).getSingle();
+    expect(preservedSale.id, 'sale-v11');
+    expect(preservedSale.customerId, isNull);
+
+    await database.close();
+    schema.close();
+  });
 }

@@ -103,6 +103,7 @@ type Sale @table(name: "sales", key: "id") {
   registerId: String!
   shiftId: String
   inventoryTransactionId: String
+  customerId: String
   operationId: String!
   receiptNumber: String
   status: String!
@@ -117,6 +118,41 @@ type Sale @table(name: "sales", key: "id") {
   version: Int!
   createdAt: Timestamp!
   updatedAt: Timestamp!
+}
+
+type Customer @table(name: "customers", key: "id") {
+  id: String!
+  organizationId: String!
+  customerNumber: String!
+  displayName: String!
+  normalizedName: String!
+  email: String
+  normalizedEmail: String
+  phone: String
+  normalizedPhone: String
+  birthDate: Timestamp
+  marketingConsent: Boolean!
+  status: String!
+  mergedIntoCustomerId: String
+  archivedAt: Timestamp
+  anonymizedAt: Timestamp
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+}
+
+type LoyaltyAccount @table(name: "loyalty_accounts", key: "id") {
+  id: String!
+  organizationId: String!
+  customerId: String!
+  status: String!
+  pointsBalance: Int64!
+  lifetimeEarnedPoints: Int64!
+  lifetimeRedeemedPoints: Int64!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  closedAt: Timestamp
 }
 
 type ProductImage @table(name: "product_images", key: "id") {

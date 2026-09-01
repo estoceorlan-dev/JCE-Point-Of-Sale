@@ -296,8 +296,27 @@ class DriftSalesRepository implements SalesRepository {
     final inventoryTransactionId = _idGenerator.newId();
     final itemIds = [for (final _ in pricing.lines) _idGenerator.newId()];
     final now = _clock.nowUtc();
+    final customerId = _trimmedOrNull(draft.customerId);
+    final customerDependency = customerId == null
+        ? null
+        : await _latestCustomerOperation(customerId);
     final mutation = await _localMutationTransaction.execute(
       businessWrite: (database) async {
+        if (customerId != null) {
+          final customer =
+              await (database.select(database.customers)..where(
+                    (row) =>
+                        row.id.equals(customerId) &
+                        row.organizationId.equals(context.organizationId) &
+                        row.status.equals('active'),
+                  ))
+                  .getSingleOrNull();
+          if (customer == null) {
+            throw const AuthorizationFailure(
+              'The selected customer is unavailable in this organization.',
+            );
+          }
+        }
         final scope = await _resolveRegisterAndShift(
           database,
           context,
@@ -352,6 +371,7 @@ class DriftSalesRepository implements SalesRepository {
                 registerId: scope.register.id,
                 shiftId: Value(scope.shift?.id),
                 inventoryTransactionId: Value(inventoryTransactionId),
+                customerId: Value(customerId),
                 operationId: operationId,
                 receiptNumber: Value(receiptNumber),
                 status: Value(SaleStatus.completed.databaseValue),
@@ -463,6 +483,7 @@ class DriftSalesRepository implements SalesRepository {
           'changeMinor': reconciliation.changeMinor,
           'lineCount': pricing.lines.length,
           'discountApprovedByUserId': discountApprovedByUserId,
+          'customerId': customerId,
         },
         now: now,
       ),
@@ -480,9 +501,11 @@ class DriftSalesRepository implements SalesRepository {
           deviceId: draft.deviceId,
           approvedByUserId: discountApprovedByUserId,
           saleDiscountReason: draft.cart.saleDiscountReason,
+          customerId: customerId,
           now: now,
         ),
         now: now,
+        dependsOnOperationId: customerDependency,
       ),
     );
     if (mutation.isFailure) {
@@ -1358,6 +1381,7 @@ GROUP BY sri.sale_item_id
     required PaymentReconciliation reconciliation,
     required String deviceId,
     required DateTime now,
+    String? customerId,
     String? approvedByUserId,
     String? saleDiscountReason,
   }) {
@@ -1366,6 +1390,7 @@ GROUP BY sri.sale_item_id
       'inventoryTransactionId': inventoryTransactionId,
       'deviceId': deviceId,
       'completedAt': now.toIso8601String(),
+      'customerId': customerId,
       'subtotalMinor': pricing.subtotalMinor,
       'discountMinor': pricing.discountMinor,
       'taxMinor': pricing.taxMinor,
@@ -1409,6 +1434,20 @@ GROUP BY sri.sale_item_id
           },
       ],
     };
+  }
+
+  Future<String?> _latestCustomerOperation(String customerId) async {
+    final rows =
+        await (_database.select(_database.syncOutboxEntries)
+              ..where(
+                (row) =>
+                    row.aggregateType.equals('customer') &
+                    row.aggregateId.equals(customerId),
+              )
+              ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
+              ..limit(1))
+            .get();
+    return rows.firstOrNull?.operationId;
   }
 }
 

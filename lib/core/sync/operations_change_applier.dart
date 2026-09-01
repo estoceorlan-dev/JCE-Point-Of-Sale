@@ -35,6 +35,8 @@ class OperationsChangeApplier {
       await _supplier(envelope);
     } else if (type.startsWith('purchase_order.')) {
       await _purchaseOrder(envelope);
+    } else if (type.startsWith('customer.') || type.startsWith('loyalty.')) {
+      await _customer(envelope);
     } else if (type == 'device.register') {
       // Device registration has no local business projection.
     } else {
@@ -673,6 +675,11 @@ class OperationsChangeApplier {
             inventoryTransactionId: Value(
               inventoryTransactionId ?? existing?.inventoryTransactionId,
             ),
+            customerId: Value(
+              _string(sale['customerId']) ??
+                  _string(payload['customerId']) ??
+                  existing?.customerId,
+            ),
             operationId: existing?.operationId ?? envelope.change.operationId,
             receiptNumber: Value(_string(sale['receiptNumber'])),
             status: Value(_string(sale['status']) ?? 'completed'),
@@ -1015,6 +1022,226 @@ class OperationsChangeApplier {
               reference: Value(_string(refund['reference'])),
               createdAt: envelope.change.occurredAt,
             ),
+          );
+    }
+  }
+
+  Future<void> _customer(RemoteChangeEnvelope envelope) async {
+    final target = _map(envelope.result['target']);
+    if (target != null) {
+      await _applyCustomerResult(envelope, target);
+    }
+    await _applyCustomerResult(envelope, envelope.result);
+    if (envelope.commandType == 'customer.merge') {
+      final sourceId = envelope.change.aggregateId;
+      final targetId = _requiredString(
+        envelope.commandPayload,
+        'targetCustomerId',
+      );
+      await (database.update(database.sales)..where(
+            (row) =>
+                row.organizationId.equals(envelope.change.organizationId) &
+                row.customerId.equals(sourceId),
+          ))
+          .write(
+            SalesCompanion(
+              customerId: Value(targetId),
+              updatedAt: Value(envelope.change.occurredAt),
+            ),
+          );
+      await (database.update(database.customerNotes)..where(
+            (row) =>
+                row.organizationId.equals(envelope.change.organizationId) &
+                row.customerId.equals(sourceId),
+          ))
+          .write(
+            CustomerNotesCompanion(
+              customerId: Value(targetId),
+              updatedAt: Value(envelope.change.occurredAt),
+            ),
+          );
+    }
+    if (envelope.commandType == 'customer.anonymize') {
+      await (database.update(database.customerNotes)..where(
+            (row) =>
+                row.organizationId.equals(envelope.change.organizationId) &
+                row.customerId.equals(envelope.change.aggregateId),
+          ))
+          .write(
+            CustomerNotesCompanion(
+              body: const Value('[anonymized]'),
+              deletedAt: Value(envelope.change.occurredAt),
+              updatedAt: Value(envelope.change.occurredAt),
+            ),
+          );
+    }
+  }
+
+  Future<void> _applyCustomerResult(
+    RemoteChangeEnvelope envelope,
+    Map<String, Object?> result,
+  ) async {
+    final customer = _requiredMap(result['customer'], 'customer');
+    final id = _requiredString(customer, 'id');
+    final existing =
+        await (database.select(database.customers)..where(
+              (row) =>
+                  row.id.equals(id) &
+                  row.organizationId.equals(envelope.change.organizationId),
+            ))
+            .getSingleOrNull();
+    final occurredAt = envelope.change.occurredAt;
+    final status = _requiredString(customer, 'status');
+    await database
+        .into(database.customers)
+        .insertOnConflictUpdate(
+          CustomersCompanion.insert(
+            id: id,
+            organizationId: envelope.change.organizationId,
+            customerNumber: _requiredString(customer, 'customerNumber'),
+            displayName: _requiredString(customer, 'displayName'),
+            normalizedName: _normalizeSyncSearch(
+              _requiredString(customer, 'displayName'),
+            ),
+            email: Value(_string(customer['email'])),
+            normalizedEmail: Value(_string(customer['normalizedEmail'])),
+            phone: Value(_string(customer['phone'])),
+            normalizedPhone: Value(_string(customer['normalizedPhone'])),
+            birthDate: Value(_date(customer['birthDate'])),
+            marketingConsent: Value(customer['marketingConsent'] == true),
+            status: Value(status),
+            mergedIntoCustomerId: Value(
+              _string(customer['mergedIntoCustomerId']),
+            ),
+            archivedAt: Value(_date(customer['archivedAt'])),
+            anonymizedAt: Value(_date(customer['anonymizedAt'])),
+            version: Value(_integer(customer['version'])),
+            createdAt:
+                _date(customer['createdAt']) ??
+                existing?.createdAt ??
+                occurredAt,
+            updatedAt: _date(customer['updatedAt']) ?? occurredAt,
+          ),
+        );
+
+    final addresses = result['addresses'];
+    if (addresses is List) {
+      for (final value in addresses) {
+        final address = _requiredMap(value, 'customer address');
+        final addressId = _requiredString(address, 'id');
+        final local = await (database.select(
+          database.customerAddresses,
+        )..where((row) => row.id.equals(addressId))).getSingleOrNull();
+        await database
+            .into(database.customerAddresses)
+            .insertOnConflictUpdate(
+              CustomerAddressesCompanion.insert(
+                id: addressId,
+                organizationId: envelope.change.organizationId,
+                customerId: id,
+                label: _requiredString(address, 'label'),
+                recipientName: Value(_string(address['recipientName'])),
+                lineOne: _requiredString(address, 'lineOne'),
+                lineTwo: Value(_string(address['lineTwo'])),
+                city: _requiredString(address, 'city'),
+                province: Value(_string(address['province'])),
+                postalCode: Value(_string(address['postalCode'])),
+                countryCode: Value(_requiredString(address, 'countryCode')),
+                isPrimary: Value(address['isPrimary'] == true),
+                version: Value(_nullableInt(address['version']) ?? 0),
+                createdAt:
+                    _date(address['createdAt']) ??
+                    local?.createdAt ??
+                    occurredAt,
+                updatedAt: _date(address['updatedAt']) ?? occurredAt,
+                deletedAt: Value(_date(address['deletedAt'])),
+              ),
+            );
+      }
+    }
+
+    final notes = result['notes'];
+    if (notes is List) {
+      for (final value in notes) {
+        final note = _requiredMap(value, 'customer note');
+        final noteId = _requiredString(note, 'id');
+        final local = await (database.select(
+          database.customerNotes,
+        )..where((row) => row.id.equals(noteId))).getSingleOrNull();
+        await database
+            .into(database.customerNotes)
+            .insertOnConflictUpdate(
+              CustomerNotesCompanion.insert(
+                id: noteId,
+                organizationId: envelope.change.organizationId,
+                branchId: _requiredString(note, 'branchId'),
+                customerId: id,
+                body: _requiredString(note, 'body'),
+                createdByUserId: _requiredString(note, 'createdByUserId'),
+                createdAt:
+                    _date(note['createdAt']) ?? local?.createdAt ?? occurredAt,
+                updatedAt: _date(note['updatedAt']) ?? occurredAt,
+                deletedAt: Value(_date(note['deletedAt'])),
+              ),
+            );
+      }
+    }
+
+    final account = _map(result['loyaltyAccount']);
+    if (account == null) return;
+    final accountId = _requiredString(account, 'id');
+    final localAccount = await (database.select(
+      database.loyaltyAccounts,
+    )..where((row) => row.id.equals(accountId))).getSingleOrNull();
+    await database
+        .into(database.loyaltyAccounts)
+        .insertOnConflictUpdate(
+          LoyaltyAccountsCompanion.insert(
+            id: accountId,
+            organizationId: envelope.change.organizationId,
+            customerId: id,
+            status: Value(_requiredString(account, 'status')),
+            pointsBalance: Value(_integer(account['pointsBalance'])),
+            lifetimeEarnedPoints: Value(
+              _integer(account['lifetimeEarnedPoints']),
+            ),
+            lifetimeRedeemedPoints: Value(
+              _integer(account['lifetimeRedeemedPoints']),
+            ),
+            version: Value(_integer(account['version'])),
+            createdAt:
+                _date(account['createdAt']) ??
+                localAccount?.createdAt ??
+                occurredAt,
+            updatedAt: _date(account['updatedAt']) ?? occurredAt,
+            closedAt: Value(_date(account['closedAt'])),
+          ),
+        );
+    final entries = result['loyaltyEntries'];
+    if (entries is! List) return;
+    for (final value in entries) {
+      final entry = _requiredMap(value, 'loyalty ledger entry');
+      await database
+          .into(database.loyaltyLedgerEntries)
+          .insert(
+            LoyaltyLedgerEntriesCompanion.insert(
+              id: _requiredString(entry, 'id'),
+              organizationId: envelope.change.organizationId,
+              branchId: Value(_string(entry['branchId'])),
+              accountId: accountId,
+              saleId: Value(_string(entry['saleId'])),
+              operationId: _requiredString(entry, 'operationId'),
+              entryType: _requiredString(entry, 'entryType'),
+              pointsDelta: _integer(entry['pointsDelta']),
+              balanceAfter: _integer(entry['balanceAfter']),
+              reason: _requiredString(entry, 'reason'),
+              referenceType: Value(_string(entry['referenceType'])),
+              referenceId: Value(_string(entry['referenceId'])),
+              createdByUserId: _requiredString(entry, 'createdByUserId'),
+              occurredAt: _date(entry['occurredAt']) ?? occurredAt,
+              createdAt: _date(entry['createdAt']) ?? occurredAt,
+            ),
+            mode: InsertMode.insertOrIgnore,
           );
     }
   }

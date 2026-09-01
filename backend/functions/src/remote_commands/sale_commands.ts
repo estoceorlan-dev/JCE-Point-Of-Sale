@@ -60,6 +60,20 @@ export async function completeSale(
   const {lines, payments} = validateSalePayload(payload);
   const completedAt = optionalTimestamp(payload, "completedAt") ?? new Date();
   await validateSaleCatalog(client, command, lines, completedAt);
+  const customerId = optionalString(payload, "customerId");
+  if (customerId !== null) {
+    const customer = await client.query(
+      `SELECT 1 FROM customers WHERE id = $1 AND organization_id = $2
+       AND status = 'active'`,
+      [customerId, command.organizationId],
+    );
+    if (customer.rowCount !== 1) {
+      throw new RemoteCommandError(
+        "failed-precondition",
+        "The selected customer is unavailable in this organization.",
+      );
+    }
+  }
 
   const deviceId = requiredString(payload, "deviceId");
   const scope = await loadCheckoutScope(client, command, deviceId);
@@ -106,14 +120,14 @@ export async function completeSale(
     `
       INSERT INTO sales (
         id, organization_id, branch_id, register_id, shift_id,
-        inventory_transaction_id, operation_id, receipt_number, status,
+        inventory_transaction_id, customer_id, operation_id, receipt_number, status,
         cashier_user_id, subtotal_minor, discount_minor, tax_minor, total_minor,
         tendered_minor, change_minor, discount_approved_by_user_id,
         discount_approved_at, completed_at, version, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'completed', $9, $10, $11,
-        $12, $13, $14, $15, $16,
-        CASE WHEN $16::text IS NULL THEN NULL ELSE now() END,
-        $17, 0, now(), now())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'completed', $10, $11,
+        $12, $13, $14, $15, $16, $17,
+        CASE WHEN $17::text IS NULL THEN NULL ELSE now() END,
+        $18, 0, now(), now())
     `,
     [
       saleId,
@@ -122,6 +136,7 @@ export async function completeSale(
       scope.registerId,
       scope.shiftId,
       inventoryTransactionId,
+      customerId,
       command.operationId,
       receiptNumber,
       command.actorUserId,
@@ -185,6 +200,7 @@ export async function completeSale(
       registerId: scope.registerId,
       shiftId: scope.shiftId,
       inventoryTransactionId,
+      customerId,
       receiptNumber,
       status: "completed",
       completedAt: completedAt.toISOString(),

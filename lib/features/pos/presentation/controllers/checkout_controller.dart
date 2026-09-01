@@ -6,6 +6,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../shifts/presentation/providers/shift_providers.dart';
+import '../../../customers/presentation/providers/customers_providers.dart';
 import '../../domain/entities/payment.dart';
 import '../../domain/entities/sale.dart';
 import '../providers/pos_providers.dart';
@@ -41,6 +42,7 @@ class CheckoutController extends AsyncNotifier<void> {
           cart: ref.read(cartControllerProvider),
           tenders: tenders,
           deviceId: deviceId,
+          customerId: ref.read(selectedCheckoutCustomerProvider)?.id,
           operationId: operationId,
         ),
         approveDiscountAsManager: approveDiscountAsManager,
@@ -55,6 +57,7 @@ class CheckoutController extends AsyncNotifier<void> {
     );
     if (result.isSuccess) {
       ref.read(cartControllerProvider.notifier).clear();
+      ref.read(selectedCheckoutCustomerProvider.notifier).state = null;
     }
     _submitting = false;
     return result;

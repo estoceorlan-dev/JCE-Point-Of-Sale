@@ -48,6 +48,9 @@ The canonical application and bundle identifier is `com.jce.pos`.
 - Auditable inter-branch transfer custody, reservations, shipment, and receipt
 - Offline suppliers, approval-ready purchase orders, partial goods receipts,
   landed costs, and weighted-average inventory cost projections
+- Offline customer lookup and attribution with explicit duplicate/merge rules
+- Privacy-controlled archive and anonymization workflows
+- Idempotent immutable loyalty ledger with auditable point adjustments
 
 ## Environment configuration
 
@@ -146,6 +149,13 @@ goods receipts, receipt-only inventory posting, and deterministic weighted-
 average landed costs. Apply `backend/sql/migrations/0006_phase11_purchasing.sql`
 before deploying the updated Functions and client. See
 [Phase 11 purchasing](docs/phase_11_purchasing.md).
+
+Phase 12 adds normalized offline customer lookup, optional sale attribution,
+branch purchase history, duplicate merges, privacy-preserving archival and
+anonymization, and an immutable loyalty ledger. Apply
+`backend/sql/migrations/0007_phase12_customers.sql` before deploying the
+updated Functions and schema-version-11 client. See
+[Phase 12 customers](docs/phase_12_customers.md).
 
 ## Code generation
 

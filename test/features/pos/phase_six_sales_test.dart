@@ -5,6 +5,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/core/database/app_database.dart';
 import 'package:jce_pos/core/database/local_mutation_transaction.dart';
+import 'package:jce_pos/core/database/models/outbox_command.dart';
 import 'package:jce_pos/core/error/failures.dart';
 import 'package:jce_pos/core/utils/app_clock.dart';
 import 'package:jce_pos/core/utils/id_generator.dart';
@@ -188,6 +189,59 @@ void main() {
     });
 
     test(
+      'checkout optionally attributes an offline-created customer',
+      () async {
+        final now = DateTime.utc(2026, 8, 26, 7);
+        await database
+            .into(database.customers)
+            .insert(
+              CustomersCompanion.insert(
+                id: 'customer',
+                organizationId: 'organization',
+                customerNumber: 'CUS-00000001',
+                displayName: 'Offline Customer',
+                normalizedName: 'OFFLINECUSTOMER',
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+        await database.outboxDao.enqueue(
+          OutboxCommand(
+            operationId: 'customer-create-operation',
+            organizationId: 'organization',
+            branchId: 'branch',
+            actorUserId: 'cashier-user',
+            commandType: 'customer.create',
+            aggregateType: 'customer',
+            aggregateId: 'customer',
+            payload: const {'id': 'customer'},
+            createdAt: now,
+          ),
+        );
+
+        final result = await repository.checkout(
+          context: _context,
+          draft: _checkoutDraft(
+            operationId: 'customer-sale-operation',
+            customerId: 'customer',
+          ),
+        );
+
+        expect(result.isSuccess, isTrue, reason: result.failureOrNull?.message);
+        expect(
+          (await database.select(database.sales).getSingle()).customerId,
+          'customer',
+        );
+        final saleCommand =
+            await (database.select(database.syncOutboxEntries)..where(
+                  (row) => row.operationId.equals('customer-sale-operation'),
+                ))
+                .getSingle();
+        expect(saleCommand.dependsOnOperationId, 'customer-create-operation');
+      },
+    );
+
+    test(
       'discounts above branch policy retain manager approval evidence',
       () async {
         await (database.update(
@@ -348,10 +402,12 @@ CheckoutDraft _checkoutDraft({
   required String operationId,
   int saleDiscountMinor = 0,
   int cashTenderedMinor = 12000,
+  String? customerId,
 }) {
   return CheckoutDraft(
     operationId: operationId,
     deviceId: 'device-a',
+    customerId: customerId,
     cart: Cart(
       lines: [
         CartLine(

@@ -194,6 +194,10 @@ class HardcodedAuthRepository implements AuthRepository {
         AppPermission.approvePurchases,
         AppPermission.receivePurchases,
         AppPermission.manageSuppliers,
+        AppPermission.viewCustomers,
+        AppPermission.manageCustomers,
+        AppPermission.anonymizeCustomers,
+        AppPermission.manageLoyalty,
         AppPermission.viewReports,
         AppPermission.viewAuditLogs,
       },
@@ -201,6 +205,8 @@ class HardcodedAuthRepository implements AuthRepository {
         AppPermission.viewDashboard,
         AppPermission.processSales,
         AppPermission.processSaleReturns,
+        AppPermission.viewCustomers,
+        AppPermission.manageCustomers,
       },
       UserRole.inventoryClerk => {
         AppPermission.viewDashboard,
@@ -210,6 +216,7 @@ class HardcodedAuthRepository implements AuthRepository {
         AppPermission.createPurchases,
         AppPermission.receivePurchases,
         AppPermission.manageSuppliers,
+        AppPermission.viewCustomers,
       },
       UserRole.auditor => {
         AppPermission.viewDashboard,

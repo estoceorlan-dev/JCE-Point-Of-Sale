@@ -332,6 +332,11 @@ LIMIT 100
   }
 
   Future<domain.SaleRecord> _hydrate(Sale sale, String registerName) async {
+    final customer = sale.customerId == null
+        ? null
+        : await (_database.select(
+            _database.customers,
+          )..where((row) => row.id.equals(sale.customerId!))).getSingleOrNull();
     final itemRows =
         await (_database.select(_database.saleItems)
               ..where((row) => row.saleId.equals(sale.id))
@@ -409,6 +414,8 @@ LIMIT 100
       registerId: sale.registerId,
       registerName: registerName,
       shiftId: sale.shiftId,
+      customerId: sale.customerId,
+      customerDisplayName: customer?.displayName,
       receiptNumber: sale.receiptNumber ?? 'Pending',
       status: effectiveStatus,
       cashierUserId: sale.cashierUserId,

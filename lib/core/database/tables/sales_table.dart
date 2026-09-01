@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'branches_table.dart';
+import 'customers_table.dart';
 import 'inventory_transactions_table.dart';
 import 'organizations_table.dart';
 import 'registers_table.dart';
@@ -22,6 +23,11 @@ class Sales extends Table {
       text().nullable().references(Shifts, #id, onDelete: KeyAction.restrict)();
   TextColumn get inventoryTransactionId => text().nullable().references(
     InventoryTransactions,
+    #id,
+    onDelete: KeyAction.restrict,
+  )();
+  TextColumn get customerId => text().nullable().references(
+    Customers,
     #id,
     onDelete: KeyAction.restrict,
   )();
@@ -80,6 +86,8 @@ class Sales extends Table {
     'FOREIGN KEY (inventory_transaction_id, organization_id, branch_id) '
         'REFERENCES inventory_transactions (id, organization_id, branch_id) '
         'ON DELETE RESTRICT',
+    'FOREIGN KEY (customer_id, organization_id) '
+        'REFERENCES customers (id, organization_id) ON DELETE RESTRICT',
     "CHECK (status IN ('draft', 'completed', 'voided', 'partially_returned', "
         "'returned', 'sync_rejected'))",
     "CHECK ((status = 'draft' AND completed_at IS NULL) OR "

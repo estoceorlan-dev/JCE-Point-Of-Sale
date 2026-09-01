@@ -6,6 +6,7 @@ import '../../features/auth/domain/entities/auth_session.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
+import '../../features/customers/presentation/pages/customers_page.dart';
 import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/logs/presentation/pages/logs_page.dart';
 import '../../features/pos/presentation/pages/pos_page.dart';
@@ -75,6 +76,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           _branch(AppRoute.inventory, const InventoryPage()),
           _branch(AppRoute.transfers, const TransfersPage()),
           _branch(AppRoute.purchases, const PurchasesPage()),
+          _branch(AppRoute.customers, const CustomersPage()),
           _branch(AppRoute.reports, const ReportsPage()),
           _branch(AppRoute.logs, const LogsPage()),
           _branch(AppRoute.users, const UsersPage()),

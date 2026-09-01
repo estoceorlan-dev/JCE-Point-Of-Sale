@@ -17,6 +17,9 @@ import 'tables/approval_requests_table.dart';
 import 'tables/branches_table.dart';
 import 'tables/cash_movements_table.dart';
 import 'tables/categories_table.dart';
+import 'tables/customer_addresses_table.dart';
+import 'tables/customer_notes_table.dart';
+import 'tables/customers_table.dart';
 import 'tables/goods_receipt_items_table.dart';
 import 'tables/goods_receipts_table.dart';
 import 'tables/inventory_balances_table.dart';
@@ -24,6 +27,8 @@ import 'tables/inventory_ledger_entries_table.dart';
 import 'tables/inventory_transactions_table.dart';
 import 'tables/local_audit_logs_table.dart';
 import 'tables/local_metadata_table.dart';
+import 'tables/loyalty_accounts_table.dart';
+import 'tables/loyalty_ledger_entries_table.dart';
 import 'tables/organizations_table.dart';
 import 'tables/permissions_table.dart';
 import 'tables/product_barcodes_table.dart';
@@ -116,6 +121,11 @@ part 'app_database.g.dart';
     PurchaseOrderItems,
     GoodsReceipts,
     GoodsReceiptItems,
+    Customers,
+    CustomerAddresses,
+    CustomerNotes,
+    LoyaltyAccounts,
+    LoyaltyLedgerEntries,
   ],
   daos: [
     MetadataDao,
@@ -132,7 +142,7 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 10;
+  static const int currentSchemaVersion = 11;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -379,6 +389,25 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createIndex(suppliersSearchIdx);
         await migrator.createIndex(purchaseOrdersBranchStatusIdx);
         await migrator.createIndex(goodsReceiptsHistoryIdx);
+      case 11:
+        await migrator.createTable(customers);
+        await migrator.createTable(customerAddresses);
+        await migrator.createTable(customerNotes);
+        await migrator.createTable(loyaltyAccounts);
+        await migrator.alterTable(
+          TableMigration(
+            sales,
+            columnTransformer: {
+              sales.customerId: const CustomExpression<String>('NULL'),
+            },
+          ),
+        );
+        await migrator.createTable(loyaltyLedgerEntries);
+        await migrator.createIndex(customersNameSearchIdx);
+        await migrator.createIndex(customersEmailSearchIdx);
+        await migrator.createIndex(customersPhoneSearchIdx);
+        await migrator.createIndex(customerNotesHistoryIdx);
+        await migrator.createIndex(loyaltyLedgerHistoryIdx);
       default:
         throw StateError('Missing migration for schema version $version.');
     }

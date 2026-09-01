@@ -42,6 +42,11 @@ class SaleDetailsDialog extends ConsumerWidget {
                 children: [
                   Chip(label: Text(sale.status.label)),
                   Chip(label: Text(sale.registerName)),
+                  if (sale.customerDisplayName case final customer?)
+                    Chip(
+                      avatar: const Icon(Icons.person_outline, size: 18),
+                      label: Text(customer),
+                    ),
                   Chip(label: Text(sale.completedAt.toLocal().toString())),
                 ],
               ),

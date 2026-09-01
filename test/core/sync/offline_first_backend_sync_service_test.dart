@@ -301,6 +301,47 @@ void main() {
     expect(secondProduct.name, firstProduct.name);
     expect(secondProduct.sku, firstProduct.sku);
   });
+
+  test('customer change feed converges normalized offline lookup', () async {
+    final change = _change(
+      sequence: 2,
+      aggregateType: 'customer',
+      aggregateId: 'customer-1',
+      payload: {
+        'schemaVersion': 1,
+        'commandType': 'customer.create',
+        'actorUserId': 'user',
+        'commandPayload': const {},
+        'result': {
+          'customer': {
+            'id': 'customer-1',
+            'customerNumber': 'CUS-00000001',
+            'displayName': 'Ana Reyes',
+            'normalizedEmail': 'ana@example.com',
+            'email': 'ana@example.com',
+            'normalizedPhone': '639171234567',
+            'phone': '+63 917 123 4567',
+            'marketingConsent': false,
+            'status': 'active',
+            'version': 0,
+            'createdAt': initialTime.toIso8601String(),
+            'updatedAt': initialTime.toIso8601String(),
+          },
+          'addresses': const [],
+          'notes': const [],
+          'loyaltyAccount': null,
+          'loyaltyEntries': const [],
+        },
+      },
+    );
+
+    await DriftRemoteChangeApplier(database).apply(change);
+
+    final customer = await database.select(database.customers).getSingle();
+    expect(customer.displayName, 'Ana Reyes');
+    expect(customer.normalizedEmail, 'ana@example.com');
+    expect(customer.normalizedPhone, '639171234567');
+  });
 }
 
 Future<void> _seedScope(AppDatabase database, DateTime now) async {
@@ -361,7 +402,7 @@ RemoteChange _change({
   return RemoteChange(
     sequence: sequence,
     organizationId: 'org',
-    branchId: aggregateType == 'product' ? null : 'branch',
+    branchId: ['product', 'customer'].contains(aggregateType) ? null : 'branch',
     aggregateType: aggregateType,
     aggregateId: aggregateId,
     operationId: 'remote-$sequence',
