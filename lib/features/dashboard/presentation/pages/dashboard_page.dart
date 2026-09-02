@@ -6,6 +6,8 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/metric_tile.dart';
 import '../../../../shared/providers/app_providers.dart';
+import '../../../../shared/utils/formatters.dart';
+import '../providers/dashboard_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -14,6 +16,7 @@ class DashboardPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final syncState = ref.watch(syncStateProvider).asData?.value;
+    final summary = ref.watch(dashboardSummaryProvider).asData?.value;
     final pending = syncState == null
         ? '…'
         : (syncState.pendingChanges +
@@ -53,23 +56,36 @@ class DashboardPage extends ConsumerWidget {
                     spacing: AppSpacing.lg,
                     runSpacing: AppSpacing.lg,
                     children: [
-                      const MetricTile(
+                      MetricTile(
                         title: 'Today sales',
-                        value: 'PHP 0.00',
-                        detail: 'Completed local sales',
+                        value: summary == null
+                            ? '…'
+                            : Formatters.currencyMinor(summary.netSalesMinor),
+                        detail:
+                            '${summary?.completedSales ?? 0} completed transactions',
                         icon: Icons.payments_outlined,
                       ),
-                      const MetricTile(
+                      MetricTile(
                         title: 'Open carts',
-                        value: '0',
+                        value: summary?.openCarts.toString() ?? '…',
                         detail: 'Current register activity',
                         icon: Icons.shopping_bag_outlined,
                       ),
-                      const MetricTile(
+                      MetricTile(
                         title: 'Low stock',
-                        value: '0',
+                        value: summary?.lowStockItems.toString() ?? '…',
                         detail: 'Branch inventory thresholds',
                         icon: Icons.warning_amber_outlined,
+                      ),
+                      MetricTile(
+                        title: 'Gross profit estimate',
+                        value: summary == null
+                            ? '…'
+                            : Formatters.currencyMinor(
+                                summary.grossProfitMinor,
+                              ),
+                        detail: 'Based on snapshotted item cost',
+                        icon: Icons.trending_up_outlined,
                       ),
                       MetricTile(
                         title: 'Pending sync',

@@ -18,10 +18,12 @@ project; project boundaries provide the isolation.
 | `staging` | `jce-pos-staging-259528` | Live and isolated; migrations, SQL Connect, Storage, and five Functions deployed; signed-in smoke passed |
 | `production` | `jce-pos-production-259528` | Project and dedicated runtime identity created; live resources blocked by the Cloud Billing project quota |
 
-The aliases are checked into `.firebaserc`. Each deployed project uses its own
-`jce-pos-functions` service account with only the runtime roles needed for
-Cloud SQL, Storage objects, and logging. Create a matching
-`backend/functions/.env.<project-id>` from
+The aliases are checked into `.firebaserc`. Staging uses a dedicated
+`jce-pos-functions` service account with the runtime roles needed for Cloud SQL,
+Storage objects, and logging. Development currently uses the default App Engine
+service account with the project-wide Editor role; replacing it with the same
+least-privilege pattern is required during production hardening before branch
+deployment. Create a matching `backend/functions/.env.<project-id>` from
 `backend/functions/environment.example`; environment files remain gitignored.
 
 Production must not reuse either live non-production database. Once billing
