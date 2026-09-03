@@ -155,6 +155,89 @@ type LoyaltyAccount @table(name: "loyalty_accounts", key: "id") {
   closedAt: Timestamp
 }
 
+type OrganizationSetting @table(name: "organization_settings", key: "id") {
+  id: String!
+  organizationId: String!
+  settingKey: String!
+  valueJson: Any!
+  version: Int!
+  updatedByUserId: String!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+}
+
+type BranchSetting @table(name: "branch_settings", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String!
+  settingKey: String!
+  valueJson: Any!
+  version: Int!
+  updatedByUserId: String!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+}
+
+type NumberSequence @table(name: "number_sequences", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String
+  branchScope: String!
+  sequenceKey: String!
+  prefix: String!
+  nextValue: Int64!
+  padding: Int!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+}
+
+type ReasonCode @table(name: "reason_codes", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String
+  branchScope: String!
+  category: String!
+  code: String!
+  label: String!
+  requiresNote: Boolean!
+  isActive: Boolean!
+  sortOrder: Int!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+type FeatureFlag @table(name: "feature_flags", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String
+  branchScope: String!
+  flagKey: String!
+  isEnabled: Boolean!
+  configurationJson: Any!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+}
+
+type AuditLog @table(name: "audit_logs", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String
+  actorUserId: String!
+  firebaseUid: String!
+  operationId: String!
+  action: String!
+  entityType: String!
+  entityId: String!
+  deviceId: String
+  metadataJson: Any!
+  occurredAt: Timestamp!
+  createdAt: Timestamp!
+}
+
 type ProductImage @table(name: "product_images", key: "id") {
   id: String!
   organizationId: String!

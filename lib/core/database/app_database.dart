@@ -15,6 +15,7 @@ import 'tables/app_users_table.dart';
 import 'tables/approval_decisions_table.dart';
 import 'tables/approval_requests_table.dart';
 import 'tables/branches_table.dart';
+import 'tables/branch_settings_table.dart';
 import 'tables/cash_movements_table.dart';
 import 'tables/categories_table.dart';
 import 'tables/customer_addresses_table.dart';
@@ -22,6 +23,7 @@ import 'tables/customer_notes_table.dart';
 import 'tables/customers_table.dart';
 import 'tables/goods_receipt_items_table.dart';
 import 'tables/goods_receipts_table.dart';
+import 'tables/feature_flags_table.dart';
 import 'tables/inventory_balances_table.dart';
 import 'tables/inventory_ledger_entries_table.dart';
 import 'tables/inventory_transactions_table.dart';
@@ -30,6 +32,8 @@ import 'tables/local_metadata_table.dart';
 import 'tables/loyalty_accounts_table.dart';
 import 'tables/loyalty_ledger_entries_table.dart';
 import 'tables/organizations_table.dart';
+import 'tables/organization_settings_table.dart';
+import 'tables/number_sequences_table.dart';
 import 'tables/permissions_table.dart';
 import 'tables/product_barcodes_table.dart';
 import 'tables/product_images_table.dart';
@@ -40,6 +44,7 @@ import 'tables/purchase_orders_table.dart';
 import 'tables/payments_table.dart';
 import 'tables/receipt_sequences_table.dart';
 import 'tables/registers_table.dart';
+import 'tables/reason_codes_table.dart';
 import 'tables/role_permissions_table.dart';
 import 'tables/roles_table.dart';
 import 'tables/sale_discounts_table.dart';
@@ -126,6 +131,11 @@ part 'app_database.g.dart';
     CustomerNotes,
     LoyaltyAccounts,
     LoyaltyLedgerEntries,
+    OrganizationSettings,
+    BranchSettings,
+    NumberSequences,
+    ReasonCodes,
+    FeatureFlags,
   ],
   daos: [
     MetadataDao,
@@ -142,7 +152,7 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 11;
+  static const int currentSchemaVersion = 12;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -151,6 +161,7 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (migrator) async {
       await migrator.createAll();
+      await _installAuditAppendOnlyTriggers();
     },
     onUpgrade: (migrator, from, to) async {
       await transaction(() async {
@@ -162,6 +173,7 @@ class AppDatabase extends _$AppDatabase {
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
       if (!details.wasCreated) {
+        await _installAuditAppendOnlyTriggers();
         await customUpdate(
           'UPDATE sync_outbox '
           'SET status = ?, next_attempt_at = NULL, '
@@ -408,6 +420,18 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createIndex(customersPhoneSearchIdx);
         await migrator.createIndex(customerNotesHistoryIdx);
         await migrator.createIndex(loyaltyLedgerHistoryIdx);
+      case 12:
+        await migrator.createTable(organizationSettings);
+        await migrator.createTable(branchSettings);
+        await migrator.createTable(numberSequences);
+        await migrator.createTable(reasonCodes);
+        await migrator.createTable(featureFlags);
+        await migrator.createIndex(organizationSettingsKeyIdx);
+        await migrator.createIndex(branchSettingsKeyIdx);
+        await migrator.createIndex(numberSequencesScopeIdx);
+        await migrator.createIndex(reasonCodesScopeIdx);
+        await migrator.createIndex(featureFlagsScopeIdx);
+        await _installAuditAppendOnlyTriggers();
       default:
         throw StateError('Missing migration for schema version $version.');
     }
@@ -416,5 +440,22 @@ class AppDatabase extends _$AppDatabase {
   Future<bool> _tableHasColumn(String tableName, String columnName) async {
     final columns = await customSelect('PRAGMA table_info($tableName)').get();
     return columns.any((row) => row.read<String>('name') == columnName);
+  }
+
+  Future<void> _installAuditAppendOnlyTriggers() async {
+    await customStatement('''
+CREATE TRIGGER IF NOT EXISTS local_audit_logs_no_update
+BEFORE UPDATE ON local_audit_logs
+BEGIN
+  SELECT RAISE(ABORT, 'Audit records are append-only');
+END
+''');
+    await customStatement('''
+CREATE TRIGGER IF NOT EXISTS local_audit_logs_no_delete
+BEFORE DELETE ON local_audit_logs
+BEGIN
+  SELECT RAISE(ABORT, 'Audit records are append-only');
+END
+''');
   }
 }

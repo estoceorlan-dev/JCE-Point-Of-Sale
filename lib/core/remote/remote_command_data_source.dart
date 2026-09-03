@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:cloud_functions/cloud_functions.dart';
 
 import '../database/app_database.dart';
+import '../database/daos/metadata_dao.dart';
 
 abstract interface class RemoteCommandDataSource {
   Future<RemoteCommandResult> execute(
@@ -17,13 +18,16 @@ final class CloudFunctionsRemoteCommandDataSource
     required FirebaseFunctions functions,
     required String functionName,
     required String deviceRegistrationFunctionName,
+    required MetadataDao metadataDao,
   }) : _functions = functions,
        _functionName = functionName,
-       _deviceRegistrationFunctionName = deviceRegistrationFunctionName;
+       _deviceRegistrationFunctionName = deviceRegistrationFunctionName,
+       _metadataDao = metadataDao;
 
   final FirebaseFunctions _functions;
   final String _functionName;
   final String _deviceRegistrationFunctionName;
+  final MetadataDao _metadataDao;
 
   @override
   Future<RemoteCommandResult> execute(
@@ -54,6 +58,7 @@ final class CloudFunctionsRemoteCommandDataSource
           'commandType': command.commandType,
           'aggregateType': command.aggregateType,
           'aggregateId': command.aggregateId,
+          'deviceId': await _metadataDao.readValue('device.id'),
           'payload': payload.map(
             (key, value) => MapEntry(key.toString(), value as Object?),
           ),

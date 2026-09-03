@@ -7,6 +7,8 @@ import '../../../../core/utils/id_generator.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../settings/domain/entities/operational_setting.dart';
+import '../../../settings/presentation/providers/settings_providers.dart';
 import '../../data/data_sources/sales_local_data_source.dart';
 import '../../data/repositories/drift_sales_repository.dart';
 import '../../domain/entities/sale.dart';
@@ -83,9 +85,21 @@ final returnDestinationsProvider = FutureProvider<List<ReturnDestination>>((
       .getReturnDestinations(context: context);
 });
 
-final receiptRendererProvider = Provider<ReceiptRenderer>(
-  (ref) => const PlainTextReceiptRenderer(),
-);
+final receiptRendererProvider = Provider<ReceiptRenderer>((ref) {
+  final settings =
+      ref.watch(operationalSettingsProvider).asData?.value ??
+      OperationalSettings.defaults();
+  return PlainTextReceiptRenderer(
+    header: settings.text(OperationalSettingKey.receiptHeader),
+    footer: settings.text(OperationalSettingKey.receiptFooter),
+    showTaxBreakdown: settings.boolean(
+      OperationalSettingKey.receiptShowTaxBreakdown,
+    ),
+    paperWidthCharacters: settings.integer(
+      OperationalSettingKey.receiptPaperWidth,
+    )!,
+  );
+});
 
 final correctionReceiptRendererProvider = Provider<CorrectionReceiptRenderer>(
   (ref) => const PlainTextCorrectionReceiptRenderer(),

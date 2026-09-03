@@ -7,17 +7,22 @@ const requiredTables = [
   "approval_decisions",
   "approval_requests",
   "audit_logs",
+  "branch_settings",
   "branches",
   "change_feed",
   "devices",
+  "feature_flags",
   "inventory_balances",
   "inventory_ledger_entries",
   "inventory_transactions",
   "organizations",
+  "organization_settings",
+  "number_sequences",
   "permissions",
   "processed_operations",
   "products",
   "refund_payments",
+  "reason_codes",
   "role_permissions",
   "roles",
   "sales",
@@ -97,7 +102,7 @@ async function applySchemaMigrations(client) {
         `${requiredTables.length} tables.`,
     );
   }
-  console.log("PostgreSQL migrations applied and Phase 9 schema verified.");
+  console.log("PostgreSQL migrations applied and Phase 14 schema verified.");
 }
 
 module.exports = {applySchemaMigrations};

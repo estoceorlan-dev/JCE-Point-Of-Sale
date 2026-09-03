@@ -26,6 +26,9 @@ const permissionByCommandPrefix: ReadonlyArray<[string, string]> = [
   ["purchase_order", "purchases.create"],
   ["customer", "customers.manage"],
   ["loyalty", "loyalty.manage"],
+  ["setting", "settings.manage"],
+  ["reason_code", "settings.manage"],
+  ["feature_flag", "settings.manage"],
 ];
 
 const permissionByCommand: Readonly<Record<string, string>> = {

@@ -7,6 +7,7 @@ enum AuditActionType {
   loginFailed,
   branchSwitch,
   roleChange,
+  settingChange,
   sale,
   transfer,
   sync,

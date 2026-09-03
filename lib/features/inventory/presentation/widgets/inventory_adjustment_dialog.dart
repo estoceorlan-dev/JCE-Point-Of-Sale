@@ -7,6 +7,8 @@ import '../../../../shared/utils/formatters.dart';
 import '../../../products/domain/entities/product_query.dart';
 import '../../../products/domain/entities/product_summary.dart';
 import '../../../products/presentation/providers/products_providers.dart';
+import '../../../settings/domain/entities/reason_code.dart';
+import '../../../settings/presentation/providers/settings_providers.dart';
 import '../../domain/entities/inventory_adjustment.dart';
 import '../../domain/entities/inventory_balance.dart';
 import '../../domain/entities/stock_location.dart';
@@ -31,6 +33,7 @@ class _InventoryAdjustmentDialogState
   final _notesController = TextEditingController();
   String? _locationId;
   String? _productId;
+  String? _reasonCode;
   bool _increase = true;
   bool _approveAsManager = false;
   String? _error;
@@ -54,6 +57,20 @@ class _InventoryAdjustmentDialogState
             .value ??
         const [];
     final policy = ref.watch(inventoryPolicyProvider).value;
+    final configuredReasons =
+        ref
+            .watch(reasonCodesProvider)
+            .valueOrNull
+            ?.where(
+              (reason) =>
+                  reason.isActive &&
+                  reason.category == ReasonCodeCategory.inventoryAdjustment,
+            )
+            .toList(growable: false) ??
+        const <ReasonCode>[];
+    final selectedReason = configuredReasons
+        .where((reason) => reason.code == _reasonCode)
+        .firstOrNull;
     final session = ref.watch(activeInventorySessionProvider);
     final canApprove =
         session?.can(AppPermission.approveInventoryAdjustments) ?? false;
@@ -139,16 +156,36 @@ class _InventoryAdjustmentDialogState
                   },
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                TextFormField(
-                  controller: _reasonController,
-                  decoration: const InputDecoration(
-                    labelText: 'Adjustment reason',
-                    hintText: 'Damage, recount, receiving correction…',
+                if (configuredReasons.isNotEmpty)
+                  DropdownButtonFormField<String>(
+                    initialValue: _reasonCode,
+                    decoration: const InputDecoration(
+                      labelText: 'Adjustment reason',
+                    ),
+                    items: [
+                      for (final reason in configuredReasons)
+                        DropdownMenuItem(
+                          value: reason.code,
+                          child: Text(reason.label),
+                        ),
+                    ],
+                    onChanged: saving
+                        ? null
+                        : (value) => setState(() => _reasonCode = value),
+                    validator: (value) =>
+                        value == null ? 'Select an adjustment reason.' : null,
                   ),
-                  validator: (value) => (value?.trim().isEmpty ?? true)
-                      ? 'Enter the reason for this adjustment.'
-                      : null,
-                ),
+                if (configuredReasons.isEmpty)
+                  TextFormField(
+                    controller: _reasonController,
+                    decoration: const InputDecoration(
+                      labelText: 'Adjustment reason',
+                      hintText: 'Damage, recount, receiving correction…',
+                    ),
+                    validator: (value) => (value?.trim().isEmpty ?? true)
+                        ? 'Enter the reason for this adjustment.'
+                        : null,
+                  ),
                 const SizedBox(height: AppSpacing.lg),
                 TextFormField(
                   controller: _notesController,
@@ -156,6 +193,11 @@ class _InventoryAdjustmentDialogState
                     labelText: 'Notes (optional)',
                   ),
                   maxLines: 2,
+                  validator: (value) =>
+                      selectedReason?.requiresNote == true &&
+                          (value?.trim().isEmpty ?? true)
+                      ? 'This reason requires an explanatory note.'
+                      : null,
                 ),
                 if (policy?.adjustmentApprovalThresholdMilli
                     case final threshold?)
@@ -244,7 +286,7 @@ class _InventoryAdjustmentDialogState
             stockLocationId: _locationId!,
             productId: _productId!,
             quantityDeltaMilli: _increase ? magnitude : -magnitude,
-            reasonCode: _reasonController.text,
+            reasonCode: _reasonCode ?? _reasonController.text,
             notes: _notesController.text,
             expectedBalanceVersion: balance?.version ?? 0,
           ),

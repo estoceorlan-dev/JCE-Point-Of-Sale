@@ -8,6 +8,7 @@ export type RemoteCommandInput = {
   commandType: string;
   aggregateType: string;
   aggregateId: string;
+  deviceId?: string | null;
   payload: Record<string, unknown>;
 };
 

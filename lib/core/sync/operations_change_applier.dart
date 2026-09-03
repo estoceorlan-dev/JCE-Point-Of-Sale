@@ -37,12 +37,228 @@ class OperationsChangeApplier {
       await _purchaseOrder(envelope);
     } else if (type.startsWith('customer.') || type.startsWith('loyalty.')) {
       await _customer(envelope);
+    } else if (type.startsWith('setting.') ||
+        type.startsWith('reason_code.') ||
+        type.startsWith('feature_flag.')) {
+      await _settings(envelope);
     } else if (type == 'device.register') {
       // Device registration has no local business projection.
     } else {
       return false;
     }
     return true;
+  }
+
+  Future<void> _settings(RemoteChangeEnvelope envelope) async {
+    final type = envelope.commandType;
+    if (type == 'setting.branch.delete') {
+      await (database.delete(database.branchSettings)..where(
+            (row) =>
+                row.id.equals(envelope.change.aggregateId) &
+                row.organizationId.equals(envelope.change.organizationId),
+          ))
+          .go();
+      await _applySettingProjection(
+        envelope,
+        _requiredString(envelope.commandPayload, 'key'),
+        await _inheritedSettingValue(envelope),
+      );
+      return;
+    }
+    if (type == 'setting.organization.upsert' ||
+        type == 'setting.branch.upsert') {
+      final row = _requiredMap(envelope.result['setting'], 'setting');
+      final id = envelope.change.aggregateId;
+      final key = _requiredString(row, 'key');
+      final value = row['value'];
+      final now = _date(row['updatedAt']) ?? envelope.change.occurredAt;
+      final createdAt = _date(row['createdAt']) ?? now;
+      final version = _integer(row['version']);
+      if (type == 'setting.organization.upsert') {
+        await database
+            .into(database.organizationSettings)
+            .insertOnConflictUpdate(
+              OrganizationSettingsCompanion.insert(
+                id: id,
+                organizationId: envelope.change.organizationId,
+                settingKey: key,
+                valueJson: jsonEncode(value),
+                version: Value(version),
+                updatedByUserId:
+                    _string(row['updatedByUserId']) ?? envelope.actorUserId,
+                createdAt: createdAt,
+                updatedAt: now,
+              ),
+            );
+        final override =
+            await (database.select(database.branchSettings)..where(
+                  (candidate) =>
+                      candidate.organizationId.equals(
+                        envelope.change.organizationId,
+                      ) &
+                      candidate.branchId.equals(
+                        envelope.change.branchId ?? '',
+                      ) &
+                      candidate.settingKey.equals(key),
+                ))
+                .getSingleOrNull();
+        if (override == null) {
+          await _applySettingProjection(envelope, key, value);
+        }
+      } else {
+        final branchId = _string(row['branchId']) ?? _branchId(envelope);
+        await database
+            .into(database.branchSettings)
+            .insertOnConflictUpdate(
+              BranchSettingsCompanion.insert(
+                id: id,
+                organizationId: envelope.change.organizationId,
+                branchId: branchId,
+                settingKey: key,
+                valueJson: jsonEncode(value),
+                version: Value(version),
+                updatedByUserId:
+                    _string(row['updatedByUserId']) ?? envelope.actorUserId,
+                createdAt: createdAt,
+                updatedAt: now,
+              ),
+            );
+        await _applySettingProjection(envelope, key, value);
+      }
+      return;
+    }
+    if (type == 'reason_code.upsert') {
+      final row = _requiredMap(envelope.result['reasonCode'], 'reasonCode');
+      final branchId = _string(row['branchId']);
+      final now = _date(row['updatedAt']) ?? envelope.change.occurredAt;
+      await database
+          .into(database.reasonCodes)
+          .insertOnConflictUpdate(
+            ReasonCodesCompanion.insert(
+              id: envelope.change.aggregateId,
+              organizationId: envelope.change.organizationId,
+              branchId: Value(branchId),
+              branchScope: branchId ?? '*',
+              category: _requiredString(row, 'category'),
+              code: _requiredString(row, 'code'),
+              label: _requiredString(row, 'label'),
+              requiresNote: Value(row['requiresNote'] == true),
+              isActive: Value(row['isActive'] == true),
+              sortOrder: Value(_integer(row['sortOrder'])),
+              version: Value(_integer(row['version'])),
+              createdAt: _date(row['createdAt']) ?? now,
+              updatedAt: now,
+            ),
+          );
+      return;
+    }
+    if (type == 'feature_flag.upsert') {
+      final row = _requiredMap(envelope.result['featureFlag'], 'featureFlag');
+      final branchId = _string(row['branchId']);
+      final now = _date(row['updatedAt']) ?? envelope.change.occurredAt;
+      await database
+          .into(database.featureFlags)
+          .insertOnConflictUpdate(
+            FeatureFlagsCompanion.insert(
+              id: envelope.change.aggregateId,
+              organizationId: envelope.change.organizationId,
+              branchId: Value(branchId),
+              branchScope: branchId ?? '*',
+              flagKey: _requiredString(row, 'key'),
+              isEnabled: Value(row['isEnabled'] == true),
+              configurationJson: Value(jsonEncode(row['configuration'] ?? {})),
+              version: Value(_integer(row['version'])),
+              createdAt: _date(row['createdAt']) ?? now,
+              updatedAt: now,
+            ),
+          );
+    }
+  }
+
+  Future<Object?> _inheritedSettingValue(RemoteChangeEnvelope envelope) async {
+    final key = _requiredString(envelope.commandPayload, 'key');
+    final organization =
+        await (database.select(database.organizationSettings)..where(
+              (row) =>
+                  row.organizationId.equals(envelope.change.organizationId) &
+                  row.settingKey.equals(key),
+            ))
+            .getSingleOrNull();
+    if (organization != null) return jsonDecode(organization.valueJson);
+    return switch (key) {
+      'inventory.allow_negative_stock' ||
+      'shifts.allow_multiple_open_per_user' ||
+      'shifts.allow_sales_without_open_shift' => false,
+      'returns.void_window_minutes' => 15,
+      _ => null,
+    };
+  }
+
+  Future<void> _applySettingProjection(
+    RemoteChangeEnvelope envelope,
+    String key,
+    Object? value,
+  ) async {
+    final branchId = envelope.change.branchId;
+    final updatedAt = Value(envelope.change.occurredAt);
+    final companion = switch (key) {
+      'inventory.allow_negative_stock' => BranchesCompanion(
+        allowNegativeStock: Value(value == true),
+        updatedAt: updatedAt,
+      ),
+      'inventory.adjustment_approval_threshold_milli' => BranchesCompanion(
+        adjustmentApprovalThresholdMilli: Value(_nullableInt(value)),
+        updatedAt: updatedAt,
+      ),
+      'sales.discount_approval_threshold_basis_points' => BranchesCompanion(
+        discountApprovalThresholdBasisPoints: Value(_nullableInt(value)),
+        updatedAt: updatedAt,
+      ),
+      'shifts.allow_multiple_open_per_user' => BranchesCompanion(
+        allowMultipleOpenShiftsPerUser: Value(value == true),
+        updatedAt: updatedAt,
+      ),
+      'shifts.allow_sales_without_open_shift' => BranchesCompanion(
+        allowSalesWithoutOpenShift: Value(value == true),
+        updatedAt: updatedAt,
+      ),
+      'shifts.cash_discrepancy_approval_threshold_minor' => BranchesCompanion(
+        cashDiscrepancyApprovalThresholdMinor: Value(_nullableInt(value)),
+        updatedAt: updatedAt,
+      ),
+      'returns.approval_threshold_minor' => BranchesCompanion(
+        returnApprovalThresholdMinor: Value(_nullableInt(value)),
+        updatedAt: updatedAt,
+      ),
+      'returns.void_window_minutes' => BranchesCompanion(
+        voidWindowMinutes: Value(_integer(value)),
+        updatedAt: updatedAt,
+      ),
+      'transfers.approval_threshold_milli' => BranchesCompanion(
+        transferApprovalThresholdMilli: Value(_nullableInt(value)),
+        updatedAt: updatedAt,
+      ),
+      _ => null,
+    };
+    if (companion == null) return;
+    final update = database.update(database.branches)
+      ..where(
+        (row) => row.organizationId.equals(envelope.change.organizationId),
+      );
+    if (branchId != null) {
+      update.where((row) => row.id.equals(branchId));
+    } else {
+      final overrides =
+          await (database.select(database.branchSettings)..where(
+                (row) =>
+                    row.organizationId.equals(envelope.change.organizationId) &
+                    row.settingKey.equals(key),
+              ))
+              .get();
+      final ids = overrides.map((row) => row.branchId).toList();
+      if (ids.isNotEmpty) update.where((row) => row.id.isNotIn(ids));
+    }
+    await update.write(companion);
   }
 
   Future<void> _branch(RemoteChangeEnvelope envelope) async {

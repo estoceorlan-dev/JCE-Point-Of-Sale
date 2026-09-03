@@ -181,6 +181,7 @@ export const applyRemoteCommand = onCall(
           commandType: requiredString(data, "commandType"),
           aggregateType: requiredString(data, "aggregateType"),
           aggregateId: requiredString(data, "aggregateId"),
+          deviceId: optionalString(data, "deviceId"),
           payload,
         }),
       );
@@ -259,4 +260,15 @@ function requiredString(
     throw new HttpsError("invalid-argument", `${key} is required.`);
   }
   return candidate.trim();
+}
+
+function optionalString(value: unknown, key: string): string | null {
+  if (typeof value !== "object" || value === null) return null;
+  const candidate = (value as Record<string, unknown>)[key];
+  if (candidate === undefined || candidate === null) return null;
+  if (typeof candidate !== "string") {
+    throw new HttpsError("invalid-argument", `${key} must be a string.`);
+  }
+  const normalized = candidate.trim();
+  return normalized.length === 0 ? null : normalized;
 }

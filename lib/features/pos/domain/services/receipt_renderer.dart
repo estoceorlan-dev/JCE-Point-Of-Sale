@@ -13,33 +13,46 @@ abstract interface class ReceiptRenderer {
 }
 
 class PlainTextReceiptRenderer implements ReceiptRenderer {
-  const PlainTextReceiptRenderer();
+  const PlainTextReceiptRenderer({
+    this.header = 'JCE General Merchandise',
+    this.footer = 'Thank you!',
+    this.showTaxBreakdown = true,
+    this.paperWidthCharacters = 42,
+  });
+
+  final String header;
+  final String footer;
+  final bool showTaxBreakdown;
+  final int paperWidthCharacters;
 
   @override
   ReceiptDocument render(SaleRecord sale) {
+    final separator = List.filled(paperWidthCharacters, '-').join();
     final lines = <String>[
-      'JCE General Merchandise',
+      header,
       'Receipt ${sale.receiptNumber}',
       'Register: ${sale.registerName}',
       'Date: ${sale.completedAt.toLocal()}',
       if (sale.customerDisplayName case final customer?) 'Customer: $customer',
-      '--------------------------------',
+      separator,
       for (final item in sale.items) ...[
         '${item.productName} (${item.sku})',
         '${_quantity(item.quantityMilli)} x ${Formatters.currencyMinor(item.unitPriceMinor)}  ${Formatters.currencyMinor(item.totalAmountMinor)}',
         if (item.discountAmountMinor > 0)
           '  Discount: -${Formatters.currencyMinor(item.discountAmountMinor)}',
       ],
-      '--------------------------------',
-      'Subtotal: ${Formatters.currencyMinor(sale.subtotalMinor)}',
-      'Discount: -${Formatters.currencyMinor(sale.discountMinor)}',
-      'Tax: ${Formatters.currencyMinor(sale.taxMinor)}',
+      separator,
+      if (showTaxBreakdown) ...[
+        'Subtotal: ${Formatters.currencyMinor(sale.subtotalMinor)}',
+        'Discount: -${Formatters.currencyMinor(sale.discountMinor)}',
+        'Tax: ${Formatters.currencyMinor(sale.taxMinor)}',
+      ],
       'TOTAL: ${Formatters.currencyMinor(sale.totalMinor)}',
       for (final payment in sale.payments)
         '${payment.method.label}: ${Formatters.currencyMinor(payment.tenderedAmountMinor)}',
       'Change: ${Formatters.currencyMinor(sale.changeMinor)}',
-      '--------------------------------',
-      'Thank you!',
+      separator,
+      if (footer.isNotEmpty) footer,
     ];
     return ReceiptDocument(plainText: lines.join('\n'));
   }

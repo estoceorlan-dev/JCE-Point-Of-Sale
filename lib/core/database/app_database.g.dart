@@ -42569,6 +42569,3245 @@ class LoyaltyLedgerEntriesCompanion
   }
 }
 
+class $OrganizationSettingsTable extends OrganizationSettings
+    with TableInfo<$OrganizationSettingsTable, OrganizationSetting> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OrganizationSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _settingKeyMeta = const VerificationMeta(
+    'settingKey',
+  );
+  @override
+  late final GeneratedColumn<String> settingKey = GeneratedColumn<String>(
+    'setting_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueJsonMeta = const VerificationMeta(
+    'valueJson',
+  );
+  @override
+  late final GeneratedColumn<String> valueJson = GeneratedColumn<String>(
+    'value_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _updatedByUserIdMeta = const VerificationMeta(
+    'updatedByUserId',
+  );
+  @override
+  late final GeneratedColumn<String> updatedByUserId = GeneratedColumn<String>(
+    'updated_by_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    settingKey,
+    valueJson,
+    version,
+    updatedByUserId,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'organization_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OrganizationSetting> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('setting_key')) {
+      context.handle(
+        _settingKeyMeta,
+        settingKey.isAcceptableOrUnknown(data['setting_key']!, _settingKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_settingKeyMeta);
+    }
+    if (data.containsKey('value_json')) {
+      context.handle(
+        _valueJsonMeta,
+        valueJson.isAcceptableOrUnknown(data['value_json']!, _valueJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueJsonMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('updated_by_user_id')) {
+      context.handle(
+        _updatedByUserIdMeta,
+        updatedByUserId.isAcceptableOrUnknown(
+          data['updated_by_user_id']!,
+          _updatedByUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedByUserIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {id, organizationId},
+  ];
+  @override
+  OrganizationSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OrganizationSetting(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      settingKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}setting_key'],
+      )!,
+      valueJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value_json'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      updatedByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_by_user_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $OrganizationSettingsTable createAlias(String alias) {
+    return $OrganizationSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class OrganizationSetting extends DataClass
+    implements Insertable<OrganizationSetting> {
+  final String id;
+  final String organizationId;
+  final String settingKey;
+  final String valueJson;
+  final int version;
+  final String updatedByUserId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const OrganizationSetting({
+    required this.id,
+    required this.organizationId,
+    required this.settingKey,
+    required this.valueJson,
+    required this.version,
+    required this.updatedByUserId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['setting_key'] = Variable<String>(settingKey);
+    map['value_json'] = Variable<String>(valueJson);
+    map['version'] = Variable<int>(version);
+    map['updated_by_user_id'] = Variable<String>(updatedByUserId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  OrganizationSettingsCompanion toCompanion(bool nullToAbsent) {
+    return OrganizationSettingsCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      settingKey: Value(settingKey),
+      valueJson: Value(valueJson),
+      version: Value(version),
+      updatedByUserId: Value(updatedByUserId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory OrganizationSetting.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OrganizationSetting(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      settingKey: serializer.fromJson<String>(json['settingKey']),
+      valueJson: serializer.fromJson<String>(json['valueJson']),
+      version: serializer.fromJson<int>(json['version']),
+      updatedByUserId: serializer.fromJson<String>(json['updatedByUserId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'settingKey': serializer.toJson<String>(settingKey),
+      'valueJson': serializer.toJson<String>(valueJson),
+      'version': serializer.toJson<int>(version),
+      'updatedByUserId': serializer.toJson<String>(updatedByUserId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  OrganizationSetting copyWith({
+    String? id,
+    String? organizationId,
+    String? settingKey,
+    String? valueJson,
+    int? version,
+    String? updatedByUserId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => OrganizationSetting(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    settingKey: settingKey ?? this.settingKey,
+    valueJson: valueJson ?? this.valueJson,
+    version: version ?? this.version,
+    updatedByUserId: updatedByUserId ?? this.updatedByUserId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  OrganizationSetting copyWithCompanion(OrganizationSettingsCompanion data) {
+    return OrganizationSetting(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      settingKey: data.settingKey.present
+          ? data.settingKey.value
+          : this.settingKey,
+      valueJson: data.valueJson.present ? data.valueJson.value : this.valueJson,
+      version: data.version.present ? data.version.value : this.version,
+      updatedByUserId: data.updatedByUserId.present
+          ? data.updatedByUserId.value
+          : this.updatedByUserId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrganizationSetting(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('settingKey: $settingKey, ')
+          ..write('valueJson: $valueJson, ')
+          ..write('version: $version, ')
+          ..write('updatedByUserId: $updatedByUserId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    settingKey,
+    valueJson,
+    version,
+    updatedByUserId,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OrganizationSetting &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.settingKey == this.settingKey &&
+          other.valueJson == this.valueJson &&
+          other.version == this.version &&
+          other.updatedByUserId == this.updatedByUserId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class OrganizationSettingsCompanion
+    extends UpdateCompanion<OrganizationSetting> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String> settingKey;
+  final Value<String> valueJson;
+  final Value<int> version;
+  final Value<String> updatedByUserId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const OrganizationSettingsCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.settingKey = const Value.absent(),
+    this.valueJson = const Value.absent(),
+    this.version = const Value.absent(),
+    this.updatedByUserId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OrganizationSettingsCompanion.insert({
+    required String id,
+    required String organizationId,
+    required String settingKey,
+    required String valueJson,
+    this.version = const Value.absent(),
+    required String updatedByUserId,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       settingKey = Value(settingKey),
+       valueJson = Value(valueJson),
+       updatedByUserId = Value(updatedByUserId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<OrganizationSetting> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? settingKey,
+    Expression<String>? valueJson,
+    Expression<int>? version,
+    Expression<String>? updatedByUserId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (settingKey != null) 'setting_key': settingKey,
+      if (valueJson != null) 'value_json': valueJson,
+      if (version != null) 'version': version,
+      if (updatedByUserId != null) 'updated_by_user_id': updatedByUserId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OrganizationSettingsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String>? settingKey,
+    Value<String>? valueJson,
+    Value<int>? version,
+    Value<String>? updatedByUserId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return OrganizationSettingsCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      settingKey: settingKey ?? this.settingKey,
+      valueJson: valueJson ?? this.valueJson,
+      version: version ?? this.version,
+      updatedByUserId: updatedByUserId ?? this.updatedByUserId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (settingKey.present) {
+      map['setting_key'] = Variable<String>(settingKey.value);
+    }
+    if (valueJson.present) {
+      map['value_json'] = Variable<String>(valueJson.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (updatedByUserId.present) {
+      map['updated_by_user_id'] = Variable<String>(updatedByUserId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrganizationSettingsCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('settingKey: $settingKey, ')
+          ..write('valueJson: $valueJson, ')
+          ..write('version: $version, ')
+          ..write('updatedByUserId: $updatedByUserId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $BranchSettingsTable extends BranchSettings
+    with TableInfo<$BranchSettingsTable, BranchSetting> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BranchSettingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES branches (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _settingKeyMeta = const VerificationMeta(
+    'settingKey',
+  );
+  @override
+  late final GeneratedColumn<String> settingKey = GeneratedColumn<String>(
+    'setting_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueJsonMeta = const VerificationMeta(
+    'valueJson',
+  );
+  @override
+  late final GeneratedColumn<String> valueJson = GeneratedColumn<String>(
+    'value_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _updatedByUserIdMeta = const VerificationMeta(
+    'updatedByUserId',
+  );
+  @override
+  late final GeneratedColumn<String> updatedByUserId = GeneratedColumn<String>(
+    'updated_by_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    branchId,
+    settingKey,
+    valueJson,
+    version,
+    updatedByUserId,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'branch_settings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BranchSetting> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('setting_key')) {
+      context.handle(
+        _settingKeyMeta,
+        settingKey.isAcceptableOrUnknown(data['setting_key']!, _settingKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_settingKeyMeta);
+    }
+    if (data.containsKey('value_json')) {
+      context.handle(
+        _valueJsonMeta,
+        valueJson.isAcceptableOrUnknown(data['value_json']!, _valueJsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueJsonMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('updated_by_user_id')) {
+      context.handle(
+        _updatedByUserIdMeta,
+        updatedByUserId.isAcceptableOrUnknown(
+          data['updated_by_user_id']!,
+          _updatedByUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedByUserIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {id, organizationId, branchId},
+  ];
+  @override
+  BranchSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BranchSetting(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      settingKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}setting_key'],
+      )!,
+      valueJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value_json'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      updatedByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}updated_by_user_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $BranchSettingsTable createAlias(String alias) {
+    return $BranchSettingsTable(attachedDatabase, alias);
+  }
+}
+
+class BranchSetting extends DataClass implements Insertable<BranchSetting> {
+  final String id;
+  final String organizationId;
+  final String branchId;
+  final String settingKey;
+  final String valueJson;
+  final int version;
+  final String updatedByUserId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const BranchSetting({
+    required this.id,
+    required this.organizationId,
+    required this.branchId,
+    required this.settingKey,
+    required this.valueJson,
+    required this.version,
+    required this.updatedByUserId,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['branch_id'] = Variable<String>(branchId);
+    map['setting_key'] = Variable<String>(settingKey);
+    map['value_json'] = Variable<String>(valueJson);
+    map['version'] = Variable<int>(version);
+    map['updated_by_user_id'] = Variable<String>(updatedByUserId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  BranchSettingsCompanion toCompanion(bool nullToAbsent) {
+    return BranchSettingsCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      branchId: Value(branchId),
+      settingKey: Value(settingKey),
+      valueJson: Value(valueJson),
+      version: Value(version),
+      updatedByUserId: Value(updatedByUserId),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory BranchSetting.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BranchSetting(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      settingKey: serializer.fromJson<String>(json['settingKey']),
+      valueJson: serializer.fromJson<String>(json['valueJson']),
+      version: serializer.fromJson<int>(json['version']),
+      updatedByUserId: serializer.fromJson<String>(json['updatedByUserId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'branchId': serializer.toJson<String>(branchId),
+      'settingKey': serializer.toJson<String>(settingKey),
+      'valueJson': serializer.toJson<String>(valueJson),
+      'version': serializer.toJson<int>(version),
+      'updatedByUserId': serializer.toJson<String>(updatedByUserId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  BranchSetting copyWith({
+    String? id,
+    String? organizationId,
+    String? branchId,
+    String? settingKey,
+    String? valueJson,
+    int? version,
+    String? updatedByUserId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => BranchSetting(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    branchId: branchId ?? this.branchId,
+    settingKey: settingKey ?? this.settingKey,
+    valueJson: valueJson ?? this.valueJson,
+    version: version ?? this.version,
+    updatedByUserId: updatedByUserId ?? this.updatedByUserId,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  BranchSetting copyWithCompanion(BranchSettingsCompanion data) {
+    return BranchSetting(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      settingKey: data.settingKey.present
+          ? data.settingKey.value
+          : this.settingKey,
+      valueJson: data.valueJson.present ? data.valueJson.value : this.valueJson,
+      version: data.version.present ? data.version.value : this.version,
+      updatedByUserId: data.updatedByUserId.present
+          ? data.updatedByUserId.value
+          : this.updatedByUserId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BranchSetting(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('settingKey: $settingKey, ')
+          ..write('valueJson: $valueJson, ')
+          ..write('version: $version, ')
+          ..write('updatedByUserId: $updatedByUserId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    branchId,
+    settingKey,
+    valueJson,
+    version,
+    updatedByUserId,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BranchSetting &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.branchId == this.branchId &&
+          other.settingKey == this.settingKey &&
+          other.valueJson == this.valueJson &&
+          other.version == this.version &&
+          other.updatedByUserId == this.updatedByUserId &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class BranchSettingsCompanion extends UpdateCompanion<BranchSetting> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String> branchId;
+  final Value<String> settingKey;
+  final Value<String> valueJson;
+  final Value<int> version;
+  final Value<String> updatedByUserId;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const BranchSettingsCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.settingKey = const Value.absent(),
+    this.valueJson = const Value.absent(),
+    this.version = const Value.absent(),
+    this.updatedByUserId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BranchSettingsCompanion.insert({
+    required String id,
+    required String organizationId,
+    required String branchId,
+    required String settingKey,
+    required String valueJson,
+    this.version = const Value.absent(),
+    required String updatedByUserId,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       branchId = Value(branchId),
+       settingKey = Value(settingKey),
+       valueJson = Value(valueJson),
+       updatedByUserId = Value(updatedByUserId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<BranchSetting> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? branchId,
+    Expression<String>? settingKey,
+    Expression<String>? valueJson,
+    Expression<int>? version,
+    Expression<String>? updatedByUserId,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (branchId != null) 'branch_id': branchId,
+      if (settingKey != null) 'setting_key': settingKey,
+      if (valueJson != null) 'value_json': valueJson,
+      if (version != null) 'version': version,
+      if (updatedByUserId != null) 'updated_by_user_id': updatedByUserId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BranchSettingsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String>? branchId,
+    Value<String>? settingKey,
+    Value<String>? valueJson,
+    Value<int>? version,
+    Value<String>? updatedByUserId,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return BranchSettingsCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      branchId: branchId ?? this.branchId,
+      settingKey: settingKey ?? this.settingKey,
+      valueJson: valueJson ?? this.valueJson,
+      version: version ?? this.version,
+      updatedByUserId: updatedByUserId ?? this.updatedByUserId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (settingKey.present) {
+      map['setting_key'] = Variable<String>(settingKey.value);
+    }
+    if (valueJson.present) {
+      map['value_json'] = Variable<String>(valueJson.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (updatedByUserId.present) {
+      map['updated_by_user_id'] = Variable<String>(updatedByUserId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BranchSettingsCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('settingKey: $settingKey, ')
+          ..write('valueJson: $valueJson, ')
+          ..write('version: $version, ')
+          ..write('updatedByUserId: $updatedByUserId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $NumberSequencesTable extends NumberSequences
+    with TableInfo<$NumberSequencesTable, NumberSequence> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NumberSequencesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES branches (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchScopeMeta = const VerificationMeta(
+    'branchScope',
+  );
+  @override
+  late final GeneratedColumn<String> branchScope = GeneratedColumn<String>(
+    'branch_scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sequenceKeyMeta = const VerificationMeta(
+    'sequenceKey',
+  );
+  @override
+  late final GeneratedColumn<String> sequenceKey = GeneratedColumn<String>(
+    'sequence_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _prefixMeta = const VerificationMeta('prefix');
+  @override
+  late final GeneratedColumn<String> prefix = GeneratedColumn<String>(
+    'prefix',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<String>(''),
+  );
+  static const VerificationMeta _nextValueMeta = const VerificationMeta(
+    'nextValue',
+  );
+  @override
+  late final GeneratedColumn<int> nextValue = GeneratedColumn<int>(
+    'next_value',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('next_value >= 1'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(1),
+  );
+  static const VerificationMeta _paddingMeta = const VerificationMeta(
+    'padding',
+  );
+  @override
+  late final GeneratedColumn<int> padding = GeneratedColumn<int>(
+    'padding',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('padding >= 1 AND padding <= 12'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(6),
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    branchId,
+    branchScope,
+    sequenceKey,
+    prefix,
+    nextValue,
+    padding,
+    version,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'number_sequences';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<NumberSequence> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    }
+    if (data.containsKey('branch_scope')) {
+      context.handle(
+        _branchScopeMeta,
+        branchScope.isAcceptableOrUnknown(
+          data['branch_scope']!,
+          _branchScopeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_branchScopeMeta);
+    }
+    if (data.containsKey('sequence_key')) {
+      context.handle(
+        _sequenceKeyMeta,
+        sequenceKey.isAcceptableOrUnknown(
+          data['sequence_key']!,
+          _sequenceKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sequenceKeyMeta);
+    }
+    if (data.containsKey('prefix')) {
+      context.handle(
+        _prefixMeta,
+        prefix.isAcceptableOrUnknown(data['prefix']!, _prefixMeta),
+      );
+    }
+    if (data.containsKey('next_value')) {
+      context.handle(
+        _nextValueMeta,
+        nextValue.isAcceptableOrUnknown(data['next_value']!, _nextValueMeta),
+      );
+    }
+    if (data.containsKey('padding')) {
+      context.handle(
+        _paddingMeta,
+        padding.isAcceptableOrUnknown(data['padding']!, _paddingMeta),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NumberSequence map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NumberSequence(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      ),
+      branchScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_scope'],
+      )!,
+      sequenceKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sequence_key'],
+      )!,
+      prefix: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prefix'],
+      )!,
+      nextValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}next_value'],
+      )!,
+      padding: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}padding'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $NumberSequencesTable createAlias(String alias) {
+    return $NumberSequencesTable(attachedDatabase, alias);
+  }
+}
+
+class NumberSequence extends DataClass implements Insertable<NumberSequence> {
+  final String id;
+  final String organizationId;
+  final String? branchId;
+  final String branchScope;
+  final String sequenceKey;
+  final String prefix;
+  final int nextValue;
+  final int padding;
+  final int version;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const NumberSequence({
+    required this.id,
+    required this.organizationId,
+    this.branchId,
+    required this.branchScope,
+    required this.sequenceKey,
+    required this.prefix,
+    required this.nextValue,
+    required this.padding,
+    required this.version,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    if (!nullToAbsent || branchId != null) {
+      map['branch_id'] = Variable<String>(branchId);
+    }
+    map['branch_scope'] = Variable<String>(branchScope);
+    map['sequence_key'] = Variable<String>(sequenceKey);
+    map['prefix'] = Variable<String>(prefix);
+    map['next_value'] = Variable<int>(nextValue);
+    map['padding'] = Variable<int>(padding);
+    map['version'] = Variable<int>(version);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  NumberSequencesCompanion toCompanion(bool nullToAbsent) {
+    return NumberSequencesCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      branchId: branchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(branchId),
+      branchScope: Value(branchScope),
+      sequenceKey: Value(sequenceKey),
+      prefix: Value(prefix),
+      nextValue: Value(nextValue),
+      padding: Value(padding),
+      version: Value(version),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory NumberSequence.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NumberSequence(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      branchId: serializer.fromJson<String?>(json['branchId']),
+      branchScope: serializer.fromJson<String>(json['branchScope']),
+      sequenceKey: serializer.fromJson<String>(json['sequenceKey']),
+      prefix: serializer.fromJson<String>(json['prefix']),
+      nextValue: serializer.fromJson<int>(json['nextValue']),
+      padding: serializer.fromJson<int>(json['padding']),
+      version: serializer.fromJson<int>(json['version']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'branchId': serializer.toJson<String?>(branchId),
+      'branchScope': serializer.toJson<String>(branchScope),
+      'sequenceKey': serializer.toJson<String>(sequenceKey),
+      'prefix': serializer.toJson<String>(prefix),
+      'nextValue': serializer.toJson<int>(nextValue),
+      'padding': serializer.toJson<int>(padding),
+      'version': serializer.toJson<int>(version),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  NumberSequence copyWith({
+    String? id,
+    String? organizationId,
+    Value<String?> branchId = const Value.absent(),
+    String? branchScope,
+    String? sequenceKey,
+    String? prefix,
+    int? nextValue,
+    int? padding,
+    int? version,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => NumberSequence(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    branchId: branchId.present ? branchId.value : this.branchId,
+    branchScope: branchScope ?? this.branchScope,
+    sequenceKey: sequenceKey ?? this.sequenceKey,
+    prefix: prefix ?? this.prefix,
+    nextValue: nextValue ?? this.nextValue,
+    padding: padding ?? this.padding,
+    version: version ?? this.version,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  NumberSequence copyWithCompanion(NumberSequencesCompanion data) {
+    return NumberSequence(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      branchScope: data.branchScope.present
+          ? data.branchScope.value
+          : this.branchScope,
+      sequenceKey: data.sequenceKey.present
+          ? data.sequenceKey.value
+          : this.sequenceKey,
+      prefix: data.prefix.present ? data.prefix.value : this.prefix,
+      nextValue: data.nextValue.present ? data.nextValue.value : this.nextValue,
+      padding: data.padding.present ? data.padding.value : this.padding,
+      version: data.version.present ? data.version.value : this.version,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NumberSequence(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('branchScope: $branchScope, ')
+          ..write('sequenceKey: $sequenceKey, ')
+          ..write('prefix: $prefix, ')
+          ..write('nextValue: $nextValue, ')
+          ..write('padding: $padding, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    branchId,
+    branchScope,
+    sequenceKey,
+    prefix,
+    nextValue,
+    padding,
+    version,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NumberSequence &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.branchId == this.branchId &&
+          other.branchScope == this.branchScope &&
+          other.sequenceKey == this.sequenceKey &&
+          other.prefix == this.prefix &&
+          other.nextValue == this.nextValue &&
+          other.padding == this.padding &&
+          other.version == this.version &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class NumberSequencesCompanion extends UpdateCompanion<NumberSequence> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String?> branchId;
+  final Value<String> branchScope;
+  final Value<String> sequenceKey;
+  final Value<String> prefix;
+  final Value<int> nextValue;
+  final Value<int> padding;
+  final Value<int> version;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const NumberSequencesCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.branchScope = const Value.absent(),
+    this.sequenceKey = const Value.absent(),
+    this.prefix = const Value.absent(),
+    this.nextValue = const Value.absent(),
+    this.padding = const Value.absent(),
+    this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  NumberSequencesCompanion.insert({
+    required String id,
+    required String organizationId,
+    this.branchId = const Value.absent(),
+    required String branchScope,
+    required String sequenceKey,
+    this.prefix = const Value.absent(),
+    this.nextValue = const Value.absent(),
+    this.padding = const Value.absent(),
+    this.version = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       branchScope = Value(branchScope),
+       sequenceKey = Value(sequenceKey),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<NumberSequence> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? branchId,
+    Expression<String>? branchScope,
+    Expression<String>? sequenceKey,
+    Expression<String>? prefix,
+    Expression<int>? nextValue,
+    Expression<int>? padding,
+    Expression<int>? version,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (branchId != null) 'branch_id': branchId,
+      if (branchScope != null) 'branch_scope': branchScope,
+      if (sequenceKey != null) 'sequence_key': sequenceKey,
+      if (prefix != null) 'prefix': prefix,
+      if (nextValue != null) 'next_value': nextValue,
+      if (padding != null) 'padding': padding,
+      if (version != null) 'version': version,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  NumberSequencesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String?>? branchId,
+    Value<String>? branchScope,
+    Value<String>? sequenceKey,
+    Value<String>? prefix,
+    Value<int>? nextValue,
+    Value<int>? padding,
+    Value<int>? version,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return NumberSequencesCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      branchId: branchId ?? this.branchId,
+      branchScope: branchScope ?? this.branchScope,
+      sequenceKey: sequenceKey ?? this.sequenceKey,
+      prefix: prefix ?? this.prefix,
+      nextValue: nextValue ?? this.nextValue,
+      padding: padding ?? this.padding,
+      version: version ?? this.version,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (branchScope.present) {
+      map['branch_scope'] = Variable<String>(branchScope.value);
+    }
+    if (sequenceKey.present) {
+      map['sequence_key'] = Variable<String>(sequenceKey.value);
+    }
+    if (prefix.present) {
+      map['prefix'] = Variable<String>(prefix.value);
+    }
+    if (nextValue.present) {
+      map['next_value'] = Variable<int>(nextValue.value);
+    }
+    if (padding.present) {
+      map['padding'] = Variable<int>(padding.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NumberSequencesCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('branchScope: $branchScope, ')
+          ..write('sequenceKey: $sequenceKey, ')
+          ..write('prefix: $prefix, ')
+          ..write('nextValue: $nextValue, ')
+          ..write('padding: $padding, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ReasonCodesTable extends ReasonCodes
+    with TableInfo<$ReasonCodesTable, ReasonCode> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReasonCodesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES branches (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchScopeMeta = const VerificationMeta(
+    'branchScope',
+  );
+  @override
+  late final GeneratedColumn<String> branchScope = GeneratedColumn<String>(
+    'branch_scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _requiresNoteMeta = const VerificationMeta(
+    'requiresNote',
+  );
+  @override
+  late final GeneratedColumn<bool> requiresNote = GeneratedColumn<bool>(
+    'requires_note',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("requires_note" IN (0, 1))',
+    ),
+    defaultValue: const Constant<bool>(false),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant<bool>(true),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    branchId,
+    branchScope,
+    category,
+    code,
+    label,
+    requiresNote,
+    isActive,
+    sortOrder,
+    version,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'reason_codes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReasonCode> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    }
+    if (data.containsKey('branch_scope')) {
+      context.handle(
+        _branchScopeMeta,
+        branchScope.isAcceptableOrUnknown(
+          data['branch_scope']!,
+          _branchScopeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_branchScopeMeta);
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('requires_note')) {
+      context.handle(
+        _requiresNoteMeta,
+        requiresNote.isAcceptableOrUnknown(
+          data['requires_note']!,
+          _requiresNoteMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {id, organizationId},
+  ];
+  @override
+  ReasonCode map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReasonCode(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      ),
+      branchScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_scope'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      requiresNote: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}requires_note'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $ReasonCodesTable createAlias(String alias) {
+    return $ReasonCodesTable(attachedDatabase, alias);
+  }
+}
+
+class ReasonCode extends DataClass implements Insertable<ReasonCode> {
+  final String id;
+  final String organizationId;
+  final String? branchId;
+  final String branchScope;
+  final String category;
+  final String code;
+  final String label;
+  final bool requiresNote;
+  final bool isActive;
+  final int sortOrder;
+  final int version;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const ReasonCode({
+    required this.id,
+    required this.organizationId,
+    this.branchId,
+    required this.branchScope,
+    required this.category,
+    required this.code,
+    required this.label,
+    required this.requiresNote,
+    required this.isActive,
+    required this.sortOrder,
+    required this.version,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    if (!nullToAbsent || branchId != null) {
+      map['branch_id'] = Variable<String>(branchId);
+    }
+    map['branch_scope'] = Variable<String>(branchScope);
+    map['category'] = Variable<String>(category);
+    map['code'] = Variable<String>(code);
+    map['label'] = Variable<String>(label);
+    map['requires_note'] = Variable<bool>(requiresNote);
+    map['is_active'] = Variable<bool>(isActive);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['version'] = Variable<int>(version);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  ReasonCodesCompanion toCompanion(bool nullToAbsent) {
+    return ReasonCodesCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      branchId: branchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(branchId),
+      branchScope: Value(branchScope),
+      category: Value(category),
+      code: Value(code),
+      label: Value(label),
+      requiresNote: Value(requiresNote),
+      isActive: Value(isActive),
+      sortOrder: Value(sortOrder),
+      version: Value(version),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory ReasonCode.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReasonCode(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      branchId: serializer.fromJson<String?>(json['branchId']),
+      branchScope: serializer.fromJson<String>(json['branchScope']),
+      category: serializer.fromJson<String>(json['category']),
+      code: serializer.fromJson<String>(json['code']),
+      label: serializer.fromJson<String>(json['label']),
+      requiresNote: serializer.fromJson<bool>(json['requiresNote']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      version: serializer.fromJson<int>(json['version']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'branchId': serializer.toJson<String?>(branchId),
+      'branchScope': serializer.toJson<String>(branchScope),
+      'category': serializer.toJson<String>(category),
+      'code': serializer.toJson<String>(code),
+      'label': serializer.toJson<String>(label),
+      'requiresNote': serializer.toJson<bool>(requiresNote),
+      'isActive': serializer.toJson<bool>(isActive),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'version': serializer.toJson<int>(version),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  ReasonCode copyWith({
+    String? id,
+    String? organizationId,
+    Value<String?> branchId = const Value.absent(),
+    String? branchScope,
+    String? category,
+    String? code,
+    String? label,
+    bool? requiresNote,
+    bool? isActive,
+    int? sortOrder,
+    int? version,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => ReasonCode(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    branchId: branchId.present ? branchId.value : this.branchId,
+    branchScope: branchScope ?? this.branchScope,
+    category: category ?? this.category,
+    code: code ?? this.code,
+    label: label ?? this.label,
+    requiresNote: requiresNote ?? this.requiresNote,
+    isActive: isActive ?? this.isActive,
+    sortOrder: sortOrder ?? this.sortOrder,
+    version: version ?? this.version,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  ReasonCode copyWithCompanion(ReasonCodesCompanion data) {
+    return ReasonCode(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      branchScope: data.branchScope.present
+          ? data.branchScope.value
+          : this.branchScope,
+      category: data.category.present ? data.category.value : this.category,
+      code: data.code.present ? data.code.value : this.code,
+      label: data.label.present ? data.label.value : this.label,
+      requiresNote: data.requiresNote.present
+          ? data.requiresNote.value
+          : this.requiresNote,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      version: data.version.present ? data.version.value : this.version,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReasonCode(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('branchScope: $branchScope, ')
+          ..write('category: $category, ')
+          ..write('code: $code, ')
+          ..write('label: $label, ')
+          ..write('requiresNote: $requiresNote, ')
+          ..write('isActive: $isActive, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    branchId,
+    branchScope,
+    category,
+    code,
+    label,
+    requiresNote,
+    isActive,
+    sortOrder,
+    version,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReasonCode &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.branchId == this.branchId &&
+          other.branchScope == this.branchScope &&
+          other.category == this.category &&
+          other.code == this.code &&
+          other.label == this.label &&
+          other.requiresNote == this.requiresNote &&
+          other.isActive == this.isActive &&
+          other.sortOrder == this.sortOrder &&
+          other.version == this.version &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class ReasonCodesCompanion extends UpdateCompanion<ReasonCode> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String?> branchId;
+  final Value<String> branchScope;
+  final Value<String> category;
+  final Value<String> code;
+  final Value<String> label;
+  final Value<bool> requiresNote;
+  final Value<bool> isActive;
+  final Value<int> sortOrder;
+  final Value<int> version;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const ReasonCodesCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.branchScope = const Value.absent(),
+    this.category = const Value.absent(),
+    this.code = const Value.absent(),
+    this.label = const Value.absent(),
+    this.requiresNote = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReasonCodesCompanion.insert({
+    required String id,
+    required String organizationId,
+    this.branchId = const Value.absent(),
+    required String branchScope,
+    required String category,
+    required String code,
+    required String label,
+    this.requiresNote = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.version = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       branchScope = Value(branchScope),
+       category = Value(category),
+       code = Value(code),
+       label = Value(label),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ReasonCode> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? branchId,
+    Expression<String>? branchScope,
+    Expression<String>? category,
+    Expression<String>? code,
+    Expression<String>? label,
+    Expression<bool>? requiresNote,
+    Expression<bool>? isActive,
+    Expression<int>? sortOrder,
+    Expression<int>? version,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (branchId != null) 'branch_id': branchId,
+      if (branchScope != null) 'branch_scope': branchScope,
+      if (category != null) 'category': category,
+      if (code != null) 'code': code,
+      if (label != null) 'label': label,
+      if (requiresNote != null) 'requires_note': requiresNote,
+      if (isActive != null) 'is_active': isActive,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (version != null) 'version': version,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReasonCodesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String?>? branchId,
+    Value<String>? branchScope,
+    Value<String>? category,
+    Value<String>? code,
+    Value<String>? label,
+    Value<bool>? requiresNote,
+    Value<bool>? isActive,
+    Value<int>? sortOrder,
+    Value<int>? version,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return ReasonCodesCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      branchId: branchId ?? this.branchId,
+      branchScope: branchScope ?? this.branchScope,
+      category: category ?? this.category,
+      code: code ?? this.code,
+      label: label ?? this.label,
+      requiresNote: requiresNote ?? this.requiresNote,
+      isActive: isActive ?? this.isActive,
+      sortOrder: sortOrder ?? this.sortOrder,
+      version: version ?? this.version,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (branchScope.present) {
+      map['branch_scope'] = Variable<String>(branchScope.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (requiresNote.present) {
+      map['requires_note'] = Variable<bool>(requiresNote.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReasonCodesCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('branchScope: $branchScope, ')
+          ..write('category: $category, ')
+          ..write('code: $code, ')
+          ..write('label: $label, ')
+          ..write('requiresNote: $requiresNote, ')
+          ..write('isActive: $isActive, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FeatureFlagsTable extends FeatureFlags
+    with TableInfo<$FeatureFlagsTable, FeatureFlag> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FeatureFlagsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES branches (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchScopeMeta = const VerificationMeta(
+    'branchScope',
+  );
+  @override
+  late final GeneratedColumn<String> branchScope = GeneratedColumn<String>(
+    'branch_scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _flagKeyMeta = const VerificationMeta(
+    'flagKey',
+  );
+  @override
+  late final GeneratedColumn<String> flagKey = GeneratedColumn<String>(
+    'flag_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isEnabledMeta = const VerificationMeta(
+    'isEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> isEnabled = GeneratedColumn<bool>(
+    'is_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant<bool>(false),
+  );
+  static const VerificationMeta _configurationJsonMeta = const VerificationMeta(
+    'configurationJson',
+  );
+  @override
+  late final GeneratedColumn<String> configurationJson =
+      GeneratedColumn<String>(
+        'configuration_json',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant<String>('{}'),
+      );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    branchId,
+    branchScope,
+    flagKey,
+    isEnabled,
+    configurationJson,
+    version,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'feature_flags';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FeatureFlag> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    }
+    if (data.containsKey('branch_scope')) {
+      context.handle(
+        _branchScopeMeta,
+        branchScope.isAcceptableOrUnknown(
+          data['branch_scope']!,
+          _branchScopeMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_branchScopeMeta);
+    }
+    if (data.containsKey('flag_key')) {
+      context.handle(
+        _flagKeyMeta,
+        flagKey.isAcceptableOrUnknown(data['flag_key']!, _flagKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_flagKeyMeta);
+    }
+    if (data.containsKey('is_enabled')) {
+      context.handle(
+        _isEnabledMeta,
+        isEnabled.isAcceptableOrUnknown(data['is_enabled']!, _isEnabledMeta),
+      );
+    }
+    if (data.containsKey('configuration_json')) {
+      context.handle(
+        _configurationJsonMeta,
+        configurationJson.isAcceptableOrUnknown(
+          data['configuration_json']!,
+          _configurationJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {id, organizationId},
+  ];
+  @override
+  FeatureFlag map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FeatureFlag(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      ),
+      branchScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_scope'],
+      )!,
+      flagKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}flag_key'],
+      )!,
+      isEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_enabled'],
+      )!,
+      configurationJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}configuration_json'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FeatureFlagsTable createAlias(String alias) {
+    return $FeatureFlagsTable(attachedDatabase, alias);
+  }
+}
+
+class FeatureFlag extends DataClass implements Insertable<FeatureFlag> {
+  final String id;
+  final String organizationId;
+  final String? branchId;
+  final String branchScope;
+  final String flagKey;
+  final bool isEnabled;
+  final String configurationJson;
+  final int version;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const FeatureFlag({
+    required this.id,
+    required this.organizationId,
+    this.branchId,
+    required this.branchScope,
+    required this.flagKey,
+    required this.isEnabled,
+    required this.configurationJson,
+    required this.version,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    if (!nullToAbsent || branchId != null) {
+      map['branch_id'] = Variable<String>(branchId);
+    }
+    map['branch_scope'] = Variable<String>(branchScope);
+    map['flag_key'] = Variable<String>(flagKey);
+    map['is_enabled'] = Variable<bool>(isEnabled);
+    map['configuration_json'] = Variable<String>(configurationJson);
+    map['version'] = Variable<int>(version);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  FeatureFlagsCompanion toCompanion(bool nullToAbsent) {
+    return FeatureFlagsCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      branchId: branchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(branchId),
+      branchScope: Value(branchScope),
+      flagKey: Value(flagKey),
+      isEnabled: Value(isEnabled),
+      configurationJson: Value(configurationJson),
+      version: Value(version),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory FeatureFlag.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FeatureFlag(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      branchId: serializer.fromJson<String?>(json['branchId']),
+      branchScope: serializer.fromJson<String>(json['branchScope']),
+      flagKey: serializer.fromJson<String>(json['flagKey']),
+      isEnabled: serializer.fromJson<bool>(json['isEnabled']),
+      configurationJson: serializer.fromJson<String>(json['configurationJson']),
+      version: serializer.fromJson<int>(json['version']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'branchId': serializer.toJson<String?>(branchId),
+      'branchScope': serializer.toJson<String>(branchScope),
+      'flagKey': serializer.toJson<String>(flagKey),
+      'isEnabled': serializer.toJson<bool>(isEnabled),
+      'configurationJson': serializer.toJson<String>(configurationJson),
+      'version': serializer.toJson<int>(version),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  FeatureFlag copyWith({
+    String? id,
+    String? organizationId,
+    Value<String?> branchId = const Value.absent(),
+    String? branchScope,
+    String? flagKey,
+    bool? isEnabled,
+    String? configurationJson,
+    int? version,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => FeatureFlag(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    branchId: branchId.present ? branchId.value : this.branchId,
+    branchScope: branchScope ?? this.branchScope,
+    flagKey: flagKey ?? this.flagKey,
+    isEnabled: isEnabled ?? this.isEnabled,
+    configurationJson: configurationJson ?? this.configurationJson,
+    version: version ?? this.version,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  FeatureFlag copyWithCompanion(FeatureFlagsCompanion data) {
+    return FeatureFlag(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      branchScope: data.branchScope.present
+          ? data.branchScope.value
+          : this.branchScope,
+      flagKey: data.flagKey.present ? data.flagKey.value : this.flagKey,
+      isEnabled: data.isEnabled.present ? data.isEnabled.value : this.isEnabled,
+      configurationJson: data.configurationJson.present
+          ? data.configurationJson.value
+          : this.configurationJson,
+      version: data.version.present ? data.version.value : this.version,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeatureFlag(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('branchScope: $branchScope, ')
+          ..write('flagKey: $flagKey, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('configurationJson: $configurationJson, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    branchId,
+    branchScope,
+    flagKey,
+    isEnabled,
+    configurationJson,
+    version,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FeatureFlag &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.branchId == this.branchId &&
+          other.branchScope == this.branchScope &&
+          other.flagKey == this.flagKey &&
+          other.isEnabled == this.isEnabled &&
+          other.configurationJson == this.configurationJson &&
+          other.version == this.version &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class FeatureFlagsCompanion extends UpdateCompanion<FeatureFlag> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String?> branchId;
+  final Value<String> branchScope;
+  final Value<String> flagKey;
+  final Value<bool> isEnabled;
+  final Value<String> configurationJson;
+  final Value<int> version;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const FeatureFlagsCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.branchScope = const Value.absent(),
+    this.flagKey = const Value.absent(),
+    this.isEnabled = const Value.absent(),
+    this.configurationJson = const Value.absent(),
+    this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FeatureFlagsCompanion.insert({
+    required String id,
+    required String organizationId,
+    this.branchId = const Value.absent(),
+    required String branchScope,
+    required String flagKey,
+    this.isEnabled = const Value.absent(),
+    this.configurationJson = const Value.absent(),
+    this.version = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       branchScope = Value(branchScope),
+       flagKey = Value(flagKey),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<FeatureFlag> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? branchId,
+    Expression<String>? branchScope,
+    Expression<String>? flagKey,
+    Expression<bool>? isEnabled,
+    Expression<String>? configurationJson,
+    Expression<int>? version,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (branchId != null) 'branch_id': branchId,
+      if (branchScope != null) 'branch_scope': branchScope,
+      if (flagKey != null) 'flag_key': flagKey,
+      if (isEnabled != null) 'is_enabled': isEnabled,
+      if (configurationJson != null) 'configuration_json': configurationJson,
+      if (version != null) 'version': version,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FeatureFlagsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String?>? branchId,
+    Value<String>? branchScope,
+    Value<String>? flagKey,
+    Value<bool>? isEnabled,
+    Value<String>? configurationJson,
+    Value<int>? version,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return FeatureFlagsCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      branchId: branchId ?? this.branchId,
+      branchScope: branchScope ?? this.branchScope,
+      flagKey: flagKey ?? this.flagKey,
+      isEnabled: isEnabled ?? this.isEnabled,
+      configurationJson: configurationJson ?? this.configurationJson,
+      version: version ?? this.version,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (branchScope.present) {
+      map['branch_scope'] = Variable<String>(branchScope.value);
+    }
+    if (flagKey.present) {
+      map['flag_key'] = Variable<String>(flagKey.value);
+    }
+    if (isEnabled.present) {
+      map['is_enabled'] = Variable<bool>(isEnabled.value);
+    }
+    if (configurationJson.present) {
+      map['configuration_json'] = Variable<String>(configurationJson.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeatureFlagsCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('branchScope: $branchScope, ')
+          ..write('flagKey: $flagKey, ')
+          ..write('isEnabled: $isEnabled, ')
+          ..write('configurationJson: $configurationJson, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -42657,6 +45896,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $LoyaltyLedgerEntriesTable loyaltyLedgerEntries =
       $LoyaltyLedgerEntriesTable(this);
+  late final $OrganizationSettingsTable organizationSettings =
+      $OrganizationSettingsTable(this);
+  late final $BranchSettingsTable branchSettings = $BranchSettingsTable(this);
+  late final $NumberSequencesTable numberSequences = $NumberSequencesTable(
+    this,
+  );
+  late final $ReasonCodesTable reasonCodes = $ReasonCodesTable(this);
+  late final $FeatureFlagsTable featureFlags = $FeatureFlagsTable(this);
   late final Index categoriesSearchIdx = Index(
     'categories_search_idx',
     'CREATE INDEX categories_search_idx ON categories (organization_id, normalized_name)',
@@ -42765,6 +46012,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'loyalty_ledger_history_idx',
     'CREATE INDEX loyalty_ledger_history_idx ON loyalty_ledger_entries (organization_id, account_id, occurred_at)',
   );
+  late final Index organizationSettingsKeyIdx = Index(
+    'organization_settings_key_idx',
+    'CREATE UNIQUE INDEX organization_settings_key_idx ON organization_settings (organization_id, setting_key)',
+  );
+  late final Index branchSettingsKeyIdx = Index(
+    'branch_settings_key_idx',
+    'CREATE UNIQUE INDEX branch_settings_key_idx ON branch_settings (organization_id, branch_id, setting_key)',
+  );
+  late final Index numberSequencesScopeIdx = Index(
+    'number_sequences_scope_idx',
+    'CREATE UNIQUE INDEX number_sequences_scope_idx ON number_sequences (organization_id, branch_scope, sequence_key)',
+  );
+  late final Index reasonCodesScopeIdx = Index(
+    'reason_codes_scope_idx',
+    'CREATE UNIQUE INDEX reason_codes_scope_idx ON reason_codes (organization_id, branch_scope, category, code)',
+  );
+  late final Index featureFlagsScopeIdx = Index(
+    'feature_flags_scope_idx',
+    'CREATE UNIQUE INDEX feature_flags_scope_idx ON feature_flags (organization_id, branch_scope, flag_key)',
+  );
   late final MetadataDao metadataDao = MetadataDao(this as AppDatabase);
   late final OutboxDao outboxDao = OutboxDao(this as AppDatabase);
   late final SyncCursorDao syncCursorDao = SyncCursorDao(this as AppDatabase);
@@ -42835,6 +46102,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     customerNotes,
     loyaltyAccounts,
     loyaltyLedgerEntries,
+    organizationSettings,
+    branchSettings,
+    numberSequences,
+    reasonCodes,
+    featureFlags,
     categoriesSearchIdx,
     productsNameSearchIdx,
     productsSkuSearchIdx,
@@ -42862,6 +46134,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     customersPhoneSearchIdx,
     customerNotesHistoryIdx,
     loyaltyLedgerHistoryIdx,
+    organizationSettingsKeyIdx,
+    branchSettingsKeyIdx,
+    numberSequencesScopeIdx,
+    reasonCodesScopeIdx,
+    featureFlagsScopeIdx,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -45767,6 +49044,120 @@ final class $$OrganizationsTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $OrganizationSettingsTable,
+    List<OrganizationSetting>
+  >
+  _organizationSettingsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.organizationSettings,
+        aliasName: $_aliasNameGenerator(
+          db.organizations.id,
+          db.organizationSettings.organizationId,
+        ),
+      );
+
+  $$OrganizationSettingsTableProcessedTableManager
+  get organizationSettingsRefs {
+    final manager = $$OrganizationSettingsTableTableManager(
+      $_db,
+      $_db.organizationSettings,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _organizationSettingsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$BranchSettingsTable, List<BranchSetting>>
+  _branchSettingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.branchSettings,
+    aliasName: $_aliasNameGenerator(
+      db.organizations.id,
+      db.branchSettings.organizationId,
+    ),
+  );
+
+  $$BranchSettingsTableProcessedTableManager get branchSettingsRefs {
+    final manager = $$BranchSettingsTableTableManager(
+      $_db,
+      $_db.branchSettings,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_branchSettingsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$NumberSequencesTable, List<NumberSequence>>
+  _numberSequencesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.numberSequences,
+    aliasName: $_aliasNameGenerator(
+      db.organizations.id,
+      db.numberSequences.organizationId,
+    ),
+  );
+
+  $$NumberSequencesTableProcessedTableManager get numberSequencesRefs {
+    final manager = $$NumberSequencesTableTableManager(
+      $_db,
+      $_db.numberSequences,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _numberSequencesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ReasonCodesTable, List<ReasonCode>>
+  _reasonCodesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.reasonCodes,
+    aliasName: $_aliasNameGenerator(
+      db.organizations.id,
+      db.reasonCodes.organizationId,
+    ),
+  );
+
+  $$ReasonCodesTableProcessedTableManager get reasonCodesRefs {
+    final manager = $$ReasonCodesTableTableManager(
+      $_db,
+      $_db.reasonCodes,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_reasonCodesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$FeatureFlagsTable, List<FeatureFlag>>
+  _featureFlagsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.featureFlags,
+    aliasName: $_aliasNameGenerator(
+      db.organizations.id,
+      db.featureFlags.organizationId,
+    ),
+  );
+
+  $$FeatureFlagsTableProcessedTableManager get featureFlagsRefs {
+    final manager = $$FeatureFlagsTableTableManager(
+      $_db,
+      $_db.featureFlags,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_featureFlagsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$OrganizationsTableFilterComposer
@@ -46961,6 +50352,131 @@ class $$OrganizationsTableFilterComposer
           }) => $$LoyaltyLedgerEntriesTableFilterComposer(
             $db: $db,
             $table: $db.loyaltyLedgerEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> organizationSettingsRefs(
+    Expression<bool> Function($$OrganizationSettingsTableFilterComposer f) f,
+  ) {
+    final $$OrganizationSettingsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.organizationSettings,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationSettingsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizationSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> branchSettingsRefs(
+    Expression<bool> Function($$BranchSettingsTableFilterComposer f) f,
+  ) {
+    final $$BranchSettingsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.branchSettings,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchSettingsTableFilterComposer(
+            $db: $db,
+            $table: $db.branchSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> numberSequencesRefs(
+    Expression<bool> Function($$NumberSequencesTableFilterComposer f) f,
+  ) {
+    final $$NumberSequencesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.numberSequences,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$NumberSequencesTableFilterComposer(
+            $db: $db,
+            $table: $db.numberSequences,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> reasonCodesRefs(
+    Expression<bool> Function($$ReasonCodesTableFilterComposer f) f,
+  ) {
+    final $$ReasonCodesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.reasonCodes,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReasonCodesTableFilterComposer(
+            $db: $db,
+            $table: $db.reasonCodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> featureFlagsRefs(
+    Expression<bool> Function($$FeatureFlagsTableFilterComposer f) f,
+  ) {
+    final $$FeatureFlagsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.featureFlags,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeatureFlagsTableFilterComposer(
+            $db: $db,
+            $table: $db.featureFlags,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -48213,6 +51729,132 @@ class $$OrganizationsTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> organizationSettingsRefs<T extends Object>(
+    Expression<T> Function($$OrganizationSettingsTableAnnotationComposer a) f,
+  ) {
+    final $$OrganizationSettingsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.organizationSettings,
+          getReferencedColumn: (t) => t.organizationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$OrganizationSettingsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.organizationSettings,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> branchSettingsRefs<T extends Object>(
+    Expression<T> Function($$BranchSettingsTableAnnotationComposer a) f,
+  ) {
+    final $$BranchSettingsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.branchSettings,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchSettingsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branchSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> numberSequencesRefs<T extends Object>(
+    Expression<T> Function($$NumberSequencesTableAnnotationComposer a) f,
+  ) {
+    final $$NumberSequencesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.numberSequences,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$NumberSequencesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.numberSequences,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> reasonCodesRefs<T extends Object>(
+    Expression<T> Function($$ReasonCodesTableAnnotationComposer a) f,
+  ) {
+    final $$ReasonCodesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.reasonCodes,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReasonCodesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.reasonCodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> featureFlagsRefs<T extends Object>(
+    Expression<T> Function($$FeatureFlagsTableAnnotationComposer a) f,
+  ) {
+    final $$FeatureFlagsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.featureFlags,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeatureFlagsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.featureFlags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$OrganizationsTableTableManager
@@ -48275,6 +51917,11 @@ class $$OrganizationsTableTableManager
             bool customerNotesRefs,
             bool loyaltyAccountsRefs,
             bool loyaltyLedgerEntriesRefs,
+            bool organizationSettingsRefs,
+            bool branchSettingsRefs,
+            bool numberSequencesRefs,
+            bool reasonCodesRefs,
+            bool featureFlagsRefs,
           })
         > {
   $$OrganizationsTableTableManager(_$AppDatabase db, $OrganizationsTable table)
@@ -48388,6 +52035,11 @@ class $$OrganizationsTableTableManager
                 customerNotesRefs = false,
                 loyaltyAccountsRefs = false,
                 loyaltyLedgerEntriesRefs = false,
+                organizationSettingsRefs = false,
+                branchSettingsRefs = false,
+                numberSequencesRefs = false,
+                reasonCodesRefs = false,
+                featureFlagsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -48438,6 +52090,11 @@ class $$OrganizationsTableTableManager
                     if (customerNotesRefs) db.customerNotes,
                     if (loyaltyAccountsRefs) db.loyaltyAccounts,
                     if (loyaltyLedgerEntriesRefs) db.loyaltyLedgerEntries,
+                    if (organizationSettingsRefs) db.organizationSettings,
+                    if (branchSettingsRefs) db.branchSettings,
+                    if (numberSequencesRefs) db.numberSequences,
+                    if (reasonCodesRefs) db.reasonCodes,
+                    if (featureFlagsRefs) db.featureFlags,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -49408,6 +53065,111 @@ class $$OrganizationsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (organizationSettingsRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          OrganizationSetting
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._organizationSettingsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).organizationSettingsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (branchSettingsRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          BranchSetting
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._branchSettingsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).branchSettingsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (numberSequencesRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          NumberSequence
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._numberSequencesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).numberSequencesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (reasonCodesRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          ReasonCode
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._reasonCodesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).reasonCodesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (featureFlagsRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          FeatureFlag
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._featureFlagsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).featureFlagsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -49475,6 +53237,11 @@ typedef $$OrganizationsTableProcessedTableManager =
         bool customerNotesRefs,
         bool loyaltyAccountsRefs,
         bool loyaltyLedgerEntriesRefs,
+        bool organizationSettingsRefs,
+        bool branchSettingsRefs,
+        bool numberSequencesRefs,
+        bool reasonCodesRefs,
+        bool featureFlagsRefs,
       })
     >;
 typedef $$BranchesTableCreateCompanionBuilder =
@@ -50059,6 +53826,83 @@ final class $$BranchesTableReferences
     final cache = $_typedResult.readTableOrNull(
       _loyaltyLedgerEntriesRefsTable($_db),
     );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$BranchSettingsTable, List<BranchSetting>>
+  _branchSettingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.branchSettings,
+    aliasName: $_aliasNameGenerator(db.branches.id, db.branchSettings.branchId),
+  );
+
+  $$BranchSettingsTableProcessedTableManager get branchSettingsRefs {
+    final manager = $$BranchSettingsTableTableManager(
+      $_db,
+      $_db.branchSettings,
+    ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_branchSettingsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$NumberSequencesTable, List<NumberSequence>>
+  _numberSequencesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.numberSequences,
+    aliasName: $_aliasNameGenerator(
+      db.branches.id,
+      db.numberSequences.branchId,
+    ),
+  );
+
+  $$NumberSequencesTableProcessedTableManager get numberSequencesRefs {
+    final manager = $$NumberSequencesTableTableManager(
+      $_db,
+      $_db.numberSequences,
+    ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _numberSequencesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ReasonCodesTable, List<ReasonCode>>
+  _reasonCodesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.reasonCodes,
+    aliasName: $_aliasNameGenerator(db.branches.id, db.reasonCodes.branchId),
+  );
+
+  $$ReasonCodesTableProcessedTableManager get reasonCodesRefs {
+    final manager = $$ReasonCodesTableTableManager(
+      $_db,
+      $_db.reasonCodes,
+    ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_reasonCodesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$FeatureFlagsTable, List<FeatureFlag>>
+  _featureFlagsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.featureFlags,
+    aliasName: $_aliasNameGenerator(db.branches.id, db.featureFlags.branchId),
+  );
+
+  $$FeatureFlagsTableProcessedTableManager get featureFlagsRefs {
+    final manager = $$FeatureFlagsTableTableManager(
+      $_db,
+      $_db.featureFlags,
+    ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_featureFlagsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -50802,6 +54646,106 @@ class $$BranchesTableFilterComposer
           }) => $$LoyaltyLedgerEntriesTableFilterComposer(
             $db: $db,
             $table: $db.loyaltyLedgerEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> branchSettingsRefs(
+    Expression<bool> Function($$BranchSettingsTableFilterComposer f) f,
+  ) {
+    final $$BranchSettingsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.branchSettings,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchSettingsTableFilterComposer(
+            $db: $db,
+            $table: $db.branchSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> numberSequencesRefs(
+    Expression<bool> Function($$NumberSequencesTableFilterComposer f) f,
+  ) {
+    final $$NumberSequencesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.numberSequences,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$NumberSequencesTableFilterComposer(
+            $db: $db,
+            $table: $db.numberSequences,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> reasonCodesRefs(
+    Expression<bool> Function($$ReasonCodesTableFilterComposer f) f,
+  ) {
+    final $$ReasonCodesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.reasonCodes,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReasonCodesTableFilterComposer(
+            $db: $db,
+            $table: $db.reasonCodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> featureFlagsRefs(
+    Expression<bool> Function($$FeatureFlagsTableFilterComposer f) f,
+  ) {
+    final $$FeatureFlagsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.featureFlags,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeatureFlagsTableFilterComposer(
+            $db: $db,
+            $table: $db.featureFlags,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -51669,6 +55613,106 @@ class $$BranchesTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> branchSettingsRefs<T extends Object>(
+    Expression<T> Function($$BranchSettingsTableAnnotationComposer a) f,
+  ) {
+    final $$BranchSettingsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.branchSettings,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchSettingsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branchSettings,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> numberSequencesRefs<T extends Object>(
+    Expression<T> Function($$NumberSequencesTableAnnotationComposer a) f,
+  ) {
+    final $$NumberSequencesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.numberSequences,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$NumberSequencesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.numberSequences,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> reasonCodesRefs<T extends Object>(
+    Expression<T> Function($$ReasonCodesTableAnnotationComposer a) f,
+  ) {
+    final $$ReasonCodesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.reasonCodes,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReasonCodesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.reasonCodes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> featureFlagsRefs<T extends Object>(
+    Expression<T> Function($$FeatureFlagsTableAnnotationComposer a) f,
+  ) {
+    final $$FeatureFlagsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.featureFlags,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$FeatureFlagsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.featureFlags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BranchesTableTableManager
@@ -51711,6 +55755,10 @@ class $$BranchesTableTableManager
             bool goodsReceiptsRefs,
             bool customerNotesRefs,
             bool loyaltyLedgerEntriesRefs,
+            bool branchSettingsRefs,
+            bool numberSequencesRefs,
+            bool reasonCodesRefs,
+            bool featureFlagsRefs,
           })
         > {
   $$BranchesTableTableManager(_$AppDatabase db, $BranchesTable table)
@@ -51860,6 +55908,10 @@ class $$BranchesTableTableManager
                 goodsReceiptsRefs = false,
                 customerNotesRefs = false,
                 loyaltyLedgerEntriesRefs = false,
+                branchSettingsRefs = false,
+                numberSequencesRefs = false,
+                reasonCodesRefs = false,
+                featureFlagsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -51889,6 +55941,10 @@ class $$BranchesTableTableManager
                     if (goodsReceiptsRefs) db.goodsReceipts,
                     if (customerNotesRefs) db.customerNotes,
                     if (loyaltyLedgerEntriesRefs) db.loyaltyLedgerEntries,
+                    if (branchSettingsRefs) db.branchSettings,
+                    if (numberSequencesRefs) db.numberSequences,
+                    if (reasonCodesRefs) db.reasonCodes,
+                    if (featureFlagsRefs) db.featureFlags,
                   ],
                   addJoins:
                       <
@@ -52449,6 +56505,90 @@ class $$BranchesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (branchSettingsRefs)
+                        await $_getPrefetchedData<
+                          Branche,
+                          $BranchesTable,
+                          BranchSetting
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BranchesTableReferences
+                              ._branchSettingsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BranchesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).branchSettingsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.branchId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (numberSequencesRefs)
+                        await $_getPrefetchedData<
+                          Branche,
+                          $BranchesTable,
+                          NumberSequence
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BranchesTableReferences
+                              ._numberSequencesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BranchesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).numberSequencesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.branchId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (reasonCodesRefs)
+                        await $_getPrefetchedData<
+                          Branche,
+                          $BranchesTable,
+                          ReasonCode
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BranchesTableReferences
+                              ._reasonCodesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BranchesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).reasonCodesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.branchId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (featureFlagsRefs)
+                        await $_getPrefetchedData<
+                          Branche,
+                          $BranchesTable,
+                          FeatureFlag
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BranchesTableReferences
+                              ._featureFlagsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BranchesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).featureFlagsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.branchId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -52496,6 +56636,10 @@ typedef $$BranchesTableProcessedTableManager =
         bool goodsReceiptsRefs,
         bool customerNotesRefs,
         bool loyaltyLedgerEntriesRefs,
+        bool branchSettingsRefs,
+        bool numberSequencesRefs,
+        bool reasonCodesRefs,
+        bool featureFlagsRefs,
       })
     >;
 typedef $$AppUsersTableCreateCompanionBuilder =
@@ -91911,6 +96055,2539 @@ typedef $$LoyaltyLedgerEntriesTableProcessedTableManager =
         bool createdByUserId,
       })
     >;
+typedef $$OrganizationSettingsTableCreateCompanionBuilder =
+    OrganizationSettingsCompanion Function({
+      required String id,
+      required String organizationId,
+      required String settingKey,
+      required String valueJson,
+      Value<int> version,
+      required String updatedByUserId,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$OrganizationSettingsTableUpdateCompanionBuilder =
+    OrganizationSettingsCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String> settingKey,
+      Value<String> valueJson,
+      Value<int> version,
+      Value<String> updatedByUserId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$OrganizationSettingsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $OrganizationSettingsTable,
+          OrganizationSetting
+        > {
+  $$OrganizationSettingsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.organizationSettings.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$OrganizationSettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $OrganizationSettingsTable> {
+  $$OrganizationSettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get settingKey => $composableBuilder(
+    column: $table.settingKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get valueJson => $composableBuilder(
+    column: $table.valueJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedByUserId => $composableBuilder(
+    column: $table.updatedByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OrganizationSettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $OrganizationSettingsTable> {
+  $$OrganizationSettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get settingKey => $composableBuilder(
+    column: $table.settingKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get valueJson => $composableBuilder(
+    column: $table.valueJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedByUserId => $composableBuilder(
+    column: $table.updatedByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OrganizationSettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OrganizationSettingsTable> {
+  $$OrganizationSettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get settingKey => $composableBuilder(
+    column: $table.settingKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get valueJson =>
+      $composableBuilder(column: $table.valueJson, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedByUserId => $composableBuilder(
+    column: $table.updatedByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$OrganizationSettingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OrganizationSettingsTable,
+          OrganizationSetting,
+          $$OrganizationSettingsTableFilterComposer,
+          $$OrganizationSettingsTableOrderingComposer,
+          $$OrganizationSettingsTableAnnotationComposer,
+          $$OrganizationSettingsTableCreateCompanionBuilder,
+          $$OrganizationSettingsTableUpdateCompanionBuilder,
+          (OrganizationSetting, $$OrganizationSettingsTableReferences),
+          OrganizationSetting,
+          PrefetchHooks Function({bool organizationId})
+        > {
+  $$OrganizationSettingsTableTableManager(
+    _$AppDatabase db,
+    $OrganizationSettingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OrganizationSettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OrganizationSettingsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$OrganizationSettingsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> settingKey = const Value.absent(),
+                Value<String> valueJson = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String> updatedByUserId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OrganizationSettingsCompanion(
+                id: id,
+                organizationId: organizationId,
+                settingKey: settingKey,
+                valueJson: valueJson,
+                version: version,
+                updatedByUserId: updatedByUserId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                required String settingKey,
+                required String valueJson,
+                Value<int> version = const Value.absent(),
+                required String updatedByUserId,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => OrganizationSettingsCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                settingKey: settingKey,
+                valueJson: valueJson,
+                version: version,
+                updatedByUserId: updatedByUserId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$OrganizationSettingsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({organizationId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (organizationId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.organizationId,
+                                referencedTable:
+                                    $$OrganizationSettingsTableReferences
+                                        ._organizationIdTable(db),
+                                referencedColumn:
+                                    $$OrganizationSettingsTableReferences
+                                        ._organizationIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$OrganizationSettingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OrganizationSettingsTable,
+      OrganizationSetting,
+      $$OrganizationSettingsTableFilterComposer,
+      $$OrganizationSettingsTableOrderingComposer,
+      $$OrganizationSettingsTableAnnotationComposer,
+      $$OrganizationSettingsTableCreateCompanionBuilder,
+      $$OrganizationSettingsTableUpdateCompanionBuilder,
+      (OrganizationSetting, $$OrganizationSettingsTableReferences),
+      OrganizationSetting,
+      PrefetchHooks Function({bool organizationId})
+    >;
+typedef $$BranchSettingsTableCreateCompanionBuilder =
+    BranchSettingsCompanion Function({
+      required String id,
+      required String organizationId,
+      required String branchId,
+      required String settingKey,
+      required String valueJson,
+      Value<int> version,
+      required String updatedByUserId,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$BranchSettingsTableUpdateCompanionBuilder =
+    BranchSettingsCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String> branchId,
+      Value<String> settingKey,
+      Value<String> valueJson,
+      Value<int> version,
+      Value<String> updatedByUserId,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$BranchSettingsTableReferences
+    extends BaseReferences<_$AppDatabase, $BranchSettingsTable, BranchSetting> {
+  $$BranchSettingsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.branchSettings.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BranchesTable _branchIdTable(_$AppDatabase db) =>
+      db.branches.createAlias(
+        $_aliasNameGenerator(db.branchSettings.branchId, db.branches.id),
+      );
+
+  $$BranchesTableProcessedTableManager get branchId {
+    final $_column = $_itemColumn<String>('branch_id')!;
+
+    final manager = $$BranchesTableTableManager(
+      $_db,
+      $_db.branches,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$BranchSettingsTableFilterComposer
+    extends Composer<_$AppDatabase, $BranchSettingsTable> {
+  $$BranchSettingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get settingKey => $composableBuilder(
+    column: $table.settingKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get valueJson => $composableBuilder(
+    column: $table.valueJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get updatedByUserId => $composableBuilder(
+    column: $table.updatedByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BranchSettingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $BranchSettingsTable> {
+  $$BranchSettingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get settingKey => $composableBuilder(
+    column: $table.settingKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get valueJson => $composableBuilder(
+    column: $table.valueJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get updatedByUserId => $composableBuilder(
+    column: $table.updatedByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableOrderingComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BranchSettingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BranchSettingsTable> {
+  $$BranchSettingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get settingKey => $composableBuilder(
+    column: $table.settingKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get valueJson =>
+      $composableBuilder(column: $table.valueJson, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get updatedByUserId => $composableBuilder(
+    column: $table.updatedByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$BranchSettingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BranchSettingsTable,
+          BranchSetting,
+          $$BranchSettingsTableFilterComposer,
+          $$BranchSettingsTableOrderingComposer,
+          $$BranchSettingsTableAnnotationComposer,
+          $$BranchSettingsTableCreateCompanionBuilder,
+          $$BranchSettingsTableUpdateCompanionBuilder,
+          (BranchSetting, $$BranchSettingsTableReferences),
+          BranchSetting,
+          PrefetchHooks Function({bool organizationId, bool branchId})
+        > {
+  $$BranchSettingsTableTableManager(
+    _$AppDatabase db,
+    $BranchSettingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BranchSettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BranchSettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BranchSettingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> settingKey = const Value.absent(),
+                Value<String> valueJson = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String> updatedByUserId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BranchSettingsCompanion(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                settingKey: settingKey,
+                valueJson: valueJson,
+                version: version,
+                updatedByUserId: updatedByUserId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                required String branchId,
+                required String settingKey,
+                required String valueJson,
+                Value<int> version = const Value.absent(),
+                required String updatedByUserId,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => BranchSettingsCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                settingKey: settingKey,
+                valueJson: valueJson,
+                version: version,
+                updatedByUserId: updatedByUserId,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$BranchSettingsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({organizationId = false, branchId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (organizationId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.organizationId,
+                                referencedTable: $$BranchSettingsTableReferences
+                                    ._organizationIdTable(db),
+                                referencedColumn:
+                                    $$BranchSettingsTableReferences
+                                        ._organizationIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (branchId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.branchId,
+                                referencedTable: $$BranchSettingsTableReferences
+                                    ._branchIdTable(db),
+                                referencedColumn:
+                                    $$BranchSettingsTableReferences
+                                        ._branchIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$BranchSettingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BranchSettingsTable,
+      BranchSetting,
+      $$BranchSettingsTableFilterComposer,
+      $$BranchSettingsTableOrderingComposer,
+      $$BranchSettingsTableAnnotationComposer,
+      $$BranchSettingsTableCreateCompanionBuilder,
+      $$BranchSettingsTableUpdateCompanionBuilder,
+      (BranchSetting, $$BranchSettingsTableReferences),
+      BranchSetting,
+      PrefetchHooks Function({bool organizationId, bool branchId})
+    >;
+typedef $$NumberSequencesTableCreateCompanionBuilder =
+    NumberSequencesCompanion Function({
+      required String id,
+      required String organizationId,
+      Value<String?> branchId,
+      required String branchScope,
+      required String sequenceKey,
+      Value<String> prefix,
+      Value<int> nextValue,
+      Value<int> padding,
+      Value<int> version,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$NumberSequencesTableUpdateCompanionBuilder =
+    NumberSequencesCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String?> branchId,
+      Value<String> branchScope,
+      Value<String> sequenceKey,
+      Value<String> prefix,
+      Value<int> nextValue,
+      Value<int> padding,
+      Value<int> version,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$NumberSequencesTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $NumberSequencesTable, NumberSequence> {
+  $$NumberSequencesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.numberSequences.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BranchesTable _branchIdTable(_$AppDatabase db) =>
+      db.branches.createAlias(
+        $_aliasNameGenerator(db.numberSequences.branchId, db.branches.id),
+      );
+
+  $$BranchesTableProcessedTableManager? get branchId {
+    final $_column = $_itemColumn<String>('branch_id');
+    if ($_column == null) return null;
+    final manager = $$BranchesTableTableManager(
+      $_db,
+      $_db.branches,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$NumberSequencesTableFilterComposer
+    extends Composer<_$AppDatabase, $NumberSequencesTable> {
+  $$NumberSequencesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branchScope => $composableBuilder(
+    column: $table.branchScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sequenceKey => $composableBuilder(
+    column: $table.sequenceKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prefix => $composableBuilder(
+    column: $table.prefix,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nextValue => $composableBuilder(
+    column: $table.nextValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get padding => $composableBuilder(
+    column: $table.padding,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$NumberSequencesTableOrderingComposer
+    extends Composer<_$AppDatabase, $NumberSequencesTable> {
+  $$NumberSequencesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branchScope => $composableBuilder(
+    column: $table.branchScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sequenceKey => $composableBuilder(
+    column: $table.sequenceKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get prefix => $composableBuilder(
+    column: $table.prefix,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nextValue => $composableBuilder(
+    column: $table.nextValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get padding => $composableBuilder(
+    column: $table.padding,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableOrderingComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$NumberSequencesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NumberSequencesTable> {
+  $$NumberSequencesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get branchScope => $composableBuilder(
+    column: $table.branchScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sequenceKey => $composableBuilder(
+    column: $table.sequenceKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get prefix =>
+      $composableBuilder(column: $table.prefix, builder: (column) => column);
+
+  GeneratedColumn<int> get nextValue =>
+      $composableBuilder(column: $table.nextValue, builder: (column) => column);
+
+  GeneratedColumn<int> get padding =>
+      $composableBuilder(column: $table.padding, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$NumberSequencesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $NumberSequencesTable,
+          NumberSequence,
+          $$NumberSequencesTableFilterComposer,
+          $$NumberSequencesTableOrderingComposer,
+          $$NumberSequencesTableAnnotationComposer,
+          $$NumberSequencesTableCreateCompanionBuilder,
+          $$NumberSequencesTableUpdateCompanionBuilder,
+          (NumberSequence, $$NumberSequencesTableReferences),
+          NumberSequence,
+          PrefetchHooks Function({bool organizationId, bool branchId})
+        > {
+  $$NumberSequencesTableTableManager(
+    _$AppDatabase db,
+    $NumberSequencesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NumberSequencesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NumberSequencesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NumberSequencesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String?> branchId = const Value.absent(),
+                Value<String> branchScope = const Value.absent(),
+                Value<String> sequenceKey = const Value.absent(),
+                Value<String> prefix = const Value.absent(),
+                Value<int> nextValue = const Value.absent(),
+                Value<int> padding = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => NumberSequencesCompanion(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                branchScope: branchScope,
+                sequenceKey: sequenceKey,
+                prefix: prefix,
+                nextValue: nextValue,
+                padding: padding,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                Value<String?> branchId = const Value.absent(),
+                required String branchScope,
+                required String sequenceKey,
+                Value<String> prefix = const Value.absent(),
+                Value<int> nextValue = const Value.absent(),
+                Value<int> padding = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => NumberSequencesCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                branchScope: branchScope,
+                sequenceKey: sequenceKey,
+                prefix: prefix,
+                nextValue: nextValue,
+                padding: padding,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$NumberSequencesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({organizationId = false, branchId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (organizationId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.organizationId,
+                                referencedTable:
+                                    $$NumberSequencesTableReferences
+                                        ._organizationIdTable(db),
+                                referencedColumn:
+                                    $$NumberSequencesTableReferences
+                                        ._organizationIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (branchId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.branchId,
+                                referencedTable:
+                                    $$NumberSequencesTableReferences
+                                        ._branchIdTable(db),
+                                referencedColumn:
+                                    $$NumberSequencesTableReferences
+                                        ._branchIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$NumberSequencesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $NumberSequencesTable,
+      NumberSequence,
+      $$NumberSequencesTableFilterComposer,
+      $$NumberSequencesTableOrderingComposer,
+      $$NumberSequencesTableAnnotationComposer,
+      $$NumberSequencesTableCreateCompanionBuilder,
+      $$NumberSequencesTableUpdateCompanionBuilder,
+      (NumberSequence, $$NumberSequencesTableReferences),
+      NumberSequence,
+      PrefetchHooks Function({bool organizationId, bool branchId})
+    >;
+typedef $$ReasonCodesTableCreateCompanionBuilder =
+    ReasonCodesCompanion Function({
+      required String id,
+      required String organizationId,
+      Value<String?> branchId,
+      required String branchScope,
+      required String category,
+      required String code,
+      required String label,
+      Value<bool> requiresNote,
+      Value<bool> isActive,
+      Value<int> sortOrder,
+      Value<int> version,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$ReasonCodesTableUpdateCompanionBuilder =
+    ReasonCodesCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String?> branchId,
+      Value<String> branchScope,
+      Value<String> category,
+      Value<String> code,
+      Value<String> label,
+      Value<bool> requiresNote,
+      Value<bool> isActive,
+      Value<int> sortOrder,
+      Value<int> version,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+final class $$ReasonCodesTableReferences
+    extends BaseReferences<_$AppDatabase, $ReasonCodesTable, ReasonCode> {
+  $$ReasonCodesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.reasonCodes.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BranchesTable _branchIdTable(_$AppDatabase db) =>
+      db.branches.createAlias(
+        $_aliasNameGenerator(db.reasonCodes.branchId, db.branches.id),
+      );
+
+  $$BranchesTableProcessedTableManager? get branchId {
+    final $_column = $_itemColumn<String>('branch_id');
+    if ($_column == null) return null;
+    final manager = $$BranchesTableTableManager(
+      $_db,
+      $_db.branches,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ReasonCodesTableFilterComposer
+    extends Composer<_$AppDatabase, $ReasonCodesTable> {
+  $$ReasonCodesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branchScope => $composableBuilder(
+    column: $table.branchScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get requiresNote => $composableBuilder(
+    column: $table.requiresNote,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReasonCodesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReasonCodesTable> {
+  $$ReasonCodesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branchScope => $composableBuilder(
+    column: $table.branchScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get requiresNote => $composableBuilder(
+    column: $table.requiresNote,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableOrderingComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReasonCodesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReasonCodesTable> {
+  $$ReasonCodesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get branchScope => $composableBuilder(
+    column: $table.branchScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<bool> get requiresNote => $composableBuilder(
+    column: $table.requiresNote,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReasonCodesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReasonCodesTable,
+          ReasonCode,
+          $$ReasonCodesTableFilterComposer,
+          $$ReasonCodesTableOrderingComposer,
+          $$ReasonCodesTableAnnotationComposer,
+          $$ReasonCodesTableCreateCompanionBuilder,
+          $$ReasonCodesTableUpdateCompanionBuilder,
+          (ReasonCode, $$ReasonCodesTableReferences),
+          ReasonCode,
+          PrefetchHooks Function({bool organizationId, bool branchId})
+        > {
+  $$ReasonCodesTableTableManager(_$AppDatabase db, $ReasonCodesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReasonCodesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReasonCodesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReasonCodesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String?> branchId = const Value.absent(),
+                Value<String> branchScope = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<bool> requiresNote = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReasonCodesCompanion(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                branchScope: branchScope,
+                category: category,
+                code: code,
+                label: label,
+                requiresNote: requiresNote,
+                isActive: isActive,
+                sortOrder: sortOrder,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                Value<String?> branchId = const Value.absent(),
+                required String branchScope,
+                required String category,
+                required String code,
+                required String label,
+                Value<bool> requiresNote = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReasonCodesCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                branchScope: branchScope,
+                category: category,
+                code: code,
+                label: label,
+                requiresNote: requiresNote,
+                isActive: isActive,
+                sortOrder: sortOrder,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ReasonCodesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({organizationId = false, branchId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (organizationId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.organizationId,
+                                referencedTable: $$ReasonCodesTableReferences
+                                    ._organizationIdTable(db),
+                                referencedColumn: $$ReasonCodesTableReferences
+                                    ._organizationIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+                    if (branchId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.branchId,
+                                referencedTable: $$ReasonCodesTableReferences
+                                    ._branchIdTable(db),
+                                referencedColumn: $$ReasonCodesTableReferences
+                                    ._branchIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ReasonCodesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReasonCodesTable,
+      ReasonCode,
+      $$ReasonCodesTableFilterComposer,
+      $$ReasonCodesTableOrderingComposer,
+      $$ReasonCodesTableAnnotationComposer,
+      $$ReasonCodesTableCreateCompanionBuilder,
+      $$ReasonCodesTableUpdateCompanionBuilder,
+      (ReasonCode, $$ReasonCodesTableReferences),
+      ReasonCode,
+      PrefetchHooks Function({bool organizationId, bool branchId})
+    >;
+typedef $$FeatureFlagsTableCreateCompanionBuilder =
+    FeatureFlagsCompanion Function({
+      required String id,
+      required String organizationId,
+      Value<String?> branchId,
+      required String branchScope,
+      required String flagKey,
+      Value<bool> isEnabled,
+      Value<String> configurationJson,
+      Value<int> version,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$FeatureFlagsTableUpdateCompanionBuilder =
+    FeatureFlagsCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String?> branchId,
+      Value<String> branchScope,
+      Value<String> flagKey,
+      Value<bool> isEnabled,
+      Value<String> configurationJson,
+      Value<int> version,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$FeatureFlagsTableReferences
+    extends BaseReferences<_$AppDatabase, $FeatureFlagsTable, FeatureFlag> {
+  $$FeatureFlagsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.featureFlags.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BranchesTable _branchIdTable(_$AppDatabase db) =>
+      db.branches.createAlias(
+        $_aliasNameGenerator(db.featureFlags.branchId, db.branches.id),
+      );
+
+  $$BranchesTableProcessedTableManager? get branchId {
+    final $_column = $_itemColumn<String>('branch_id');
+    if ($_column == null) return null;
+    final manager = $$BranchesTableTableManager(
+      $_db,
+      $_db.branches,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FeatureFlagsTableFilterComposer
+    extends Composer<_$AppDatabase, $FeatureFlagsTable> {
+  $$FeatureFlagsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branchScope => $composableBuilder(
+    column: $table.branchScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get flagKey => $composableBuilder(
+    column: $table.flagKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get configurationJson => $composableBuilder(
+    column: $table.configurationJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FeatureFlagsTableOrderingComposer
+    extends Composer<_$AppDatabase, $FeatureFlagsTable> {
+  $$FeatureFlagsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branchScope => $composableBuilder(
+    column: $table.branchScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get flagKey => $composableBuilder(
+    column: $table.flagKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isEnabled => $composableBuilder(
+    column: $table.isEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get configurationJson => $composableBuilder(
+    column: $table.configurationJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableOrderingComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FeatureFlagsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FeatureFlagsTable> {
+  $$FeatureFlagsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get branchScope => $composableBuilder(
+    column: $table.branchScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get flagKey =>
+      $composableBuilder(column: $table.flagKey, builder: (column) => column);
+
+  GeneratedColumn<bool> get isEnabled =>
+      $composableBuilder(column: $table.isEnabled, builder: (column) => column);
+
+  GeneratedColumn<String> get configurationJson => $composableBuilder(
+    column: $table.configurationJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FeatureFlagsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FeatureFlagsTable,
+          FeatureFlag,
+          $$FeatureFlagsTableFilterComposer,
+          $$FeatureFlagsTableOrderingComposer,
+          $$FeatureFlagsTableAnnotationComposer,
+          $$FeatureFlagsTableCreateCompanionBuilder,
+          $$FeatureFlagsTableUpdateCompanionBuilder,
+          (FeatureFlag, $$FeatureFlagsTableReferences),
+          FeatureFlag,
+          PrefetchHooks Function({bool organizationId, bool branchId})
+        > {
+  $$FeatureFlagsTableTableManager(_$AppDatabase db, $FeatureFlagsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FeatureFlagsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FeatureFlagsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FeatureFlagsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String?> branchId = const Value.absent(),
+                Value<String> branchScope = const Value.absent(),
+                Value<String> flagKey = const Value.absent(),
+                Value<bool> isEnabled = const Value.absent(),
+                Value<String> configurationJson = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FeatureFlagsCompanion(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                branchScope: branchScope,
+                flagKey: flagKey,
+                isEnabled: isEnabled,
+                configurationJson: configurationJson,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                Value<String?> branchId = const Value.absent(),
+                required String branchScope,
+                required String flagKey,
+                Value<bool> isEnabled = const Value.absent(),
+                Value<String> configurationJson = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => FeatureFlagsCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                branchScope: branchScope,
+                flagKey: flagKey,
+                isEnabled: isEnabled,
+                configurationJson: configurationJson,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$FeatureFlagsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({organizationId = false, branchId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (organizationId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.organizationId,
+                                referencedTable: $$FeatureFlagsTableReferences
+                                    ._organizationIdTable(db),
+                                referencedColumn: $$FeatureFlagsTableReferences
+                                    ._organizationIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+                    if (branchId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.branchId,
+                                referencedTable: $$FeatureFlagsTableReferences
+                                    ._branchIdTable(db),
+                                referencedColumn: $$FeatureFlagsTableReferences
+                                    ._branchIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FeatureFlagsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FeatureFlagsTable,
+      FeatureFlag,
+      $$FeatureFlagsTableFilterComposer,
+      $$FeatureFlagsTableOrderingComposer,
+      $$FeatureFlagsTableAnnotationComposer,
+      $$FeatureFlagsTableCreateCompanionBuilder,
+      $$FeatureFlagsTableUpdateCompanionBuilder,
+      (FeatureFlag, $$FeatureFlagsTableReferences),
+      FeatureFlag,
+      PrefetchHooks Function({bool organizationId, bool branchId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -92028,4 +98705,14 @@ class $AppDatabaseManager {
       $$LoyaltyAccountsTableTableManager(_db, _db.loyaltyAccounts);
   $$LoyaltyLedgerEntriesTableTableManager get loyaltyLedgerEntries =>
       $$LoyaltyLedgerEntriesTableTableManager(_db, _db.loyaltyLedgerEntries);
+  $$OrganizationSettingsTableTableManager get organizationSettings =>
+      $$OrganizationSettingsTableTableManager(_db, _db.organizationSettings);
+  $$BranchSettingsTableTableManager get branchSettings =>
+      $$BranchSettingsTableTableManager(_db, _db.branchSettings);
+  $$NumberSequencesTableTableManager get numberSequences =>
+      $$NumberSequencesTableTableManager(_db, _db.numberSequences);
+  $$ReasonCodesTableTableManager get reasonCodes =>
+      $$ReasonCodesTableTableManager(_db, _db.reasonCodes);
+  $$FeatureFlagsTableTableManager get featureFlags =>
+      $$FeatureFlagsTableTableManager(_db, _db.featureFlags);
 }

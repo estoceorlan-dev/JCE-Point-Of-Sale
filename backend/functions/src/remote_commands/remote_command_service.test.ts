@@ -3,7 +3,10 @@ import test from "node:test";
 import {PoolClient} from "pg";
 
 import {RemoteCommandError, RemoteCommandInput} from "./command_types";
-import {processRemoteCommand} from "./remote_command_service";
+import {
+  processRemoteCommand,
+  sanitizeAuditMetadata,
+} from "./remote_command_service";
 import {validateSalePayload} from "./sale_commands";
 
 type FakeOptions = {
@@ -16,10 +19,11 @@ class FakePoolClient {
   constructor(private readonly options: FakeOptions = {}) {}
 
   readonly statements: string[] = [];
+  auditValues?: unknown[];
   pendingBranchWrite = false;
   committedBranchWrite = false;
 
-  async query(text: string): Promise<unknown> {
+  async query(text: string, values?: unknown[]): Promise<unknown> {
     const normalized = text.replace(/\s+/g, " ").trim();
     this.statements.push(normalized);
     if (normalized === "BEGIN" || normalized.startsWith("SELECT pg_advisory_xact_lock")) {
@@ -59,6 +63,7 @@ class FakePoolClient {
       return result([{id: "branch-1", version: 4}]);
     }
     if (normalized.startsWith("INSERT INTO audit_logs")) {
+      this.auditValues = values;
       if (this.options.failAudit === true) throw new Error("audit unavailable");
       return result([]);
     }
@@ -138,6 +143,30 @@ test("an audit failure rolls the entire command transaction back", async () => {
   assert.equal(client.statements.at(-1), "ROLLBACK");
   assert.equal(client.pendingBranchWrite, false);
   assert.equal(client.committedBranchWrite, false);
+});
+
+test("remote audit records retain device identity and redact secrets", async () => {
+  const client = new FakePoolClient();
+  await processRemoteCommand(asClient(client), command({
+    commandType: "branch.discount_policy.update",
+    aggregateType: "branch",
+    aggregateId: "branch-1",
+    deviceId: "device-14",
+    payload: {approvalThresholdBasisPoints: 1500},
+  }));
+  assert.equal(client.auditValues?.[9], "device-14");
+  assert.deepEqual(
+    sanitizeAuditMetadata({
+      safe: "visible",
+      password: "secret",
+      nested: {accessToken: "token"},
+    }),
+    {
+      safe: "visible",
+      password: "[REDACTED]",
+      nested: {accessToken: "[REDACTED]"},
+    },
+  );
 });
 
 test("sale totals are recalculated and tampering is rejected", () => {

@@ -19,6 +19,7 @@ import {correctSale} from "./sale_correction_commands";
 import {applyShiftCommand} from "./shift_commands";
 import {applyStockCountCommand} from "./stock_count_commands";
 import {applyTransferCommand} from "./transfer_commands";
+import {applySettingsCommand} from "./settings_commands";
 
 type ProcessedOperationRow = {
   command_type: string;
@@ -75,9 +76,9 @@ export async function processRemoteCommand(
       `
         INSERT INTO audit_logs (
           id, organization_id, branch_id, actor_user_id, firebase_uid,
-          operation_id, action, entity_type, entity_id, metadata_json,
+          operation_id, action, entity_type, entity_id, device_id, metadata_json,
           occurred_at, created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now(), now())
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now(), now())
       `,
       [
         randomUUID(),
@@ -89,7 +90,8 @@ export async function processRemoteCommand(
         command.commandType,
         command.aggregateType,
         command.aggregateId,
-        {commandType: command.commandType},
+        command.deviceId ?? null,
+        auditMetadataFor(command, result),
       ],
     );
     await client.query(
@@ -146,7 +148,8 @@ export async function processRemoteCommand(
 }
 
 function changeType(commandType: string): "upsert" | "tombstone" {
-  return commandType.endsWith(".archive") ? "tombstone" : "upsert";
+  return commandType.endsWith(".archive") || commandType.endsWith(".delete") ?
+    "tombstone" : "upsert";
 }
 
 function handlerFor(commandType: string): CommandHandler {
@@ -168,6 +171,11 @@ function handlerFor(commandType: string): CommandHandler {
       commandType.startsWith("loyalty.")) {
     return applyCustomerCommand;
   }
+  if (commandType.startsWith("setting.") ||
+      commandType.startsWith("reason_code.") ||
+      commandType.startsWith("feature_flag.")) {
+    return applySettingsCommand;
+  }
   if (commandType.startsWith("inventory.") || commandType.startsWith("stock_location.")) {
     return applyInventoryCommand;
   }
@@ -176,6 +184,46 @@ function handlerFor(commandType: string): CommandHandler {
     return applyProductCommand;
   }
   throw new RemoteCommandError("invalid-argument", `Unsupported command: ${commandType}.`);
+}
+
+function auditMetadataFor(
+  command: AuthorizedCommand,
+  result: CommandResult,
+): Record<string, unknown> {
+  const after = result.setting ?? result.reasonCode ?? result.featureFlag;
+  return sanitizeAuditMetadata({
+    commandType: command.commandType,
+    ...(result.before === undefined ? {} : {before: result.before}),
+    ...(after === undefined ? {} : {after}),
+  });
+}
+
+export function sanitizeAuditMetadata(
+  value: Record<string, unknown>,
+  depth = 0,
+): Record<string, unknown> {
+  if (depth >= 6) return {truncated: true};
+  const result: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value)) {
+    const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (["password", "passwd", "secret", "token", "credential",
+      "authorization", "cardnumber", "pan", "cvv", "cvc", "pin"]
+      .some((candidate) => normalized.includes(candidate))) {
+      result[key] = "[REDACTED]";
+    } else if (Array.isArray(item)) {
+      result[key] = item.slice(0, 100).map((entry) =>
+        typeof entry === "object" && entry !== null ?
+          sanitizeAuditMetadata(entry as Record<string, unknown>, depth + 1) : entry,
+      );
+    } else if (typeof item === "object" && item !== null) {
+      result[key] = sanitizeAuditMetadata(item as Record<string, unknown>, depth + 1);
+    } else if (typeof item === "string" && item.length > 500) {
+      result[key] = `${item.slice(0, 500)}…`;
+    } else {
+      result[key] = item;
+    }
+  }
+  return result;
 }
 
 function resultVersion(result: CommandResult): number {
@@ -190,6 +238,11 @@ function resultVersion(result: CommandResult): number {
 
 function changeFeedBranchId(command: AuthorizedCommand): string | null {
   if (command.commandType === "customer.note.add") return command.branchId;
+  if (command.aggregateType === "organization_setting") return null;
+  if (command.aggregateType === "reason_code" ||
+      command.aggregateType === "feature_flag") {
+    return typeof command.payload.branchId === "string" ? command.branchId : null;
+  }
   if (command.aggregateType === "stock_transfer" ||
       command.aggregateType === "supplier" ||
       command.aggregateType === "customer" ||

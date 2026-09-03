@@ -31,6 +31,7 @@ final remoteCommandDataSourceProvider = Provider<RemoteCommandDataSource>((
     functions: ref.watch(firebaseFunctionsProvider),
     functionName: config.remoteCommandFunctionName,
     deviceRegistrationFunctionName: config.deviceRegistrationFunctionName,
+    metadataDao: ref.watch(metadataDaoProvider),
   );
 });
 
@@ -463,6 +464,11 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       'unit.update',
       'unit.archive',
       'unit.restore',
+      'setting.organization.upsert',
+      'setting.branch.upsert',
+      'setting.branch.delete',
+      'reason_code.upsert',
+      'feature_flag.upsert',
     }.contains(type);
   }
 

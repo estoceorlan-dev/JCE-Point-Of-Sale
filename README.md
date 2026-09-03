@@ -51,6 +51,10 @@ The canonical application and bundle identifier is `com.jce.pos`.
 - Offline customer lookup and attribution with explicit duplicate/merge rules
 - Privacy-controlled archive and anonymization workflows
 - Idempotent immutable loyalty ledger with auditable point adjustments
+- Append-only local and remote audit trails with device identity and safe
+  before/after metadata
+- Offline organization defaults, branch overrides, reason codes, feature
+  flags, receipt formatting, tax behavior, and approval/shift policies
 
 ## Environment configuration
 
@@ -156,6 +160,14 @@ anonymization, and an immutable loyalty ledger. Apply
 `backend/sql/migrations/0007_phase12_customers.sql` before deploying the
 updated Functions and schema-version-11 client. See
 [Phase 12 customers](docs/phase_12_customers.md).
+
+Phase 14 adds schema-versioned offline operational settings, deterministic
+organization-to-branch precedence, configurable inventory reason codes and
+feature flags, append-only audit enforcement, safe metadata redaction, and a
+filterable audit administration screen. Apply
+`backend/sql/migrations/0009_phase14_audit_settings.sql` before deploying the
+updated Functions, SQL Connect schema, and schema-version-12 client. See
+[Phase 14 audit and settings](docs/phase_14_audit_settings.md).
 
 ## Code generation
 

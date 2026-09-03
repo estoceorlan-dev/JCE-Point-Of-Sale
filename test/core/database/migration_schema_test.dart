@@ -408,4 +408,24 @@ VALUES ('sale-v11', 'org-v11', 'branch-v11', 'register-v11', 'operation-v11',
     await database.close();
     schema.close();
   });
+
+  test('released version 11 customers migrate to audit settings', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(11);
+    final database = AppDatabase.forTesting(schema.newConnection());
+
+    await verifier.migrateAndValidate(
+      database,
+      AppDatabase.currentSchemaVersion,
+    );
+
+    expect(await database.select(database.organizationSettings).get(), isEmpty);
+    expect(await database.select(database.branchSettings).get(), isEmpty);
+    expect(await database.select(database.numberSequences).get(), isEmpty);
+    expect(await database.select(database.reasonCodes).get(), isEmpty);
+    expect(await database.select(database.featureFlags).get(), isEmpty);
+
+    await database.close();
+    schema.close();
+  });
 }

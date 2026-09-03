@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart'
@@ -323,6 +325,18 @@ class DriftSalesRepository implements SalesRepository {
           draft.deviceId,
         );
         final branch = scope.branch;
+        final discountLimit = await _resolvedIntegerSetting(
+          database,
+          context,
+          'sales.discount_limit_basis_points',
+          10000,
+        );
+        if (pricing.discountBasisPoints > discountLimit) {
+          throw ValidationFailure(
+            'This discount exceeds the configured maximum of '
+            '${discountLimit / 100}%.',
+          );
+        }
         final threshold = branch.discountApprovalThresholdBasisPoints;
         if (threshold != null &&
             pricing.discountMinor * 10000 > pricing.subtotalMinor * threshold &&
@@ -1011,6 +1025,12 @@ class DriftSalesRepository implements SalesRepository {
   }
 
   Future<Cart> _canonicalCart(BusinessContext context, Cart cart) async {
+    final taxBehavior = await _resolvedStringSetting(
+      _database,
+      context,
+      'tax.behavior',
+      'per_product',
+    );
     final lines = <CartLine>[];
     for (final line in cart.lines) {
       final product = await _localDataSource.getSaleProduct(
@@ -1026,7 +1046,23 @@ class DriftSalesRepository implements SalesRepository {
       }
       lines.add(
         CartLine(
-          product: product,
+          product: taxBehavior == 'per_product'
+              ? product
+              : SaleProduct(
+                  id: product.id,
+                  sku: product.sku,
+                  name: product.name,
+                  unitName: product.unitName,
+                  primaryBarcode: product.primaryBarcode,
+                  stockLocationId: product.stockLocationId,
+                  stockLocationName: product.stockLocationName,
+                  unitPriceMinor: product.unitPriceMinor,
+                  unitCostMinor: product.unitCostMinor,
+                  taxRateBasisPoints: product.taxRateBasisPoints,
+                  taxInclusive: taxBehavior == 'inclusive',
+                  availableQuantityMilli: product.availableQuantityMilli,
+                  inventoryVersion: product.inventoryVersion,
+                ),
           quantityMilli: line.quantityMilli,
           itemDiscountMinor: line.itemDiscountMinor,
           discountReason: line.discountReason,
@@ -1038,6 +1074,50 @@ class DriftSalesRepository implements SalesRepository {
       saleDiscountMinor: cart.saleDiscountMinor,
       saleDiscountReason: cart.saleDiscountReason,
     );
+  }
+
+  Future<Object?> _resolvedSetting(
+    AppDatabase database,
+    BusinessContext context,
+    String key,
+  ) async {
+    final branch =
+        await (database.select(database.branchSettings)..where(
+              (row) =>
+                  row.organizationId.equals(context.organizationId) &
+                  row.branchId.equals(context.branchId) &
+                  row.settingKey.equals(key),
+            ))
+            .getSingleOrNull();
+    if (branch != null) return jsonDecode(branch.valueJson);
+    final organization =
+        await (database.select(database.organizationSettings)..where(
+              (row) =>
+                  row.organizationId.equals(context.organizationId) &
+                  row.settingKey.equals(key),
+            ))
+            .getSingleOrNull();
+    return organization == null ? null : jsonDecode(organization.valueJson);
+  }
+
+  Future<int> _resolvedIntegerSetting(
+    AppDatabase database,
+    BusinessContext context,
+    String key,
+    int fallback,
+  ) async {
+    final value = await _resolvedSetting(database, context, key);
+    return value is int ? value : fallback;
+  }
+
+  Future<String> _resolvedStringSetting(
+    AppDatabase database,
+    BusinessContext context,
+    String key,
+    String fallback,
+  ) async {
+    final value = await _resolvedSetting(database, context, key);
+    return value is String ? value : fallback;
   }
 
   Future<db.SaleReturn?> _correctionForOperation(
