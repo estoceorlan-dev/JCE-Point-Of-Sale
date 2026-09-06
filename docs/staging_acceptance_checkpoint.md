@@ -3,7 +3,38 @@
 Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 `jce-pos-instance`, database `jce-pos-database`. Production was not touched.
 
-## Verified live
+## Latest result: live database migration completed
+
+- The operator granted the human IAM account temporary membership in
+  `jce_pos_migrator`. A real IAM connection verified `SET LOCAL ROLE`, schema
+  USAGE and CREATE before any migration.
+- Fresh pre-migration backup: `C:/JCE/.backups/staging-GnZp8f/public.dump`,
+  SHA-256 `82572712821e900fd79eb99f5c1d2317a74b3dc9f27d48432fb5cc2ed9154ee6`.
+  All 39 original tables restored locally; corrected migrations and the
+  role-grant regression rehearsal passed. The scratch server was stopped.
+- Applied `0005`-`0011` to LIVE STAGING through the IAM migration runner.
+  All 11 migration checksums now match. All 60 public tables remain owned by
+  `jce_pos_migrator`; normalized branch-code duplicates remain zero.
+- Applied `0011` SHA-256:
+  `aa7381511ba3174f354f6adbb70d652e64a801c4446e4bb5836328b5939dc9ee`.
+  It is now immutable: future corrections require a new migration. Git attributes
+  preserve the existing LF bytes of SQL files across Windows checkouts.
+- Post-migration two-connection locking primitive checks passed. This is not
+  full signed-in business-command concurrency acceptance.
+- Existing Functions and SQL Connect runtime identities have SELECT, INSERT and
+  UPDATE access to all 60 public tables. No database permission repair or
+  ownership transfer was needed/performed.
+- SQL Connect diff proposed recreating existing migration-owned tables; no
+  generated SQL was applied. Its existing remote schema uses validation NONE,
+  as documented for this externally managed database. Schema/connector and
+  Functions deployments have NOT yet been performed in this delivery.
+- All 35 backend tests and lint passed again. Earlier Flutter checkpoint remains
+  233 passing tests; this continuation did not change Flutter code.
+
+The operator's temporary migration membership is still present. Remove it after
+remaining deployment/permission verification, using the IAM operator guide.
+
+## Historical checks before the live migration
 
 - Firebase CLI credentials can access staging. Cloud SQL reports `RUNNABLE`.
 - Direct IAM PostgreSQL connectivity works. Migrations `0001`–`0004` match their
@@ -28,17 +59,43 @@ Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
   `applyRemoteCommand` returned HTTP 401 / `UNAUTHENTICATED`.
   Signed-in workflow concurrency and the new administration callables remain
   unverified against the updated schema.
-- `origin/main` is at `60504e526ce065fc31c0ccbb3b69780c01662cc8`, matching local HEAD.
+- At the initial preflight, `origin/main` and local HEAD were both
+  `60504e526ce065fc31c0ccbb3b69780c01662cc8`; the implementation checkpoint was
+  subsequently pushed as `f313a2b`.
 
 ## Release blockers
 
-1. The connected IAM user is not a member of `jce_pos_migrator`, which owns all
-   39 public tables, and cannot create objects in `public`. No privileges were
-   granted and no alternative privileged identity was assumed.
+### Corrected migration rehearsal
+
+The subsequent live preflight reconfirmed `0011` was pending. Its role-name-based
+permission grants were removed; it now seeds permission definitions only.
+All 35 backend tests and lint pass, including two new migration policy checks.
+The corrected migrations restored/rehearsed successfully against a fresh backup:
+`C:/JCE/.backups/staging-Tojjaq/public.dump`, SHA-256
+`32f6789f7206026a27c3e5098f85a5eabede70fafd4b7009f0797112ed78acae`.
+The local rollback-only regression fixtures include owner/admin/uppercase/custom
+role names, verify existing grants and grant timestamps are unchanged, and verify
+migration replay does not elevate access. The scratch server was stopped.
+This supersedes the earlier rehearsal for the corrected `0011`; no live schema
+or privilege changes were made. See [IAM operator guide](staging_iam_access.md).
+
+### Remaining prerequisites
+
+1. No direct Firebase Authentication management grant was found for the Functions
+   runtime service account. Its direct project roles are Cloud SQL Client,
+   Cloud SQL Instance User, Logs Writer and Storage Object Admin. Approve and
+   configure the required Auth access for identity lookup/creation, invite-link
+   generation and refresh-token revocation before deploying the new workflows.
 2. Only Windows, Chrome and Edge targets are connected. No Android terminal was
    detected. Installed Epson L5290 office printers are not evidence of a configured
    supported ESC/POS receipt printer or cash drawer. Printer address/model,
    scanner/drawer details and hands-on confirmation are needed for acceptance.
+3. Approve explicit organization/role IDs for the new administration permissions
+   and provision them deliberately; migration `0011` no longer grants them.
+   The candidate found by active organization-wide assignment is Administrator,
+   role `c32fa057-7995-4db9-bf75-27df81d7186b`, organization
+   `17b463d6-a990-487a-ad55-b7c31b0edba8`. It currently has `users.manage` but not
+   `branches.manage` or `roles.manage`. Approval was requested; no grants made.
 
 Cloud-managed backups remain unavailable: the No Cost Trial rejected an on-demand
 backup with HTTP 400 and automated backups are disabled. The verified logical
@@ -47,8 +104,9 @@ full-instance disaster recovery. No billing change was made.
 
 ## Actions deliberately not performed
 
-No live migrations, deployments, privilege/billing changes or remote business-data
-mutations were performed. Deployment remains paused at its prerequisites. Source
+Live staging migrations are completed as recorded above. No production changes,
+Functions/schema/connector deployments, billing changes or application-role
+grants were performed. Deployment remains paused at its prerequisites. Source
 checkpoint commit/push is separate from release acceptance: the repository's CI
 workflow runs verification only and contains no deployment job. Credentials,
 backups and the existing `android/build/` artifacts are excluded from the source

@@ -47,18 +47,23 @@ deploying Functions/SQL Connect and the schema-15 client. Do not alter checksums
 already applied migrations; if staging already has an earlier `0011`, add a new
 migration for the normalized index instead.
 
+Before live application, `0011` was corrected to seed permission definitions without
+assigning privileges to roles named `owner` or `admin`. Explicitly approve
+organization/role IDs and organization-wide assignments before administration
+rollout. The existing account-provisioning script does not grant role permissions.
+See [staging IAM access](staging_iam_access.md) for operator setup and verification.
+
 ## Outstanding external acceptance
 
-Local checkpoint: 233 Flutter tests and 33 Functions tests pass. SQL Connect SDK
+Local checkpoint: 233 Flutter tests and 35 Functions tests pass. SQL Connect SDK
 generation succeeded. These checks include the preserved hardware/receipt and
 released Drift migration tests, not live device or PostgreSQL acceptance.
 
-No database migration, Firebase deployment or pilot flag was changed in this work.
-Subsequent direct staging checks verified rollback-only PostgreSQL locking
-primitives and unauthenticated Firebase rejection. A public-schema backup restored
-all 39 tables locally and migrations `0005`-`0011` passed in the scratch cluster.
-Live migration execution and complete signed-in workflow concurrency still need
-validation. See [staging checkpoint](staging_acceptance_checkpoint.md).
+Live staging migrations `0005`-`0011` are now applied after a fresh backup and
+successful local restore/rehearsal. All 11 checksums match; all 60 tables remain
+migration-owned. PostgreSQL locking primitive checks pass. Firebase application
+deployment, pilot flag changes and complete signed-in workflow concurrency remain
+pending. See [staging checkpoint](staging_acceptance_checkpoint.md).
 
 Before calling all Phase 0–2 exit criteria complete:
 

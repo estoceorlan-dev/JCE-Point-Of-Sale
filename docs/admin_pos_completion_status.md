@@ -115,10 +115,12 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
   normalized legacy code collisions, receipt numbering, snapshot scope upgrades,
   replay protection and failed/atomic remote-conflict recovery.
 
-## Deployment order — not performed
+## Deployment order — staging database complete; application deployment pending
 
 1. Back up and validate staging PostgreSQL; apply historical migrations through
    `0010_phase15_pos_hardware.sql`, then `0011_admin_operations.sql`.
+   **Completed on staging:** corrected migrations through `0011` applied,
+   checksums verified, and all 60 public tables retain the migration owner.
 2. Build/deploy Functions and review SQL Connect changes. New callables:
    `getAdministrationSnapshot`, `generateStaffInviteLink`,
    `acceptStaffInvitation`. Client function names remain configurable.
@@ -139,6 +141,8 @@ Subsequent direct staging checks verified IAM connectivity, existing migration
 checksums, rollback-only locking primitives and unauthenticated Firebase rejection.
 The staging public-schema logical backup restored all 39 tables into an isolated
 local PostgreSQL cluster, and pending migrations `0005`-`0011` passed there.
-Migration-owner access and physical acceptance remain blockers to live rollout;
-the local rehearsal does not validate cloud role/ACL recovery or signed-in command
-concurrency. See [live staging checkpoint](staging_acceptance_checkpoint.md).
+The operator then granted migration-owner access and live staging migrations
+through corrected `0011` completed. Remaining prerequisites are approved
+application-admin grants, Functions Firebase Auth access, backend/client
+deployment, signed-in command concurrency and physical acceptance.
+See [live staging checkpoint](staging_acceptance_checkpoint.md).

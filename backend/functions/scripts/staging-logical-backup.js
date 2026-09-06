@@ -8,6 +8,7 @@ const net = require("node:net");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const {applySchemaMigrations} = require("./schema-migrations");
+const {verifyAdministrationMigration} = require("./verify-administration-migration");
 
 function run(binary, args, env = process.env) {
   return new Promise((resolve, reject) => {
@@ -81,6 +82,10 @@ async function main() {
     manifest.restoreVerified = true;
     console.log(JSON.stringify({restoreVerified: true, tables: manifest.restoredTables}));
     await applySchemaMigrations(localClient);
+    await verifyAdministrationMigration(localClient);
+    manifest.administrationRoleGrantsVerified = true;
+    console.log(JSON.stringify({administrationRoleGrantsVerified: true,
+      scope: "local rollback-only fixtures and migration replay; no automatic permission grants"}));
     manifest.migrationsRehearsed = true;
     manifest.appliedMigrations = (await localClient.query("SELECT name FROM schema_migrations ORDER BY name")).rows.map((row) => row.name);
     console.log(JSON.stringify({migrationsRehearsed: true, migrations: manifest.appliedMigrations}));

@@ -18,15 +18,9 @@ ON CONFLICT (code) DO UPDATE SET
   description = EXCLUDED.description,
   updated_at = now();
 
-INSERT INTO role_permissions (role_id, permission_code, granted_at)
-SELECT r.id, p.code, now()
-FROM roles r
-CROSS JOIN permissions p
-WHERE lower(r.code) IN ('owner', 'admin')
-  AND p.code IN ('branches.manage', 'roles.manage')
-  AND r.is_active = true
-  AND r.deleted_at IS NULL
-ON CONFLICT DO NOTHING;
+-- Seed permission definitions only. Role names do not authorize access.
+-- Grant these permissions separately to explicitly approved organization/role
+-- IDs through the controlled administration provisioning workflow.
 
 CREATE INDEX IF NOT EXISTS branches_directory_idx
   ON branches (organization_id, is_active, lower(name), code);

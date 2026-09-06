@@ -1,0 +1,2 @@
+# Migration checksums are byte-sensitive. Preserve deployed LF bytes on Windows.
+backend/sql/migrations/*.sql text eol=lf
