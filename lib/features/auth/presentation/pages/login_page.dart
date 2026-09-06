@@ -3,15 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_breakpoints.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/routing/app_route.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_loading_overlay.dart';
+import '../../../../core/widgets/app_split_layout.dart';
 import '../controllers/auth_controller.dart';
+import '../theme/login_theme.dart';
 import '../widgets/login_brand_header.dart';
-import '../widgets/login_form_card.dart';
+import '../widgets/login_form.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -41,8 +42,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final theme = LoginTheme.from(Theme.of(context));
     final authState = ref.watch(authControllerProvider);
     final authError = authState.whenOrNull(
       error: (error, _) => error is Failure
@@ -55,70 +55,59 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         authState.isLoading ||
         (session != null && session.permissions.isNotEmpty);
 
-    return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Opacity(
-            opacity: 0.7,
-            child: Image.asset(_coverLogoAsset, fit: BoxFit.cover),
-          ),
-          ColoredBox(
-            color: theme.scaffoldBackgroundColor.withValues(
-              alpha: isDark ? 0.68 : 0.52,
-            ),
-          ),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isCompact = constraints.maxWidth < AppBreakpoints.compact;
-
-                return Center(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isCompact ? AppSpacing.lg : AppSpacing.xxl,
-                      vertical: AppSpacing.xxl,
+    return Theme(
+      data: theme,
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            SafeArea(
+              child: AppSplitLayout(
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const LoginBrandHeader(logoAsset: _logoAsset),
+                    const SizedBox(height: AppSpacing.xxl),
+                    LoginForm(
+                      formKey: _formKey,
+                      emailController: _emailController,
+                      passwordController: _passwordController,
+                      isSubmitting: isLoadingWorkspace,
+                      obscurePassword: _obscurePassword,
+                      errorMessage:
+                          _errorMessage ??
+                          authError ??
+                          (session != null && session.permissions.isEmpty
+                              ? 'This account currently has no permissions.'
+                              : null),
+                      onSubmit: _submit,
+                      onTogglePasswordVisibility: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                      onForgotPassword: _showForgotPasswordMessage,
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const LoginBrandHeader(logoAsset: _logoAsset),
-                        const SizedBox(height: AppSpacing.xl),
-                        LoginFormCard(
-                          formKey: _formKey,
-                          emailController: _emailController,
-                          passwordController: _passwordController,
-                          isSubmitting: isLoadingWorkspace,
-                          obscurePassword: _obscurePassword,
-                          errorMessage:
-                              _errorMessage ??
-                              authError ??
-                              (session != null && session.permissions.isEmpty
-                                  ? 'This account currently has no permissions.'
-                                  : null),
-                          isCompact: isCompact,
-                          onSubmit: _submit,
-                          onTogglePasswordVisibility: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
-                          onForgotPassword: _showForgotPasswordMessage,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+                  ],
+                ),
+                illustration: Image.asset(
+                  _coverLogoAsset,
+                  fit: BoxFit.contain,
+                  semanticLabel:
+                      'JCE Dry Goods Trading. From Our Store to Your Home.',
+                ),
+              ),
             ),
-          ),
-          if (isLoadingWorkspace)
-            AppLoadingOverlay(
-              message: _isSubmitting
-                  ? 'Signing you in...'
-                  : 'Loading your workspace...',
-            ),
-        ],
+            if (isLoadingWorkspace)
+              AppLoadingOverlay(
+                message: _isSubmitting
+                    ? 'Signing you in...'
+                    : 'Loading your workspace...',
+              ),
+          ],
+        ),
       ),
     );
   }

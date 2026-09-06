@@ -57,13 +57,10 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Email'),
+      find.byType(TextFormField).at(0),
       'cashier@jce.test',
     );
-    await tester.enterText(
-      find.widgetWithText(TextFormField, 'Password'),
-      'password123',
-    );
+    await tester.enterText(find.byType(TextFormField).at(1), 'password123');
     await tester.tap(find.text('Login'));
     await tester.pumpAndSettle();
 
