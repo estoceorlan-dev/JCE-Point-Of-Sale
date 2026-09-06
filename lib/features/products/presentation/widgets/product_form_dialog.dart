@@ -7,11 +7,13 @@ import '../../domain/entities/catalog_category.dart';
 import '../../domain/entities/catalog_tax_category.dart';
 import '../../domain/entities/catalog_unit.dart';
 import '../../domain/entities/product.dart';
+import '../../domain/entities/product_barcode_draft.dart';
 import '../../domain/entities/product_draft.dart';
 import '../../domain/entities/product_price.dart';
 import '../../domain/entities/product_summary.dart';
 import '../../domain/value_objects/minor_unit_parser.dart';
 import '../controllers/product_mutation_controller.dart';
+import 'product_barcode_editor.dart';
 
 class ProductFormDialog extends ConsumerStatefulWidget {
   const ProductFormDialog({
@@ -38,7 +40,7 @@ class _ProductFormDialogState extends ConsumerState<ProductFormDialog> {
   late final TextEditingController _skuController;
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
-  late final TextEditingController _barcodesController;
+  List<ProductBarcodeDraft> _barcodes = [];
   late final TextEditingController _priceController;
   late final TextEditingController _imagePathsController;
   String? _categoryId;
@@ -56,9 +58,10 @@ class _ProductFormDialogState extends ConsumerState<ProductFormDialog> {
     _skuController = TextEditingController(text: product?.sku);
     _nameController = TextEditingController(text: product?.name);
     _descriptionController = TextEditingController(text: product?.description);
-    _barcodesController = TextEditingController(
-      text: product?.barcodes.join(', '),
-    );
+    _barcodes = [
+      for (var i = 0; i < (product?.barcodes.length ?? 0); i++)
+        ProductBarcodeDraft(value: product!.barcodes[i], isPrimary: i == 0),
+    ];
     final activePrice = product?.activePrice;
     _priceController = TextEditingController(
       text: MinorUnitParser.format(
@@ -96,7 +99,6 @@ class _ProductFormDialogState extends ConsumerState<ProductFormDialog> {
     _skuController.dispose();
     _nameController.dispose();
     _descriptionController.dispose();
-    _barcodesController.dispose();
     _priceController.dispose();
     _imagePathsController.dispose();
     super.dispose();
@@ -242,13 +244,11 @@ class _ProductFormDialogState extends ConsumerState<ProductFormDialog> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _barcodesController,
-                          decoration: const InputDecoration(
-                            labelText: 'Barcodes',
-                            helperText:
-                                'Separate multiple barcodes with commas.',
-                          ),
+                        ProductBarcodeEditor(
+                          barcodes: _barcodes,
+                          enabled: !isSaving,
+                          onChanged: (value) =>
+                              setState(() => _barcodes = value),
                         ),
                         const SizedBox(height: AppSpacing.md),
                         Row(
@@ -365,7 +365,7 @@ class _ProductFormDialogState extends ConsumerState<ProductFormDialog> {
       categoryId: _categoryId,
       taxCategoryId: _taxCategoryId,
       description: _descriptionController.text,
-      barcodes: _splitValues(_barcodesController.text),
+      barcodeDrafts: _barcodes,
       imagePaths: _splitValues(_imagePathsController.text),
       unitPriceMinor: priceMinor,
       priceScope: _priceScope,

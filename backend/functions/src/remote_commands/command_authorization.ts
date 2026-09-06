@@ -15,12 +15,14 @@ const permissionByCommandPrefix: ReadonlyArray<[string, string]> = [
   ["product", "products.manage"],
   ["category", "products.manage"],
   ["unit", "products.manage"],
+  ["tax_category", "products.manage"],
   ["inventory", "inventory.manage"],
   ["stock_location", "inventory.manage"],
   ["stock_count", "inventory.manage"],
   ["register", "registers.manage"],
   ["shift", "sales.process"],
   ["sale", "sales.process"],
+  ["receipt", "sales.process"],
   ["transfer", "inventory.manage"],
   ["supplier", "suppliers.manage"],
   ["purchase_order", "purchases.create"],
@@ -29,9 +31,15 @@ const permissionByCommandPrefix: ReadonlyArray<[string, string]> = [
   ["setting", "settings.manage"],
   ["reason_code", "settings.manage"],
   ["feature_flag", "settings.manage"],
+  ["user", "users.manage"],
+  ["role", "roles.manage"],
 ];
 
 const permissionByCommand: Readonly<Record<string, string>> = {
+  "branch.create": "branches.manage",
+  "branch.update": "branches.manage",
+  "branch.archive": "branches.manage",
+  "branch.restore": "branches.manage",
   "branch.update_name": "settings.manage",
   "branch.shift_policy.update": "registers.manage",
   "branch.discount_policy.update": "settings.manage",
@@ -52,6 +60,13 @@ export async function authorizeCommand(
   input: RemoteCommandInput,
 ): Promise<AuthorizedCommand> {
   const permission = requiredPermission(input.commandType);
+  const organizationScoped = isOrganizationScoped(input.commandType);
+  // Keep the authorization branch active until this operation commits. The
+  // archival path takes an exclusive row lock before checking open operations.
+  await client.query(
+    "SELECT id FROM branches WHERE id = $1 AND organization_id = $2 AND is_active = true AND deleted_at IS NULL FOR SHARE",
+    [input.branchId, input.organizationId],
+  );
   const result = await client.query<AccessRow>(
     `
       SELECT
@@ -74,7 +89,8 @@ export async function authorizeCommand(
       INNER JOIN user_role_assignments ura
         ON ura.user_id = au.id
        AND ura.organization_id = au.organization_id
-       AND (ura.branch_id IS NULL OR ura.branch_id = b.id)
+       AND (${organizationScoped ? "ura.branch_id IS NULL" :
+    "(ura.branch_id IS NULL OR ura.branch_id = b.id)"})
        AND ura.revoked_at IS NULL
       INNER JOIN roles r
         ON r.id = ura.role_id
@@ -108,6 +124,12 @@ export async function authorizeCommand(
     actorUserId: result.rows[0].actor_user_id,
     permissions,
   };
+}
+
+function isOrganizationScoped(commandType: string): boolean {
+  return ["branch.create", "branch.update", "branch.archive", "branch.restore"]
+    .includes(commandType) || commandType.startsWith("user.") ||
+    commandType.startsWith("role.");
 }
 
 function requiredPermission(commandType: string): string {

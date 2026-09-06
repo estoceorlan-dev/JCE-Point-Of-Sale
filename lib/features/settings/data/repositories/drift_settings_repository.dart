@@ -849,7 +849,8 @@ ValidationFailure? _validationFailure(
       if (value is! int || value < 0) {
         return ValidationFailure('${key.label} cannot be negative.');
       }
-    case OperationalSettingKey.inventoryAllowNegativeStock ||
+    case OperationalSettingKey.salesRequireNonCashReference ||
+        OperationalSettingKey.inventoryAllowNegativeStock ||
         OperationalSettingKey.receiptShowTaxBreakdown ||
         OperationalSettingKey.shiftsAllowMultipleOpen ||
         OperationalSettingKey.shiftsAllowSalesWithoutOpen:

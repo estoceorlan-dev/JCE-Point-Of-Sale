@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/domain/entities/auth_session.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/branches/presentation/pages/branches_page.dart';
+import '../../features/branches/presentation/pages/branch_details_page.dart';
+import '../../features/shifts/presentation/pages/shift_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/customers/presentation/pages/customers_page.dart';
 import '../../features/inventory/presentation/pages/inventory_page.dart';
@@ -48,8 +51,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       final route = _routeForLocation(state.matchedLocation);
-      final permission = route?.requiredPermission;
-      final hasAccess = permission == null || session.can(permission);
+      final hasAccess = route == null || route.canAccess(session);
 
       if (hasAccess) {
         return null;
@@ -57,6 +59,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return _firstAccessiblePath(session) ?? AppRoute.auth.path;
     },
     routes: [
+      GoRoute(
+        path: '/users',
+        redirect: (context, state) => AppRoute.users.path,
+      ),
       GoRoute(
         path: AppRoute.auth.path,
         name: AppRoute.auth.routeName,
@@ -79,7 +85,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           _branch(AppRoute.customers, const CustomersPage()),
           _branch(AppRoute.reports, const ReportsPage()),
           _branch(AppRoute.logs, const LogsPage()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoute.branches.path,
+                name: AppRoute.branches.routeName,
+                builder: (_, _) => const BranchesPage(),
+                routes: [
+                  GoRoute(
+                    path: ':branchId',
+                    builder: (_, state) => BranchDetailsPage(
+                      branchId: state.pathParameters['branchId']!,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
           _branch(AppRoute.users, const UsersPage()),
+          _branch(
+            AppRoute.registers,
+            const ShiftPage(administrationOnly: true),
+          ),
           _branch(AppRoute.settings, const SettingsPage()),
         ],
       ),
@@ -99,7 +126,7 @@ class _RouterRefreshNotifier extends ChangeNotifier {
 
 String? _firstAccessiblePath(AuthSession session) {
   for (final item in appNavigationItems) {
-    if (session.can(item.permission)) {
+    if (item.route.canAccess(session)) {
       return item.route.path;
     }
   }
@@ -108,7 +135,9 @@ String? _firstAccessiblePath(AuthSession session) {
 
 AppRoute? _routeForLocation(String location) {
   for (final item in appNavigationItems) {
-    if (item.route.path == location) {
+    if (item.route.path == location ||
+        (item.route != AppRoute.dashboard &&
+            location.startsWith('${item.route.path}/'))) {
       return item.route;
     }
   }
@@ -126,8 +155,12 @@ StatefulShellBranch _branch(AppRoute route, Widget child) {
       GoRoute(
         path: route.path,
         name: route.routeName,
-        pageBuilder: (context, state) =>
-            NoTransitionPage<void>(key: state.pageKey, child: child),
+        pageBuilder: (context, state) => NoTransitionPage<void>(
+          key: state.pageKey,
+          child: route == AppRoute.users
+              ? UsersPage(branchId: state.uri.queryParameters['branchId'])
+              : child,
+        ),
       ),
     ],
   );

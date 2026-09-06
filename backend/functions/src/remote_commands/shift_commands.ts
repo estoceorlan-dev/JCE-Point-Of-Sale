@@ -1,5 +1,6 @@
 import {randomUUID} from "node:crypto";
 import {PoolClient} from "pg";
+import {administerRegister} from "./register_administration_commands";
 
 import {
   AuthorizedCommand,
@@ -8,6 +9,7 @@ import {
   asObject,
   optionalString,
   optionalTimestamp,
+  requiredBoolean,
   requiredInteger,
   requiredString,
 } from "./command_types";
@@ -24,12 +26,90 @@ export async function applyShiftCommand(
   client: PoolClient,
   command: AuthorizedCommand,
 ): Promise<CommandResult> {
+  if (["register.update", "register.archive", "register.restore", "register.unassign_device"]
+    .includes(command.commandType)) return administerRegister(client, command);
   if (command.commandType === "register.create") return createRegister(client, command);
   if (command.commandType === "register.assign_device") return assignRegisterDevice(client, command);
+  if (command.commandType === "register.hardware.configure") return configureRegisterHardware(client, command);
   if (command.commandType === "shift.open") return openShift(client, command);
   if (command.commandType === "shift.cash_movement") return postCashMovement(client, command);
   if (command.commandType === "shift.close") return closeShift(client, command);
   throw new RemoteCommandError("invalid-argument", `Unsupported shift command: ${command.commandType}.`);
+}
+
+async function configureRegisterHardware(
+  client: PoolClient,
+  command: AuthorizedCommand,
+): Promise<CommandResult> {
+  const payload = command.payload;
+  const registerId = requiredString(payload, "registerId");
+  const scannerType = requiredString(payload, "scannerType");
+  const scannerTimeout = requiredInteger(payload, "scannerInterCharacterTimeoutMs");
+  const duplicateSuppression = requiredInteger(payload, "scannerDuplicateSuppressionMs");
+  const printerType = requiredString(payload, "printerType");
+  const printerAddress = optionalString(payload, "printerAddress");
+  const printerPort = requiredInteger(payload, "printerPort");
+  const paperWidth = requiredInteger(payload, "printerPaperWidthMm");
+  const drawerEnabled = requiredBoolean(payload, "cashDrawerEnabled");
+  const drawerPin = requiredInteger(payload, "cashDrawerPin");
+  const expectedVersion = requiredInteger(payload, "expectedVersion");
+  if (registerId !== command.aggregateId ||
+      !["disabled", "keyboard_wedge", "camera"].includes(scannerType) ||
+      scannerTimeout < 20 || scannerTimeout > 1000 ||
+      duplicateSuppression < 0 || duplicateSuppression > 5000 ||
+      !["screen", "network_esc_pos"].includes(printerType) ||
+      (printerType === "network_esc_pos" && printerAddress === null) ||
+      printerPort < 1 || printerPort > 65535 ||
+      ![58, 80].includes(paperWidth) || ![0, 1].includes(drawerPin) ||
+      (drawerEnabled && printerType !== "network_esc_pos") ||
+      expectedVersion < 0) {
+    throw new RemoteCommandError(
+      "invalid-argument",
+      "The register hardware configuration is invalid.",
+    );
+  }
+  const result = await client.query(
+    `UPDATE registers SET
+       scanner_type = $4,
+       scanner_inter_character_timeout_ms = $5,
+       scanner_duplicate_suppression_ms = $6,
+       printer_type = $7,
+       printer_address = $8,
+       printer_port = $9,
+       printer_paper_width_mm = $10,
+       cash_drawer_enabled = $11,
+       cash_drawer_pin = $12,
+       version = version + 1,
+       updated_at = now()
+     WHERE id = $1 AND organization_id = $2 AND branch_id = $3
+       AND version = $13 AND is_active = true AND deleted_at IS NULL
+     RETURNING id, code, name, assigned_device_id, scanner_type,
+       scanner_inter_character_timeout_ms, scanner_duplicate_suppression_ms,
+       printer_type, printer_address, printer_port, printer_paper_width_mm,
+       cash_drawer_enabled, cash_drawer_pin, is_active, version`,
+    [
+      registerId,
+      command.organizationId,
+      command.branchId,
+      scannerType,
+      scannerTimeout,
+      duplicateSuppression,
+      printerType,
+      printerAddress,
+      printerPort,
+      paperWidth,
+      drawerEnabled,
+      drawerPin,
+      expectedVersion,
+    ],
+  );
+  if (result.rowCount !== 1) {
+    throw new RemoteCommandError(
+      "aborted",
+      "The register hardware configuration changed. Refresh and retry.",
+    );
+  }
+  return {register: result.rows[0]};
 }
 
 async function createRegister(
@@ -129,11 +209,13 @@ async function openShift(
       INNER JOIN branches b ON b.id = r.branch_id AND b.organization_id = r.organization_id
       WHERE r.id = $1 AND r.organization_id = $2 AND r.branch_id = $3
         AND r.assigned_device_id = $4 AND r.is_active = true AND r.deleted_at IS NULL
+        AND b.is_active = true AND b.deleted_at IS NULL
         AND EXISTS (
           SELECT 1 FROM devices d
           WHERE d.id = $4 AND d.organization_id = r.organization_id
             AND d.branch_id = r.branch_id AND d.disabled_at IS NULL
         )
+      FOR UPDATE OF r
     `,
     [registerId, command.organizationId, command.branchId, deviceId],
   );

@@ -9,7 +9,11 @@ import '../config/app_config.dart';
 import '../database/app_database.dart';
 import '../database/database_provider.dart';
 import '../database/models/sync_diagnostics.dart';
+import '../error/result.dart';
+import '../error/failure.dart';
+import '../error/failure_mapper.dart';
 import '../services/backend_sync_service.dart';
+import '../services/administration_snapshot_service.dart';
 import 'connectivity_monitor.dart';
 import 'background_sync.dart';
 
@@ -27,6 +31,8 @@ final syncStateProvider =
         ref,
         context,
         automatic: !ref.watch(appConfigProvider).enableDemoAuth,
+        hydrateAdministration:
+            session?.administrationPermissions.isNotEmpty ?? false,
       );
     });
 
@@ -44,8 +50,13 @@ final unresolvedSyncConflictsProvider = StreamProvider<List<SyncConflict>>((
 });
 
 class SyncController extends StateNotifier<AsyncValue<SyncState>> {
-  SyncController(this._ref, this._context, {required bool automatic})
-    : super(const AsyncData(SyncState(status: SyncStatus.idle))) {
+  SyncController(
+    this._ref,
+    this._context, {
+    required bool automatic,
+    required bool hydrateAdministration,
+  }) : _hydrateAdministration = hydrateAdministration,
+       super(const AsyncData(SyncState(status: SyncStatus.idle))) {
     if (_context == null) {
       _legacyPendingSubscription = _ref
           .read(outboxDaoProvider)
@@ -104,6 +115,7 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
 
   final Ref _ref;
   final BusinessContext? _context;
+  final bool _hydrateAdministration;
   StreamSubscription<SyncDiagnostics>? _diagnosticsSubscription;
   StreamSubscription<int>? _legacyPendingSubscription;
   StreamSubscription<List<SyncConflict>>? _conflictSubscription;
@@ -124,6 +136,21 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
       ),
     );
     try {
+      if (_hydrateAdministration &&
+          await _ref.read(connectivityMonitorProvider).isConnected) {
+        await _ref
+            .read(administrationSnapshotServiceProvider)
+            .hydrateIfNeeded(
+              context,
+              scopeKey:
+                  _ref
+                      .read(authControllerProvider)
+                      .asData
+                      ?.value
+                      ?.administrationScopeKey ??
+                  '',
+            );
+      }
       final result = await _ref
           .read(backendSyncServiceProvider)
           .synchronize(context: context, trigger: trigger);
@@ -164,7 +191,35 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
     await synchronize(SyncTrigger.manual);
   }
 
-  Future<void> acceptRemote(SyncConflict conflict) async {
+  Future<Result<void, Failure>> acceptRemote(SyncConflict conflict) async {
+    try {
+      await _acceptRemote(conflict);
+      return const Result.success(null);
+    } catch (error, stackTrace) {
+      return Result.failure(FailureMapper.fromException(error, stackTrace));
+    }
+  }
+
+  Future<void> _acceptRemote(SyncConflict conflict) async {
+    if (const {
+      'branch',
+      'app_user',
+      'role',
+      'register',
+      'tax_category',
+    }.contains(conflict.entityType)) {
+      final context = _context;
+      if (context == null || !_hydrateAdministration) {
+        throw StateError(
+          'Organization-wide administration access is required.',
+        );
+      }
+      await _ref
+          .read(administrationSnapshotServiceProvider)
+          .acceptRemote(context, conflict);
+      await synchronize(SyncTrigger.manual);
+      return;
+    }
     final now = DateTime.now().toUtc();
     await _ref.read(appDatabaseProvider).transaction(() async {
       await _ref.read(outboxDaoProvider).discard(conflict.operationId, now);

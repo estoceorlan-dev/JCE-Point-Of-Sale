@@ -10,6 +10,12 @@ class ValidateProductUseCase {
 
   Result<ProductDraft, Failure> call(ProductDraft draft) {
     final value = draft.normalized();
+    if (value.barcodeDrafts.isNotEmpty &&
+        value.barcodeDrafts.where((barcode) => barcode.isPrimary).length != 1) {
+      return const Result.failure(
+        ValidationFailure('Choose exactly one primary barcode.'),
+      );
+    }
     if (value.sku.length < 2 || value.sku.length > 64) {
       return const Result.failure(
         ValidationFailure('SKU must contain between 2 and 64 characters.'),

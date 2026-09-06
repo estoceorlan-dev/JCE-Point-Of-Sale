@@ -1,4 +1,5 @@
 import '../../shared/models/permission.dart';
+import '../../features/auth/domain/entities/auth_session.dart';
 
 enum AppRoute {
   auth,
@@ -11,7 +12,9 @@ enum AppRoute {
   customers,
   reports,
   logs,
+  branches,
   users,
+  registers,
   settings,
 }
 
@@ -27,7 +30,9 @@ extension AppRouteInfo on AppRoute {
     AppRoute.customers => 'customers',
     AppRoute.reports => 'reports',
     AppRoute.logs => 'logs',
+    AppRoute.branches => 'branches',
     AppRoute.users => 'users',
+    AppRoute.registers => 'registers',
     AppRoute.settings => 'settings',
   };
 
@@ -42,7 +47,9 @@ extension AppRouteInfo on AppRoute {
     AppRoute.customers => '/customers',
     AppRoute.reports => '/reports',
     AppRoute.logs => '/logs',
-    AppRoute.users => '/users',
+    AppRoute.branches => '/branches',
+    AppRoute.users => '/staff',
+    AppRoute.registers => '/registers',
     AppRoute.settings => '/settings',
   };
 
@@ -57,7 +64,9 @@ extension AppRouteInfo on AppRoute {
     AppRoute.customers => 'Customers',
     AppRoute.reports => 'Reports',
     AppRoute.logs => 'Logs',
-    AppRoute.users => 'Users',
+    AppRoute.branches => 'Branches',
+    AppRoute.users => 'Staff & Access',
+    AppRoute.registers => 'Registers & Hardware',
     AppRoute.settings => 'Settings',
   };
 
@@ -72,7 +81,19 @@ extension AppRouteInfo on AppRoute {
     AppRoute.customers => AppPermission.viewCustomers,
     AppRoute.reports => AppPermission.viewReports,
     AppRoute.logs => AppPermission.viewAuditLogs,
+    AppRoute.branches => AppPermission.manageBranches,
     AppRoute.users => AppPermission.manageUsers,
+    AppRoute.registers => AppPermission.manageRegisters,
     AppRoute.settings => AppPermission.manageSettings,
+  };
+
+  bool canAccess(AuthSession session) => switch (this) {
+    AppRoute.branches => session.canOrganizationWide(
+      AppPermission.manageBranches,
+    ),
+    AppRoute.users =>
+      session.canOrganizationWide(AppPermission.manageUsers) ||
+          session.canOrganizationWide(AppPermission.manageRoles),
+    _ => requiredPermission == null || session.can(requiredPermission!),
   };
 }

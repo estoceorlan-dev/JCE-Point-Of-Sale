@@ -10,6 +10,8 @@ type AppUser @table(name: "app_users", key: "id") {
   email: String!
   displayName: String!
   status: String!
+  invitedAt: Timestamp
+  activatedAt: Timestamp
   version: Int!
   createdAt: Timestamp!
   updatedAt: Timestamp!
@@ -35,6 +37,78 @@ type Role @table(name: "roles", key: "id") {
   organizationId: String!
   code: String!
   name: String!
+  description: String
+  isActive: Boolean!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+# Administration projections are migration-owned. No client write operations
+# are exposed; authenticated callable commands enforce organization-wide roles.
+type Branch @table(name: "branches", key: "id") {
+  id: String!
+  organizationId: String!
+  code: String!
+  name: String!
+  timezone: String!
+  addressLineOne: String
+  addressLineTwo: String
+  city: String
+  province: String
+  postalCode: String
+  phone: String
+  email: String
+  receiptDisplayName: String
+  isActive: Boolean!
+  allowNegativeStock: Boolean!
+  adjustmentApprovalThresholdMilli: Int64
+  allowMultipleOpenShiftsPerUser: Boolean!
+  allowSalesWithoutOpenShift: Boolean!
+  cashDiscrepancyApprovalThresholdMinor: Int64
+  discountApprovalThresholdBasisPoints: Int
+  returnApprovalThresholdMinor: Int64
+  voidWindowMinutes: Int!
+  transferApprovalThresholdMilli: Int64
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+type Register @table(name: "registers", key: "id") {
+  id: String!
+  organizationId: String!
+  branchId: String!
+  code: String!
+  name: String!
+  assignedDeviceId: String
+  assignedByUserId: String
+  assignedAt: Timestamp
+  scannerType: String!
+  scannerInterCharacterTimeoutMs: Int!
+  scannerDuplicateSuppressionMs: Int!
+  printerType: String!
+  printerAddress: String
+  printerPort: Int!
+  printerPaperWidthMm: Int!
+  cashDrawerEnabled: Boolean!
+  cashDrawerPin: Int!
+  isActive: Boolean!
+  version: Int!
+  createdAt: Timestamp!
+  updatedAt: Timestamp!
+  deletedAt: Timestamp
+}
+
+type TaxCategory @table(name: "tax_categories", key: "id") {
+  id: String!
+  organizationId: String!
+  code: String!
+  name: String!
+  rateBasisPoints: Int!
+  isInclusive: Boolean!
   isActive: Boolean!
   version: Int!
   createdAt: Timestamp!

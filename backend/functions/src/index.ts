@@ -1,4 +1,5 @@
 import {initializeApp} from "firebase-admin/app";
+import {getAuth} from "firebase-admin/auth";
 import {logger} from "firebase-functions";
 import {HttpsError, onCall} from "firebase-functions/v2/https";
 import {defineString} from "firebase-functions/params";
@@ -21,6 +22,13 @@ import {
   findPriorImageFinalization,
   persistProductImageFinalization,
 } from "./product_image_finalizer";
+import {
+  acceptStaffInvite,
+  bindStaffIdentity,
+  loadInvitedStaff,
+  StaffInviteError,
+} from "./staff_invites";
+import {loadAdministrationSnapshot} from "./administration_snapshot";
 
 initializeApp();
 
@@ -172,7 +180,7 @@ export const applyRemoteCommand = onCall(
     try {
       const data = asObject(request.data, "data");
       const payload = asObject(data.payload, "payload");
-      return await withDatabase(databaseConfig(), (client) =>
+      const execution = await withDatabase(databaseConfig(), (client) =>
         processRemoteCommand(client, {
           firebaseUid: uid,
           operationId: requiredString(data, "operationId"),
@@ -185,6 +193,15 @@ export const applyRemoteCommand = onCall(
           payload,
         }),
       );
+      if (data.commandType === "user.status.set" &&
+          (payload.status === "suspended" || payload.status === "disabled")) {
+        const target = await getAuthUserForStaff(
+          requiredString(data, "organizationId"),
+          requiredString(data, "aggregateId"),
+        );
+        if (target !== null) await getAuth().revokeRefreshTokens(target);
+      }
+      return execution;
     } catch (error) {
       if (error instanceof RemoteCommandError) {
         throw new HttpsError(error.code, error.message);
@@ -194,6 +211,126 @@ export const applyRemoteCommand = onCall(
     }
   },
 );
+
+export const generateStaffInviteLink = onCall(
+  {
+    region: functionsRegion,
+    serviceAccount: runtimeServiceAccount,
+  },
+  async (request) => {
+    const actorFirebaseUid = request.auth?.uid;
+    if (actorFirebaseUid === undefined) {
+      throw new HttpsError("unauthenticated", "Authentication is required.");
+    }
+    const organizationId = requiredString(request.data, "organizationId");
+    const userId = requiredString(request.data, "userId");
+    try {
+      const invited = await withDatabase(databaseConfig(), (client) =>
+        loadInvitedStaff(client, {actorFirebaseUid, organizationId, userId}),
+      );
+      let identity;
+      if (invited.firebaseUid !== null) {
+        identity = await getAuth().getUser(invited.firebaseUid);
+      } else {
+        try {
+          identity = await getAuth().getUserByEmail(invited.email);
+        } catch (error) {
+          if ((error as {code?: string}).code !== "auth/user-not-found") throw error;
+          identity = await getAuth().createUser({
+            email: invited.email,
+            displayName: invited.displayName,
+            emailVerified: false,
+          });
+        }
+      }
+      if (identity.email?.toLowerCase() !== invited.email.toLowerCase()) {
+        throw new StaffInviteError("failed-precondition", "The identity email no longer matches this invitation.");
+      }
+      await withDatabase(databaseConfig(), (client) =>
+        bindStaffIdentity(client, {
+          actorFirebaseUid,
+          organizationId,
+          userId,
+          targetFirebaseUid: identity.uid,
+        }),
+      );
+      const inviteUrl = await getAuth().generatePasswordResetLink(invited.email);
+      return {inviteUrl};
+    } catch (error) {
+      if (error instanceof StaffInviteError) {
+        throw new HttpsError(error.reason, error.message);
+      }
+      logger.error("Staff invite generation failed.", {code: (error as {code?: string}).code ?? "unknown"});
+      throw new HttpsError("internal", "The invitation link could not be generated.");
+    }
+  },
+);
+
+export const acceptStaffInvitation = onCall(
+  {
+    region: functionsRegion,
+    serviceAccount: runtimeServiceAccount,
+  },
+  async (request) => {
+    const firebaseUid = request.auth?.uid;
+    const email = request.auth?.token.email;
+    if (firebaseUid === undefined || typeof email !== "string") {
+      throw new HttpsError("unauthenticated", "A verified identity is required.");
+    }
+    const organizationId = optionalString(request.data, "organizationId") ?? undefined;
+    try {
+      const acceptedCount = await withDatabase(databaseConfig(), (client) =>
+        acceptStaffInvite(client, {firebaseUid, email, organizationId}),
+      );
+      return {accepted: true, acceptedCount};
+    } catch (error) {
+      if (error instanceof StaffInviteError) {
+        throw new HttpsError(error.reason, error.message);
+      }
+      logger.error("Staff invitation acceptance failed.", error);
+      throw new HttpsError("internal", "The invitation could not be accepted.");
+    }
+  },
+);
+
+export const getAdministrationSnapshot = onCall(
+  {
+    region: functionsRegion,
+    serviceAccount: runtimeServiceAccount,
+  },
+  async (request) => {
+    const firebaseUid = request.auth?.uid;
+    if (firebaseUid === undefined) {
+      throw new HttpsError("unauthenticated", "Authentication is required.");
+    }
+    const organizationId = requiredString(request.data, "organizationId");
+    try {
+      return await withDatabase(databaseConfig(), (client) =>
+        loadAdministrationSnapshot(client, {firebaseUid, organizationId}),
+      );
+    } catch (error) {
+      if (error instanceof StaffInviteError) {
+        throw new HttpsError(error.reason, error.message);
+      }
+      logger.error("Administration snapshot failed.", error);
+      throw new HttpsError("internal", "The administration snapshot could not be loaded.");
+    }
+  },
+);
+
+async function getAuthUserForStaff(
+  organizationId: string,
+  userId: string,
+): Promise<string | null> {
+  return withDatabase(databaseConfig(), async (client) => {
+    const result = await client.query<{firebase_uid: string | null}>(
+      `SELECT firebase_uid FROM app_users
+       WHERE organization_id = $1 AND id = $2`,
+      [organizationId, userId],
+    );
+    return result.rows[0]?.firebase_uid ?? null;
+  });
+}
 
 export const finalizeProductImage = onCall(
   {

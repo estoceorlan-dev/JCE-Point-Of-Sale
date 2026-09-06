@@ -23,7 +23,7 @@ class OrganizationAccess {
 
   BranchAccess? branchById(String branchId) {
     for (final branch in branches) {
-      if (branch.branch.id == branchId) {
+      if (branch.branch.id == branchId && branch.branch.isActive) {
         return branch;
       }
     }

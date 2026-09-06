@@ -64,22 +64,41 @@ class DesktopSidebar extends StatelessWidget {
               subtitle: 'Dry Goods Trading',
             ),
             Expanded(
-              child: ListView.separated(
+              child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                itemCount: mainItems.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: AppSpacing.xs),
-                itemBuilder: (context, index) {
-                  final item = mainItems[index];
-                  return SidebarAction(
-                    label: item.label,
-                    icon: item.route == selectedRoute
-                        ? item.selectedIcon
-                        : item.icon,
-                    selected: item.route == selectedRoute,
-                    onTap: () => onDestinationSelected(item),
-                  );
-                },
+                children: [
+                  for (final section in AppNavigationSection.values)
+                    if (mainItems.any((item) => item.section == section)) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.sm,
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                          AppSpacing.xs,
+                        ),
+                        child: Text(
+                          section.label.toUpperCase(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ),
+                      for (final item in mainItems.where(
+                        (item) => item.section == section,
+                      )) ...[
+                        SidebarAction(
+                          label: item.label,
+                          icon: item.route == selectedRoute
+                              ? item.selectedIcon
+                              : item.icon,
+                          selected: item.route == selectedRoute,
+                          onTap: () => onDestinationSelected(item),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                      ],
+                    ],
+                ],
               ),
             ),
             Padding(

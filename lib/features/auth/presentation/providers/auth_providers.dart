@@ -43,6 +43,7 @@ final accessRemoteDataSourceProvider = Provider<AccessRemoteDataSource>((ref) {
   return CloudFunctionsAccessRemoteDataSource(
     functions: ref.watch(firebaseFunctionsProvider),
     functionName: config.accessProfileFunctionName,
+    acceptInvitationFunctionName: config.acceptStaffInviteFunctionName,
   );
 });
 

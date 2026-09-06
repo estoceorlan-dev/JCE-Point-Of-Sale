@@ -47,7 +47,10 @@ class DriftActiveContextRepository implements ActiveContextRepository {
     final session = AuthSession(
       user: user,
       activeOrganizationId: organization.organization.id,
-      activeBranchId: organization.branches.first.branch.id,
+      activeBranchId: organization.branches
+          .firstWhere((item) => item.branch.isActive)
+          .branch
+          .id,
     );
     await save(session);
     return session;
@@ -72,7 +75,8 @@ class DriftActiveContextRepository implements ActiveContextRepository {
 
   OrganizationAccess? _firstUsableOrganization(AppUser user) {
     for (final organization in user.organizations) {
-      if (organization.canSignIn && organization.branches.isNotEmpty) {
+      if (organization.canSignIn &&
+          organization.branches.any((item) => item.branch.isActive)) {
         return organization;
       }
     }

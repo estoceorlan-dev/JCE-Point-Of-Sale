@@ -30,6 +30,7 @@ const settingKeys = new Set([
   "receipt.paper_width_characters",
   "sales.discount_limit_basis_points",
   "sales.discount_approval_threshold_basis_points",
+  "sales.require_non_cash_reference",
   "shifts.allow_multiple_open_per_user",
   "shifts.allow_sales_without_open_shift",
   "shifts.cash_discrepancy_approval_threshold_minor",
@@ -376,7 +377,8 @@ function validateSetting(key: string, value: unknown): void {
   if (key === "receipt.paper_width_characters" &&
       typeof value === "number" && new Set([32, 42, 48]).has(value)) return;
   if (new Set(["inventory.allow_negative_stock", "receipt.show_tax_breakdown",
-    "shifts.allow_multiple_open_per_user", "shifts.allow_sales_without_open_shift"])
+    "shifts.allow_multiple_open_per_user", "shifts.allow_sales_without_open_shift",
+    "sales.require_non_cash_reference"])
     .has(key) && typeof value === "boolean") return;
   if (new Set(["sales.discount_limit_basis_points",
     "sales.discount_approval_threshold_basis_points"]).has(key) &&
@@ -394,6 +396,7 @@ function defaultSettingValue(key: string): unknown {
     "inventory.allow_negative_stock": false,
     "inventory.adjustment_approval_threshold_milli": null,
     "sales.discount_approval_threshold_basis_points": null,
+    "sales.require_non_cash_reference": false,
     "shifts.allow_multiple_open_per_user": false,
     "shifts.allow_sales_without_open_shift": false,
     "shifts.cash_discrepancy_approval_threshold_minor": null,

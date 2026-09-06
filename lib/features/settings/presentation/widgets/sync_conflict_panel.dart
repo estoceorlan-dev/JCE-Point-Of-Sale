@@ -77,8 +77,16 @@ class _ConflictTile extends ConsumerWidget {
         spacing: AppSpacing.sm,
         children: [
           OutlinedButton(
-            onPressed: () =>
-                ref.read(syncStateProvider.notifier).acceptRemote(conflict),
+            onPressed: () async {
+              final result = await ref
+                  .read(syncStateProvider.notifier)
+                  .acceptRemote(conflict);
+              if (context.mounted && result.failureOrNull != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(result.failureOrNull!.message)),
+                );
+              }
+            },
             child: const Text('Accept remote'),
           ),
           FilledButton(

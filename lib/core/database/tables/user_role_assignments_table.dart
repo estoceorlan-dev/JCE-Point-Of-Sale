@@ -19,7 +19,11 @@ class UserRoleAssignments extends Table {
   TextColumn get roleId =>
       text().references(Roles, #id, onDelete: KeyAction.restrict)();
   DateTimeColumn get assignedAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
   DateTimeColumn get revokedAt => dateTime().nullable()();
+  IntColumn get version => integer()
+      .withDefault(const Constant<int>(0))
+      .check(const CustomExpression<bool>('version >= 0'))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};

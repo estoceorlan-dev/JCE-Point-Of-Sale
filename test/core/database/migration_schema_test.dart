@@ -1,4 +1,5 @@
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/core/database/app_database.dart';
@@ -6,6 +7,7 @@ import 'package:jce_pos/core/database/app_database.dart';
 import 'migrations/app_database/generated/schema.dart';
 
 void main() {
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   test('current schema matches the generated current snapshot', () async {
     final database = AppDatabase.forTesting(NativeDatabase.memory());
 
@@ -424,6 +426,71 @@ VALUES ('sale-v11', 'org-v11', 'branch-v11', 'register-v11', 'operation-v11',
     expect(await database.select(database.numberSequences).get(), isEmpty);
     expect(await database.select(database.reasonCodes).get(), isEmpty);
     expect(await database.select(database.featureFlags).get(), isEmpty);
+
+    await database.close();
+    schema.close();
+  });
+
+  test('released version 12 settings migrate to POS hardware', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(12);
+    const timestamp = '2026-09-03T00:00:00.000Z';
+    schema.rawDatabase.execute('''INSERT INTO organizations
+(id, code, name, timezone, is_active, created_at, updated_at)
+VALUES ('org-v13', 'V13', 'Version 13', 'Asia/Manila', 1,
+'$timestamp', '$timestamp')''');
+    schema.rawDatabase.execute('''INSERT INTO branches
+(id, organization_id, code, name, timezone, is_active, created_at, updated_at)
+VALUES ('branch-v13', 'org-v13', 'MAIN', 'Main', 'Asia/Manila', 1,
+'$timestamp', '$timestamp')''');
+    schema.rawDatabase.execute('''INSERT INTO registers
+(id, organization_id, branch_id, code, name, is_active, version,
+created_at, updated_at)
+VALUES ('register-v13', 'org-v13', 'branch-v13', 'REG', 'Register', 1, 0,
+'$timestamp', '$timestamp')''');
+    final database = AppDatabase.forTesting(schema.newConnection());
+
+    await verifier.migrateAndValidate(
+      database,
+      AppDatabase.currentSchemaVersion,
+    );
+
+    final register = await database.select(database.registers).getSingle();
+    expect(register.scannerType, 'keyboard_wedge');
+    expect(register.printerType, 'screen');
+    expect(register.printerPort, 9100);
+    expect(register.printerPaperWidthMm, 80);
+    expect(register.cashDrawerEnabled, isFalse);
+    expect(await database.select(database.receiptPrintJobs).get(), isEmpty);
+
+    await database.close();
+    schema.close();
+  });
+
+  test('released version 13 migrates to admin and recoverable carts', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(13);
+    const timestamp = '2026-09-05T00:00:00.000Z';
+    schema.rawDatabase.execute('''INSERT INTO organizations
+(id, code, name, timezone, is_active, created_at, updated_at)
+VALUES ('org-v15', 'V15', 'Version 15', 'Asia/Manila', 1,
+'$timestamp', '$timestamp')''');
+    schema.rawDatabase.execute('''INSERT INTO branches
+(id, organization_id, code, name, timezone, is_active, created_at, updated_at)
+VALUES ('branch-v15', 'org-v15', 'MAIN', 'Main', 'Asia/Manila', 1,
+'$timestamp', '$timestamp')''');
+    final database = AppDatabase.forTesting(schema.newConnection());
+
+    await verifier.migrateAndValidate(
+      database,
+      AppDatabase.currentSchemaVersion,
+    );
+
+    final branch = await database.select(database.branches).getSingle();
+    expect(branch.version, 0);
+    expect(branch.receiptDisplayName, isNull);
+    expect(await database.select(database.posCarts).get(), isEmpty);
+    expect(await database.select(database.posCartItems).get(), isEmpty);
 
     await database.close();
     schema.close();

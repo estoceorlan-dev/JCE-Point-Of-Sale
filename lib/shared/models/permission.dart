@@ -18,9 +18,11 @@ enum AppPermission {
   manageCustomers('customers.manage'),
   anonymizeCustomers('customers.anonymize'),
   manageLoyalty('loyalty.manage'),
+  manageBranches('branches.manage'),
   viewReports('reports.view'),
   viewAuditLogs('audit_logs.view'),
   manageUsers('users.manage'),
+  manageRoles('roles.manage'),
   manageSettings('settings.manage');
 
   const AppPermission(this.code);

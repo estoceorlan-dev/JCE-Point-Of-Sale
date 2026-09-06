@@ -6,7 +6,8 @@ abstract final class MinorUnitParser {
       return null;
     }
     final whole = int.tryParse(match.group(1)!);
-    if (whole == null) {
+    // Stay within exact JSON integers on every supported client and server.
+    if (whole == null || whole > 90071992547408) {
       return null;
     }
     final fraction = (match.group(2) ?? '').padRight(2, '0');

@@ -23,6 +23,7 @@ const requiredTables = [
   "products",
   "refund_payments",
   "reason_codes",
+  "receipt_reprint_events",
   "role_permissions",
   "roles",
   "sales",
@@ -102,7 +103,7 @@ async function applySchemaMigrations(client) {
         `${requiredTables.length} tables.`,
     );
   }
-  console.log("PostgreSQL migrations applied and Phase 14 schema verified.");
+  console.log("PostgreSQL migrations applied and Phase 15 schema verified.");
 }
 
 module.exports = {applySchemaMigrations};

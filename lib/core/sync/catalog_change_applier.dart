@@ -14,6 +14,8 @@ class CatalogChangeApplier {
         await _category(envelope);
       case 'unit':
         await _unit(envelope);
+      case 'tax_category':
+        await _taxCategory(envelope);
       case 'product':
         await _product(envelope);
       case 'product_price':
@@ -54,6 +56,32 @@ class CatalogChangeApplier {
           ),
         );
     _checkResultVersion(result, envelope);
+  }
+
+  Future<void> _taxCategory(RemoteChangeEnvelope envelope) async {
+    final row = _requiredMap(envelope.result['taxCategory'], 'taxCategory');
+    final id = envelope.change.aggregateId;
+    final existing = await (database.select(
+      database.taxCategories,
+    )..where((row) => row.id.equals(id))).getSingleOrNull();
+    final now = envelope.change.occurredAt;
+    final active = row['isActive'] == true;
+    await database
+        .into(database.taxCategories)
+        .insertOnConflictUpdate(
+          TaxCategoriesCompanion.insert(
+            id: id,
+            organizationId: envelope.change.organizationId,
+            code: _requiredString(row, 'code'),
+            name: _requiredString(row, 'name'),
+            rateBasisPoints: (row['rateBasisPoints'] as num).toInt(),
+            isInclusive: Value(row['isInclusive'] == true),
+            isActive: Value(active),
+            createdAt: existing?.createdAt ?? now,
+            updatedAt: now,
+            deletedAt: Value(active ? null : now),
+          ),
+        );
   }
 
   Future<void> _unit(RemoteChangeEnvelope envelope) async {

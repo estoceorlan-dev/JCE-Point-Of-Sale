@@ -319,6 +319,7 @@ bool _isBoolean(OperationalSettingKey key) => const {
   OperationalSettingKey.receiptShowTaxBreakdown,
   OperationalSettingKey.shiftsAllowMultipleOpen,
   OperationalSettingKey.shiftsAllowSalesWithoutOpen,
+  OperationalSettingKey.salesRequireNonCashReference,
 }.contains(key);
 
 bool _isText(OperationalSettingKey key) => const {

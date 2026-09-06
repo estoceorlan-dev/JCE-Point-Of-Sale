@@ -24,6 +24,15 @@ type BranchRow = {
   code: string;
   name: string;
   timezone: string;
+  addressLineOne: string | null;
+  addressLineTwo: string | null;
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  phone: string | null;
+  email: string | null;
+  receiptDisplayName: string | null;
+  version: number;
 };
 
 export class AccessProfileDeniedError extends Error {
@@ -100,7 +109,10 @@ export async function loadAccessProfile(
 
     const branches = await client.query<BranchRow>(
       `
-        SELECT b.id, b.code, b.name, b.timezone
+        SELECT b.id, b.code, b.name, b.timezone, b.version,
+          b.address_line_one AS "addressLineOne", b.address_line_two AS "addressLineTwo",
+          b.city, b.province, b.postal_code AS "postalCode", b.phone, b.email,
+          b.receipt_display_name AS "receiptDisplayName"
         FROM branches b
         WHERE b.organization_id = $1
           AND b.is_active = true
@@ -109,6 +121,9 @@ export async function loadAccessProfile(
             EXISTS (
               SELECT 1
               FROM user_role_assignments organization_assignment
+              JOIN roles assigned_role ON assigned_role.id = organization_assignment.role_id
+                AND assigned_role.organization_id = b.organization_id
+                AND assigned_role.is_active = true AND assigned_role.deleted_at IS NULL
               WHERE organization_assignment.user_id = $2
                 AND organization_assignment.organization_id = b.organization_id
                 AND organization_assignment.branch_id IS NULL
@@ -117,6 +132,9 @@ export async function loadAccessProfile(
             OR EXISTS (
               SELECT 1
               FROM user_role_assignments branch_assignment
+              JOIN roles assigned_role ON assigned_role.id = branch_assignment.role_id
+                AND assigned_role.organization_id = b.organization_id
+                AND assigned_role.is_active = true AND assigned_role.deleted_at IS NULL
               WHERE branch_assignment.user_id = $2
                 AND branch_assignment.organization_id = b.organization_id
                 AND branch_assignment.branch_id = b.id
@@ -148,10 +166,8 @@ export async function loadAccessProfile(
         .map(rolePayload),
       branches: branches.rows.map((branch) => ({
         branch: {
-          id: branch.id,
-          code: branch.code,
-          name: branch.name,
-          timezone: branch.timezone,
+          ...branch,
+          isActive: true,
         },
         roles: roles.rows
           .filter((role) => role.branch_id === branch.id)

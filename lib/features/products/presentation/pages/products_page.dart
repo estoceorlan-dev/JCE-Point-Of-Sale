@@ -18,6 +18,8 @@ import '../widgets/product_details_dialog.dart';
 import '../widgets/product_filters.dart';
 import '../widgets/product_form_dialog.dart';
 import '../widgets/product_table.dart';
+import '../../../imports/domain/entities/csv_import.dart';
+import '../../../imports/presentation/widgets/csv_import_dialog.dart';
 
 class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
@@ -72,6 +74,12 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                       onCreate: () =>
                           _openCreate(categories, units, taxCategories),
                       onManageCatalog: _openCatalogManagement,
+                      onImport: () => showDialog<bool>(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) =>
+                            const CsvImportDialog(kind: CsvImportKind.catalog),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     ProductFilters(
@@ -256,10 +264,15 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onCreate, required this.onManageCatalog});
+  const _Header({
+    required this.onCreate,
+    required this.onManageCatalog,
+    required this.onImport,
+  });
 
   final VoidCallback onCreate;
   final VoidCallback onManageCatalog;
+  final VoidCallback onImport;
 
   @override
   Widget build(BuildContext context) {
@@ -287,7 +300,12 @@ class _Header extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: onManageCatalog,
           icon: const Icon(Icons.tune),
-          label: const Text('Categories & units'),
+          label: const Text('Catalog settings'),
+        ),
+        OutlinedButton.icon(
+          onPressed: onImport,
+          icon: const Icon(Icons.upload_file),
+          label: const Text('Import CSV'),
         ),
         FilledButton.icon(
           onPressed: onCreate,

@@ -15,6 +15,10 @@ class OperationsChangeApplier {
     final type = envelope.commandType;
     if (type.startsWith('branch.')) {
       await _branch(envelope);
+    } else if (type.startsWith('user.')) {
+      await _user(envelope);
+    } else if (type.startsWith('role.')) {
+      await _role(envelope);
     } else if (type == 'stock_location.create') {
       await _stockLocation(envelope);
     } else if (type.startsWith('inventory.')) {
@@ -29,6 +33,9 @@ class OperationsChangeApplier {
       await _sale(envelope);
     } else if (type == 'sale.return' || type == 'sale.void') {
       await _saleCorrection(envelope);
+    } else if (type == 'receipt.reprint') {
+      // Reprint events are represented by the append-only local/remote audit
+      // trail and have no mutable local business projection.
     } else if (type.startsWith('transfer.')) {
       await _transfer(envelope);
     } else if (type.startsWith('supplier.')) {
@@ -188,7 +195,8 @@ class OperationsChangeApplier {
     return switch (key) {
       'inventory.allow_negative_stock' ||
       'shifts.allow_multiple_open_per_user' ||
-      'shifts.allow_sales_without_open_shift' => false,
+      'shifts.allow_sales_without_open_shift' ||
+      'sales.require_non_cash_reference' => false,
       'returns.void_window_minutes' => 15,
       _ => null,
     };
@@ -262,6 +270,89 @@ class OperationsChangeApplier {
   }
 
   Future<void> _branch(RemoteChangeEnvelope envelope) async {
+    final versioned =
+        await (database.select(database.branches)
+              ..where((row) => row.id.equals(envelope.change.aggregateId)))
+            .getSingleOrNull();
+    if (versioned != null && versioned.version > envelope.change.version) {
+      return;
+    }
+    if ({
+      'branch.create',
+      'branch.update',
+      'branch.archive',
+      'branch.restore',
+    }.contains(envelope.commandType)) {
+      final row = _requiredMap(envelope.result['branch'], 'branch');
+      final existing =
+          await (database.select(database.branches)..where(
+                (candidate) =>
+                    candidate.id.equals(envelope.change.aggregateId) &
+                    candidate.organizationId.equals(
+                      envelope.change.organizationId,
+                    ),
+              ))
+              .getSingleOrNull();
+      final occurredAt = envelope.change.occurredAt;
+      final active = row['isActive'] == true;
+      await database
+          .into(database.branches)
+          .insertOnConflictUpdate(
+            BranchesCompanion.insert(
+              id: envelope.change.aggregateId,
+              organizationId: envelope.change.organizationId,
+              code:
+                  _string(row['code']) ??
+                  _requiredString(envelope.commandPayload, 'code'),
+              name:
+                  _string(row['name']) ??
+                  _requiredString(envelope.commandPayload, 'name'),
+              timezone: Value(
+                _string(row['timezone']) ??
+                    _requiredString(envelope.commandPayload, 'timezone'),
+              ),
+              addressLineOne: Value(
+                _string(row['addressLineOne']) ??
+                    _string(envelope.commandPayload['addressLineOne']),
+              ),
+              addressLineTwo: Value(
+                _string(row['addressLineTwo']) ??
+                    _string(envelope.commandPayload['addressLineTwo']),
+              ),
+              city: Value(
+                _string(row['city']) ??
+                    _string(envelope.commandPayload['city']),
+              ),
+              province: Value(
+                _string(row['province']) ??
+                    _string(envelope.commandPayload['province']),
+              ),
+              postalCode: Value(
+                _string(row['postalCode']) ??
+                    _string(envelope.commandPayload['postalCode']),
+              ),
+              phone: Value(
+                _string(row['phone']) ??
+                    _string(envelope.commandPayload['phone']),
+              ),
+              email: Value(
+                _string(row['email']) ??
+                    _string(envelope.commandPayload['email']),
+              ),
+              receiptDisplayName: Value(
+                _string(row['receiptDisplayName']) ??
+                    _string(envelope.commandPayload['receiptDisplayName']),
+              ),
+              isActive: Value(active),
+              version: Value(_integer(row['version'])),
+              createdAt:
+                  _date(row['createdAt']) ?? existing?.createdAt ?? occurredAt,
+              updatedAt: _date(row['updatedAt']) ?? occurredAt,
+              deletedAt: Value(_date(row['deletedAt'])),
+            ),
+          );
+      return;
+    }
     final payload = envelope.commandPayload;
     final update = BranchesCompanion(
       updatedAt: Value(envelope.change.occurredAt),
@@ -325,6 +416,136 @@ class OperationsChangeApplier {
             ),
           ),
         );
+    }
+  }
+
+  Future<void> _user(RemoteChangeEnvelope envelope) async {
+    final row = _requiredMap(envelope.result['user'], 'user');
+    final id = envelope.change.aggregateId;
+    final existing = await (database.select(
+      database.appUsers,
+    )..where((value) => value.id.equals(id))).getSingleOrNull();
+    final now = _date(row['updatedAt']) ?? envelope.change.occurredAt;
+    if (existing != null && existing.version > envelope.change.version) return;
+    await database
+        .into(database.appUsers)
+        .insertOnConflictUpdate(
+          AppUsersCompanion.insert(
+            id: id,
+            organizationId: envelope.change.organizationId,
+            firebaseUid: Value(_string(row['firebaseUid'])),
+            email:
+                _string(row['email']) ??
+                _requiredString(envelope.commandPayload, 'email'),
+            displayName:
+                _string(row['displayName']) ??
+                _string(envelope.commandPayload['displayName']) ??
+                existing?.displayName ??
+                'Staff account',
+            status: _string(row['status']) ?? existing?.status ?? 'invited',
+            invitedAt: Value(_date(row['invitedAt']) ?? existing?.invitedAt),
+            activatedAt: Value(
+              _date(row['activatedAt']) ?? existing?.activatedAt,
+            ),
+            version: Value(_integer(row['version'])),
+            createdAt: _date(row['createdAt']) ?? existing?.createdAt ?? now,
+            updatedAt: now,
+            deletedAt: Value(_date(row['deletedAt'])),
+          ),
+        );
+
+    if (envelope.result['assignments'] case final List<dynamic> assignments) {
+      await (database.update(database.userRoleAssignments)..where(
+            (value) =>
+                value.organizationId.equals(envelope.change.organizationId) &
+                value.userId.equals(id) &
+                value.revokedAt.isNull(),
+          ))
+          .write(
+            UserRoleAssignmentsCompanion(
+              revokedAt: Value(envelope.change.occurredAt),
+              updatedAt: Value(envelope.change.occurredAt),
+            ),
+          );
+      for (final value in assignments) {
+        final assignment = _requiredMap(value, 'assignment');
+        final assignedAt =
+            _date(assignment['assignedAt']) ?? envelope.change.occurredAt;
+        await database
+            .into(database.userRoleAssignments)
+            .insertOnConflictUpdate(
+              UserRoleAssignmentsCompanion.insert(
+                id: _requiredString(assignment, 'id'),
+                organizationId: envelope.change.organizationId,
+                branchId: Value(_string(assignment['branchId'])),
+                userId: id,
+                roleId: _requiredString(assignment, 'roleId'),
+                assignedAt: assignedAt,
+                updatedAt: Value(_date(assignment['updatedAt']) ?? assignedAt),
+                revokedAt: Value(_date(assignment['revokedAt'])),
+                version: Value(_integer(assignment['version'])),
+              ),
+            );
+      }
+    }
+  }
+
+  Future<void> _role(RemoteChangeEnvelope envelope) async {
+    final row = _requiredMap(envelope.result['role'], 'role');
+    final id = envelope.change.aggregateId;
+    final existing = await (database.select(
+      database.roles,
+    )..where((value) => value.id.equals(id))).getSingleOrNull();
+    final now = _date(row['updatedAt']) ?? envelope.change.occurredAt;
+    if (existing != null && existing.version > envelope.change.version) return;
+    await database
+        .into(database.roles)
+        .insertOnConflictUpdate(
+          RolesCompanion.insert(
+            id: id,
+            organizationId: envelope.change.organizationId,
+            code:
+                _string(row['code']) ??
+                _requiredString(envelope.commandPayload, 'code'),
+            name:
+                _string(row['name']) ??
+                _requiredString(envelope.commandPayload, 'name'),
+            description: Value(_string(row['description'])),
+            isActive: Value(row['isActive'] as bool? ?? true),
+            version: Value(_integer(row['version'])),
+            createdAt: _date(row['createdAt']) ?? existing?.createdAt ?? now,
+            updatedAt: now,
+            deletedAt: Value(_date(row['deletedAt'])),
+          ),
+        );
+    final values = row['permissions'] ?? envelope.commandPayload['permissions'];
+    if (values case final List<dynamic> permissions) {
+      await (database.delete(
+        database.rolePermissions,
+      )..where((value) => value.roleId.equals(id))).go();
+      for (final rawCode in permissions) {
+        final code = _string(rawCode);
+        if (code == null) continue;
+        await database
+            .into(database.permissions)
+            .insertOnConflictUpdate(
+              PermissionsCompanion.insert(
+                code: code,
+                name: code,
+                createdAt: envelope.change.occurredAt,
+              ),
+            );
+        await database
+            .into(database.rolePermissions)
+            .insert(
+              RolePermissionsCompanion.insert(
+                roleId: id,
+                permissionCode: code,
+                grantedAt: envelope.change.occurredAt,
+              ),
+              mode: InsertMode.insertOrIgnore,
+            );
+      }
     }
   }
 
@@ -562,6 +783,7 @@ class OperationsChangeApplier {
       database.registers,
     )..where((value) => value.id.equals(id))).getSingleOrNull();
     final now = envelope.change.occurredAt;
+    if (existing != null && existing.version > envelope.change.version) return;
     await database
         .into(database.registers)
         .insertOnConflictUpdate(
@@ -572,14 +794,73 @@ class OperationsChangeApplier {
             code: _string(row['code']) ?? existing?.code ?? 'REGISTER',
             name: _string(row['name']) ?? existing?.name ?? 'Register',
             assignedDeviceId: Value(
-              _string(row['assigned_device_id']) ??
-                  _string(payload['deviceId']) ??
-                  existing?.assignedDeviceId,
+              row.containsKey('assigned_device_id')
+                  ? _string(row['assigned_device_id'])
+                  : _string(payload['deviceId']) ?? existing?.assignedDeviceId,
             ),
             assignedByUserId: Value(
-              existing?.assignedByUserId ?? envelope.actorUserId,
+              row.containsKey('assigned_by_user_id')
+                  ? _string(row['assigned_by_user_id'])
+                  : existing?.assignedByUserId ?? envelope.actorUserId,
             ),
-            assignedAt: Value(existing?.assignedAt ?? now),
+            assignedAt: Value(
+              row.containsKey('assigned_at')
+                  ? _date(row['assigned_at'])
+                  : existing?.assignedAt ?? now,
+            ),
+            scannerType: Value(
+              _string(row['scanner_type']) ??
+                  _string(payload['scannerType']) ??
+                  existing?.scannerType ??
+                  'keyboard_wedge',
+            ),
+            scannerInterCharacterTimeoutMs: Value(
+              _nullableInt(row['scanner_inter_character_timeout_ms']) ??
+                  _nullableInt(payload['scannerInterCharacterTimeoutMs']) ??
+                  existing?.scannerInterCharacterTimeoutMs ??
+                  80,
+            ),
+            scannerDuplicateSuppressionMs: Value(
+              _nullableInt(row['scanner_duplicate_suppression_ms']) ??
+                  _nullableInt(payload['scannerDuplicateSuppressionMs']) ??
+                  existing?.scannerDuplicateSuppressionMs ??
+                  350,
+            ),
+            printerType: Value(
+              _string(row['printer_type']) ??
+                  _string(payload['printerType']) ??
+                  existing?.printerType ??
+                  'screen',
+            ),
+            printerAddress: Value(
+              _string(row['printer_address']) ??
+                  _string(payload['printerAddress']) ??
+                  existing?.printerAddress,
+            ),
+            printerPort: Value(
+              _nullableInt(row['printer_port']) ??
+                  _nullableInt(payload['printerPort']) ??
+                  existing?.printerPort ??
+                  9100,
+            ),
+            printerPaperWidthMm: Value(
+              _nullableInt(row['printer_paper_width_mm']) ??
+                  _nullableInt(payload['printerPaperWidthMm']) ??
+                  existing?.printerPaperWidthMm ??
+                  80,
+            ),
+            cashDrawerEnabled: Value(
+              row['cash_drawer_enabled'] as bool? ??
+                  payload['cashDrawerEnabled'] as bool? ??
+                  existing?.cashDrawerEnabled ??
+                  false,
+            ),
+            cashDrawerPin: Value(
+              _nullableInt(row['cash_drawer_pin']) ??
+                  _nullableInt(payload['cashDrawerPin']) ??
+                  existing?.cashDrawerPin ??
+                  0,
+            ),
             isActive: Value(
               row['is_active'] as bool? ?? existing?.isActive ?? true,
             ),
@@ -588,6 +869,7 @@ class OperationsChangeApplier {
             ),
             createdAt: existing?.createdAt ?? now,
             updatedAt: now,
+            deletedAt: Value(row['is_active'] == false ? now : null),
           ),
         );
   }

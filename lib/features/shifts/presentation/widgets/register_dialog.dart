@@ -3,10 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/register.dart';
+import '../../domain/repositories/register_administration_repository.dart';
 import '../controllers/shift_mutation_controller.dart';
+import '../providers/register_administration_providers.dart';
+import '../providers/shift_providers.dart';
 
 class RegisterDialog extends ConsumerStatefulWidget {
-  const RegisterDialog({super.key});
+  const RegisterDialog({super.key, this.register});
+  final Register? register;
 
   @override
   ConsumerState<RegisterDialog> createState() => _RegisterDialogState();
@@ -14,8 +18,13 @@ class RegisterDialog extends ConsumerStatefulWidget {
 
 class _RegisterDialogState extends ConsumerState<RegisterDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _codeController = TextEditingController();
-  final _nameController = TextEditingController();
+  late final _codeController = TextEditingController(
+    text: widget.register?.code,
+  );
+  late final _nameController = TextEditingController(
+    text: widget.register?.name,
+  );
+  bool _editing = false;
   String? _error;
 
   @override
@@ -27,9 +36,10 @@ class _RegisterDialogState extends ConsumerState<RegisterDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final saving = ref.watch(shiftMutationControllerProvider).isLoading;
+    final saving =
+        _editing || ref.watch(shiftMutationControllerProvider).isLoading;
     return AlertDialog(
-      title: const Text('New register'),
+      title: Text(widget.register == null ? 'New register' : 'Edit register'),
       content: SizedBox(
         width: 440,
         child: Form(
@@ -74,7 +84,13 @@ class _RegisterDialogState extends ConsumerState<RegisterDialog> {
         ),
         FilledButton(
           onPressed: saving ? null : _save,
-          child: Text(saving ? 'Saving…' : 'Create register'),
+          child: Text(
+            saving
+                ? 'Saving…'
+                : widget.register == null
+                ? 'Create register'
+                : 'Save register',
+          ),
         ),
       ],
     );
@@ -83,6 +99,26 @@ class _RegisterDialogState extends ConsumerState<RegisterDialog> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _error = null);
+    final register = widget.register;
+    if (register != null) {
+      setState(() => _editing = true);
+      final result = await ref.read(manageRegisterUseCaseProvider)(
+        session: ref.read(activeShiftSessionProvider),
+        register: register,
+        action: RegisterAction.edit,
+        draft: RegisterDraft(
+          code: _codeController.text,
+          name: _nameController.text,
+        ),
+      );
+      if (!mounted) return;
+      setState(() => _editing = false);
+      result.fold(
+        onSuccess: (_) => Navigator.pop(context, true),
+        onFailure: (failure) => setState(() => _error = failure.message),
+      );
+      return;
+    }
     final result = await ref
         .read(shiftMutationControllerProvider.notifier)
         .createRegister(

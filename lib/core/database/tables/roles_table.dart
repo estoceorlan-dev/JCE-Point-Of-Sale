@@ -11,6 +11,9 @@ class Roles extends Table {
   TextColumn get description => text().nullable()();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant<bool>(true))();
+  IntColumn get version => integer()
+      .withDefault(const Constant<int>(0))
+      .check(const CustomExpression<bool>('version >= 0'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();

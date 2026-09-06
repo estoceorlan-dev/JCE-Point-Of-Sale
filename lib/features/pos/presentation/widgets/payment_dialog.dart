@@ -13,12 +13,14 @@ class PaymentDialog extends ConsumerStatefulWidget {
     required this.pricing,
     required this.requiresDiscountApproval,
     required this.canApproveDiscount,
+    required this.requireNonCashReference,
     super.key,
   });
 
   final CartPricing pricing;
   final bool requiresDiscountApproval;
   final bool canApproveDiscount;
+  final bool requireNonCashReference;
 
   @override
   ConsumerState<PaymentDialog> createState() => _PaymentDialogState();
@@ -37,7 +39,26 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    for (final controller in [
+      _cashController,
+      _cardController,
+      _walletController,
+    ]) {
+      controller.addListener(_amountChanged);
+    }
+  }
+
+  @override
   void dispose() {
+    for (final controller in [
+      _cashController,
+      _cardController,
+      _walletController,
+    ]) {
+      controller.removeListener(_amountChanged);
+    }
     _cashController.dispose();
     _cardController.dispose();
     _cardReferenceController.dispose();
@@ -48,6 +69,12 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final entered = [_cashController, _cardController, _walletController]
+        .map(
+          (controller) => Formatters.parseCurrencyMinor(controller.text) ?? 0,
+        )
+        .fold<int>(0, (total, amount) => total + amount);
+    final remaining = widget.pricing.totalMinor - entered;
     return AlertDialog(
       title: const Text('Take payment'),
       content: SizedBox(
@@ -62,7 +89,46 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
                 style: Theme.of(context).textTheme.headlineMedium,
                 textAlign: TextAlign.center,
               ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                remaining > 0
+                    ? 'Remaining ${Formatters.currencyMinor(remaining)}'
+                    : remaining == 0
+                    ? 'Fully tendered'
+                    : 'Change / excess ${Formatters.currencyMinor(-remaining)}',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: remaining > 0
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).colorScheme.primary,
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: AppSpacing.xl),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  ActionChip(
+                    label: const Text('Exact cash'),
+                    onPressed: _submitting
+                        ? null
+                        : () => _cashController.text =
+                              (widget.pricing.totalMinor / 100).toStringAsFixed(
+                                2,
+                              ),
+                  ),
+                  for (final amount in _cashPresets(widget.pricing.totalMinor))
+                    ActionChip(
+                      label: Text(Formatters.currencyMinor(amount)),
+                      onPressed: _submitting
+                          ? null
+                          : () => _cashController.text = (amount / 100)
+                                .toStringAsFixed(2),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
               _PaymentField(
                 key: const Key('cash-payment-field'),
                 label: 'Cash tendered',
@@ -171,6 +237,12 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
         setState(() => _error = 'Enter valid positive payment amounts.');
         return;
       }
+      if (widget.requireNonCashReference &&
+          input.method != SalePaymentMethod.cash &&
+          (input.reference?.text.trim().isEmpty ?? true)) {
+        setState(() => _error = '${input.method.label} reference is required.');
+        return;
+      }
       tenders.add(
         PaymentTender(
           method: input.method,
@@ -206,6 +278,20 @@ class _PaymentDialogState extends ConsumerState<PaymentDialog> {
       }),
     );
   }
+
+  void _amountChanged() {
+    if (mounted) setState(() {});
+  }
+}
+
+List<int> _cashPresets(int totalMinor) {
+  final candidates = <int>{
+    ((totalMinor + 999) ~/ 1000) * 1000,
+    ((totalMinor + 4999) ~/ 5000) * 5000,
+    50000,
+    100000,
+  }..removeWhere((value) => value <= totalMinor);
+  return candidates.toList()..sort();
 }
 
 class _PaymentField extends StatelessWidget {

@@ -20,6 +20,9 @@ class AppConfig {
     this.updateBranchNameFunctionName = 'updateBranchName',
     this.remoteCommandFunctionName = 'applyRemoteCommand',
     this.finalizeProductImageFunctionName = 'finalizeProductImage',
+    this.generateStaffInviteFunctionName = 'generateStaffInviteLink',
+    this.acceptStaffInviteFunctionName = 'acceptStaffInvitation',
+    this.administrationSnapshotFunctionName = 'getAdministrationSnapshot',
     this.accessRefreshInterval = defaultAccessRefreshInterval,
     this.maxOfflineAccessAge = defaultMaxOfflineAccessAge,
     this.apiBaseUri,
@@ -60,6 +63,18 @@ class AppConfig {
       'JCE_FINALIZE_PRODUCT_IMAGE_FUNCTION',
       defaultValue: 'finalizeProductImage',
     );
+    const generateStaffInviteFunction = String.fromEnvironment(
+      'JCE_GENERATE_STAFF_INVITE_FUNCTION',
+      defaultValue: 'generateStaffInviteLink',
+    );
+    const acceptStaffInviteFunction = String.fromEnvironment(
+      'JCE_ACCEPT_STAFF_INVITE_FUNCTION',
+      defaultValue: 'acceptStaffInvitation',
+    );
+    const administrationSnapshotFunction = String.fromEnvironment(
+      'JCE_ADMINISTRATION_SNAPSHOT_FUNCTION',
+      defaultValue: 'getAdministrationSnapshot',
+    );
     const accessRefreshMinutes = String.fromEnvironment(
       'JCE_ACCESS_REFRESH_MINUTES',
     );
@@ -78,6 +93,9 @@ class AppConfig {
       updateBranchNameFunctionName: updateBranchNameFunction,
       remoteCommandFunctionName: remoteCommandFunction,
       finalizeProductImageFunctionName: finalizeProductImageFunction,
+      generateStaffInviteFunctionName: generateStaffInviteFunction,
+      acceptStaffInviteFunctionName: acceptStaffInviteFunction,
+      administrationSnapshotFunctionName: administrationSnapshotFunction,
       accessRefreshMinutes: accessRefreshMinutes,
       maxOfflineAccessHours: maxOfflineAccessHours,
     );
@@ -95,6 +113,9 @@ class AppConfig {
     String updateBranchNameFunctionName = 'updateBranchName',
     String remoteCommandFunctionName = 'applyRemoteCommand',
     String finalizeProductImageFunctionName = 'finalizeProductImage',
+    String generateStaffInviteFunctionName = 'generateStaffInviteLink',
+    String acceptStaffInviteFunctionName = 'acceptStaffInvitation',
+    String administrationSnapshotFunctionName = 'getAdministrationSnapshot',
     String? accessRefreshMinutes,
     String? maxOfflineAccessHours,
   }) {
@@ -134,6 +155,18 @@ class AppConfig {
       finalizeProductImageFunctionName,
       key: 'JCE_FINALIZE_PRODUCT_IMAGE_FUNCTION',
     );
+    final normalizedGenerateStaffInviteFunction = _requireValue(
+      generateStaffInviteFunctionName,
+      key: 'JCE_GENERATE_STAFF_INVITE_FUNCTION',
+    );
+    final normalizedAcceptStaffInviteFunction = _requireValue(
+      acceptStaffInviteFunctionName,
+      key: 'JCE_ACCEPT_STAFF_INVITE_FUNCTION',
+    );
+    final normalizedAdministrationSnapshotFunction = _requireValue(
+      administrationSnapshotFunctionName,
+      key: 'JCE_ADMINISTRATION_SNAPSHOT_FUNCTION',
+    );
     final parsedAccessRefreshMinutes = _parsePositiveInt(
       accessRefreshMinutes,
       fallback: defaultAccessRefreshInterval.inMinutes,
@@ -168,6 +201,10 @@ class AppConfig {
       updateBranchNameFunctionName: normalizedUpdateBranchNameFunction,
       remoteCommandFunctionName: normalizedRemoteCommandFunction,
       finalizeProductImageFunctionName: normalizedFinalizeProductImageFunction,
+      generateStaffInviteFunctionName: normalizedGenerateStaffInviteFunction,
+      acceptStaffInviteFunctionName: normalizedAcceptStaffInviteFunction,
+      administrationSnapshotFunctionName:
+          normalizedAdministrationSnapshotFunction,
       accessRefreshInterval: Duration(minutes: parsedAccessRefreshMinutes),
       maxOfflineAccessAge: Duration(hours: parsedMaxOfflineAccessHours),
     );
@@ -184,6 +221,9 @@ class AppConfig {
   final String updateBranchNameFunctionName;
   final String remoteCommandFunctionName;
   final String finalizeProductImageFunctionName;
+  final String generateStaffInviteFunctionName;
+  final String acceptStaffInviteFunctionName;
+  final String administrationSnapshotFunctionName;
   final Duration accessRefreshInterval;
   final Duration maxOfflineAccessAge;
 

@@ -41,12 +41,30 @@ class MobileBottomNavigation extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             child: Row(
               children: [
-                for (var index = 0; index < items.length; index++)
+                for (var index = 0; index < items.take(3).length; index++)
                   _MobileDestination(
                     item: items[index],
                     selected: selectedRoute == items[index].route,
                     onTap: () => onDestinationSelected(items[index]),
                   ),
+                SizedBox(
+                  width: 78,
+                  child: TextButton(
+                    onPressed: () => _showDestinations(context),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.all(AppSpacing.xs),
+                    ),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.menu),
+                        SizedBox(height: 8),
+                        Text('More'),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -54,6 +72,45 @@ class MobileBottomNavigation extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _showDestinations(BuildContext context) =>
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (sheetContext) => SafeArea(
+          child: SizedBox(
+            height: MediaQuery.sizeOf(sheetContext).height * 0.75,
+            child: ListView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              children: [
+                for (final section in AppNavigationSection.values)
+                  if (items.any((item) => item.section == section)) ...[
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      child: Text(
+                        section.label,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                    for (final item in items.where(
+                      (item) => item.section == section,
+                    ))
+                      ListTile(
+                        leading: Icon(item.icon),
+                        title: Text(item.label),
+                        selected: item.route == selectedRoute,
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          onDestinationSelected(item);
+                        },
+                      ),
+                  ],
+              ],
+            ),
+          ),
+        ),
+      );
 }
 
 class _MobileDestination extends StatelessWidget {
@@ -85,7 +142,7 @@ class _MobileDestination extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.xs,
-                vertical: AppSpacing.sm,
+                vertical: AppSpacing.xs,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -110,6 +167,7 @@ class _MobileDestination extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     item.label,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: selected

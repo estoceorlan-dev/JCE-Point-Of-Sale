@@ -42,7 +42,7 @@ class CheckoutController extends AsyncNotifier<void> {
           cart: ref.read(cartControllerProvider),
           tenders: tenders,
           deviceId: deviceId,
-          customerId: ref.read(selectedCheckoutCustomerProvider)?.id,
+          customerId: ref.read(cartControllerProvider).customerId,
           operationId: operationId,
         ),
         approveDiscountAsManager: approveDiscountAsManager,

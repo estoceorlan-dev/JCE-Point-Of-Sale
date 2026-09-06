@@ -8,6 +8,7 @@ import '../../domain/entities/catalog_drafts.dart';
 import '../../domain/entities/catalog_unit.dart';
 import '../controllers/product_mutation_controller.dart';
 import '../providers/products_providers.dart';
+import 'tax_categories_panel.dart';
 
 class CatalogManagementDialog extends ConsumerStatefulWidget {
   const CatalogManagementDialog({super.key});
@@ -43,7 +44,7 @@ class _CatalogManagementDialogState
     final units = ref.watch(allProductUnitsProvider).value ?? const [];
     final isSaving = ref.watch(productMutationControllerProvider).isLoading;
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: AlertDialog(
         title: const Text('Catalog settings'),
         content: SizedBox(
@@ -55,6 +56,7 @@ class _CatalogManagementDialogState
                 tabs: [
                   Tab(text: 'Categories'),
                   Tab(text: 'Units'),
+                  Tab(text: 'Tax categories'),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -63,6 +65,7 @@ class _CatalogManagementDialogState
                   children: [
                     _categoriesTab(categories, isSaving),
                     _unitsTab(units, isSaving),
+                    const TaxCategoriesPanel(),
                   ],
                 ),
               ),

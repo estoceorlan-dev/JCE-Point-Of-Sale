@@ -1,4 +1,5 @@
 import '../../../../shared/utils/formatters.dart';
+import '../../../branches/domain/entities/branch_profile.dart';
 import '../entities/sale.dart';
 import '../entities/sale_correction.dart';
 
@@ -9,7 +10,7 @@ class ReceiptDocument {
 }
 
 abstract interface class ReceiptRenderer {
-  ReceiptDocument render(SaleRecord sale);
+  ReceiptDocument render(SaleRecord sale, {bool isReprint = false});
 }
 
 class PlainTextReceiptRenderer implements ReceiptRenderer {
@@ -18,18 +19,40 @@ class PlainTextReceiptRenderer implements ReceiptRenderer {
     this.footer = 'Thank you!',
     this.showTaxBreakdown = true,
     this.paperWidthCharacters = 42,
+    this.branchProfile,
   });
 
   final String header;
   final String footer;
   final bool showTaxBreakdown;
   final int paperWidthCharacters;
+  final BranchProfile? branchProfile;
 
   @override
-  ReceiptDocument render(SaleRecord sale) {
+  ReceiptDocument render(SaleRecord sale, {bool isReprint = false}) {
     final separator = List.filled(paperWidthCharacters, '-').join();
+    final profile = branchProfile?.id == sale.branchId ? branchProfile : null;
     final lines = <String>[
-      header,
+      profile?.receiptDisplayName ?? header,
+      if (profile != null) ...[
+        if (profile.receiptDisplayName == null) profile.name,
+        ...[
+          profile.addressLineOne,
+          profile.addressLineTwo,
+          [
+            profile.city,
+            profile.province,
+            profile.postalCode,
+          ].whereType<String>().where((value) => value.isNotEmpty).join(', '),
+          profile.phone,
+          profile.email,
+        ].whereType<String>().where((value) => value.isNotEmpty),
+      ],
+      if (isReprint) ...[
+        separator,
+        '*** REPRINT - NOT ORIGINAL ***',
+        separator,
+      ],
       'Receipt ${sale.receiptNumber}',
       'Register: ${sale.registerName}',
       'Date: ${sale.completedAt.toLocal()}',
@@ -53,6 +76,7 @@ class PlainTextReceiptRenderer implements ReceiptRenderer {
       'Change: ${Formatters.currencyMinor(sale.changeMinor)}',
       separator,
       if (footer.isNotEmpty) footer,
+      if (isReprint) '*** REPRINT ***',
     ];
     return ReceiptDocument(plainText: lines.join('\n'));
   }

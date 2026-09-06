@@ -10,6 +10,14 @@ class Branches extends Table {
   TextColumn get name => text()();
   TextColumn get timezone =>
       text().withDefault(const Constant<String>('Asia/Manila'))();
+  TextColumn get addressLineOne => text().nullable()();
+  TextColumn get addressLineTwo => text().nullable()();
+  TextColumn get city => text().nullable()();
+  TextColumn get province => text().nullable()();
+  TextColumn get postalCode => text().nullable()();
+  TextColumn get phone => text().nullable()();
+  TextColumn get email => text().nullable()();
+  TextColumn get receiptDisplayName => text().nullable()();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant<bool>(true))();
   BoolColumn get allowNegativeStock =>
@@ -54,6 +62,9 @@ class Branches extends Table {
       'transfer_approval_threshold_milli >= 0',
     ),
   )();
+  IntColumn get version => integer()
+      .withDefault(const Constant<int>(0))
+      .check(const CustomExpression<bool>('version >= 0'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();

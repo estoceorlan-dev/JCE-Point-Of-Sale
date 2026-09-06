@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_breakpoints.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/app_confirmation_dialog.dart';
 import '../../../../shared/models/permission.dart';
 import '../../domain/entities/cash_shift.dart';
 import '../../domain/entities/register.dart';
+import '../../domain/repositories/register_administration_repository.dart';
 import '../controllers/shift_mutation_controller.dart';
 import '../providers/shift_providers.dart';
+import '../providers/register_administration_providers.dart';
 import '../widgets/active_shift_panel.dart';
 import '../widgets/cash_movement_dialog.dart';
 import '../widgets/close_shift_dialog.dart';
@@ -16,15 +19,19 @@ import '../widgets/recent_shifts_panel.dart';
 import '../widgets/register_dialog.dart';
 import '../widgets/register_setup_panel.dart';
 import '../widgets/shift_policy_dialog.dart';
+import '../../../hardware/presentation/widgets/register_hardware_dialog.dart';
 
 class ShiftPage extends ConsumerWidget {
-  const ShiftPage({super.key});
+  const ShiftPage({super.key, this.administrationOnly = false});
+
+  final bool administrationOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(activeShiftSessionProvider);
     final deviceIdAsync = ref.watch(currentDeviceIdProvider);
     final registers = ref.watch(registersProvider).value ?? const <Register>[];
+    final allRegisters = ref.watch(allRegistersProvider).value ?? registers;
     final activeShift = ref.watch(activeShiftProvider).value;
     final recentShifts =
         ref.watch(recentShiftsProvider).value ?? const <CashShift>[];
@@ -45,6 +52,7 @@ class ShiftPage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _Header(
+                  administrationOnly: administrationOnly,
                   canManage: canManage,
                   canOpen:
                       deviceIdAsync.value != null &&
@@ -67,23 +75,46 @@ class ShiftPage extends ConsumerWidget {
                       Text('Device identity unavailable: $error'),
                   data: (deviceId) => Column(
                     children: [
-                      if (activeShift case final shift?)
+                      if (!administrationOnly && activeShift != null)
                         ActiveShiftPanel(
-                          shift: shift,
-                          isCurrentUser: shift.openedByUserId == actorUserId,
-                          onCashMovement: () => _movement(context, shift.id),
-                          onClose: () => _close(context, shift),
-                        )
-                      else
+                          shift: activeShift,
+                          isCurrentUser:
+                              activeShift.openedByUserId == actorUserId,
+                          onCashMovement: () =>
+                              _movement(context, activeShift.id),
+                          onClose: () => _close(context, activeShift),
+                        ),
+                      if (activeShift == null || canManage)
                         RegisterSetupPanel(
-                          registers: registers,
+                          registers: canManage ? allRegisters : registers,
                           deviceId: deviceId,
                           canManage: canManage,
                           onAssign: (register) =>
                               _assign(context, ref, register),
+                          onConfigureHardware: (register) =>
+                              _hardware(context, register),
+                          onEdit: (register) => showDialog<bool>(
+                            context: context,
+                            builder: (_) => RegisterDialog(register: register),
+                          ),
+                          onArchive: (register) => _administer(
+                            context,
+                            ref,
+                            register,
+                            register.isActive
+                                ? RegisterAction.archive
+                                : RegisterAction.restore,
+                          ),
+                          onUnassign: (register) => _administer(
+                            context,
+                            ref,
+                            register,
+                            RegisterAction.unassignDevice,
+                          ),
                         ),
                       const SizedBox(height: AppSpacing.xl),
-                      RecentShiftsPanel(shifts: recentShifts),
+                      if (!administrationOnly)
+                        RecentShiftsPanel(shifts: recentShifts),
                     ],
                   ),
                 ),
@@ -108,6 +139,44 @@ class ShiftPage extends ConsumerWidget {
     }
   }
 
+  Future<void> _administer(
+    BuildContext context,
+    WidgetRef ref,
+    Register register,
+    RegisterAction action,
+  ) async {
+    final label = switch (action) {
+      RegisterAction.archive => 'Archive register',
+      RegisterAction.restore => 'Restore register',
+      RegisterAction.unassignDevice => 'Unassign device',
+      RegisterAction.edit => 'Edit register',
+    };
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AppConfirmationDialog(
+        title: '$label?',
+        message:
+            '${register.name}: historical sales and shifts are preserved. '
+            'An open shift must be closed before archiving or unassigning a device.',
+        confirmLabel: label,
+        destructive: action != RegisterAction.restore,
+        icon: Icons.point_of_sale,
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final result = await ref.read(manageRegisterUseCaseProvider)(
+      session: ref.read(activeShiftSessionProvider),
+      register: register,
+      action: action,
+    );
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result.failureOrNull?.message ?? 'Register updated.'),
+      ),
+    );
+  }
+
   Future<void> _assign(
     BuildContext context,
     WidgetRef ref,
@@ -125,6 +194,19 @@ class ShiftPage extends ConsumerWidget {
         context,
       ).showSnackBar(SnackBar(content: Text(failure.message))),
     );
+  }
+
+  Future<void> _hardware(BuildContext context, Register register) async {
+    final saved = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => RegisterHardwareDialog(register: register),
+    );
+    if (saved == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Register hardware updated.')),
+      );
+    }
   }
 
   Future<void> _openShift(
@@ -196,6 +278,7 @@ class ShiftPage extends ConsumerWidget {
 
 class _Header extends StatelessWidget {
   const _Header({
+    this.administrationOnly = false,
     required this.canManage,
     required this.canOpen,
     required this.onNewRegister,
@@ -204,6 +287,7 @@ class _Header extends StatelessWidget {
   });
 
   final bool canManage;
+  final bool administrationOnly;
   final bool canOpen;
   final VoidCallback onNewRegister;
   final VoidCallback onPolicy;
@@ -222,12 +306,16 @@ class _Header extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Register & shift',
+                administrationOnly
+                    ? 'Registers & hardware'
+                    : 'Register & shift',
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
               const SizedBox(height: AppSpacing.xs),
-              const Text(
-                'Recoverable offline cash sessions with immutable drawer movements.',
+              Text(
+                administrationOnly
+                    ? 'Configure registers and hardware for the active branch.'
+                    : 'Recoverable offline cash sessions with immutable drawer movements.',
               ),
             ],
           ),
@@ -244,11 +332,12 @@ class _Header extends StatelessWidget {
             icon: const Icon(Icons.policy_outlined),
             label: const Text('Policy'),
           ),
-        FilledButton.icon(
-          onPressed: canOpen ? onOpenShift : null,
-          icon: const Icon(Icons.lock_open_outlined),
-          label: const Text('Open shift'),
-        ),
+        if (!administrationOnly)
+          FilledButton.icon(
+            onPressed: canOpen ? onOpenShift : null,
+            icon: const Icon(Icons.lock_open_outlined),
+            label: const Text('Open shift'),
+          ),
       ],
     );
   }

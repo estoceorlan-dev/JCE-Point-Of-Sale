@@ -14,17 +14,42 @@ class CartPanel extends ConsumerWidget {
   const CartPanel({
     required this.checkoutAllowed,
     required this.onCheckout,
+    required this.onHold,
+    required this.onResume,
+    this.onClear,
+    this.fillHeight = false,
     super.key,
   });
 
   final bool checkoutAllowed;
   final VoidCallback onCheckout;
+  final VoidCallback onHold;
+  final VoidCallback onResume;
+  final VoidCallback? onClear;
+  final bool fillHeight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartControllerProvider);
     final pricing = ref.watch(cartPricingProvider);
+    final lines = ListView.separated(
+      shrinkWrap: !fillHeight,
+      itemCount: cart.lines.length,
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (context, index) => _CartLineTile(
+        line: cart.lines[index],
+        pricedLine: pricing?.lines[index],
+        onQuantity: () => _quantity(context, ref, cart.lines[index]),
+        onDecrease: () => _decrease(context, ref, cart.lines[index]),
+        onIncrease: () => _increase(context, ref, cart.lines[index]),
+        onDiscount: () => _itemDiscount(context, ref, cart.lines[index]),
+        onRemove: () => ref
+            .read(cartControllerProvider.notifier)
+            .removeProduct(cart.lines[index].product.id),
+      ),
+    );
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -39,9 +64,19 @@ class CartPanel extends ConsumerWidget {
                   ),
                 ),
                 if (!cart.isEmpty)
+                  IconButton(
+                    tooltip: 'Hold sale (F4)',
+                    onPressed: onHold,
+                    icon: const Icon(Icons.pause_circle_outline),
+                  ),
+                IconButton(
+                  tooltip: 'Resume held sale (F4)',
+                  onPressed: onResume,
+                  icon: const Icon(Icons.history),
+                ),
+                if (!cart.isEmpty)
                   TextButton.icon(
-                    onPressed: () =>
-                        ref.read(cartControllerProvider.notifier).clear(),
+                    onPressed: onClear ?? () => _confirmClear(context, ref),
                     icon: const Icon(Icons.delete_sweep_outlined),
                     label: const Text('Clear'),
                   ),
@@ -60,29 +95,13 @@ class CartPanel extends ConsumerWidget {
                 ),
               )
             else ...[
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 390),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: cart.lines.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, index) => _CartLineTile(
-                    line: cart.lines[index],
-                    pricedLine: pricing?.lines[index],
-                    onQuantity: () =>
-                        _quantity(context, ref, cart.lines[index]),
-                    onDecrease: () =>
-                        _decrease(context, ref, cart.lines[index]),
-                    onIncrease: () =>
-                        _increase(context, ref, cart.lines[index]),
-                    onDiscount: () =>
-                        _itemDiscount(context, ref, cart.lines[index]),
-                    onRemove: () => ref
-                        .read(cartControllerProvider.notifier)
-                        .removeProduct(cart.lines[index].product.id),
-                  ),
+              if (fillHeight)
+                Expanded(child: lines)
+              else
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 390),
+                  child: lines,
                 ),
-              ),
               const Divider(height: AppSpacing.xl),
               Align(
                 alignment: Alignment.centerLeft,
@@ -146,6 +165,27 @@ class CartPanel extends ConsumerWidget {
           .read(cartControllerProvider.notifier)
           .setQuantity(line.product.id, value),
     );
+  }
+
+  Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear current sale?'),
+        content: const Text('All items will be removed from this cart.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep sale'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear sale'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) ref.read(cartControllerProvider.notifier).clear();
   }
 
   void _decrease(BuildContext context, WidgetRef ref, CartLine line) {
@@ -268,6 +308,13 @@ class _CartLineTile extends StatelessWidget {
                       '${line.product.sku} · ${Formatters.currencyMinor(line.product.unitPriceMinor)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
+                    if (line.validationMessage case final message?)
+                      Text(
+                        message,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -282,7 +329,10 @@ class _CartLineTile extends StatelessWidget {
               ),
             ],
           ),
-          Row(
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               IconButton.filledTonal(
                 tooltip: 'Decrease quantity',
@@ -300,7 +350,6 @@ class _CartLineTile extends StatelessWidget {
                 onPressed: onIncrease,
                 icon: const Icon(Icons.add),
               ),
-              const Spacer(),
               TextButton.icon(
                 onPressed: onDiscount,
                 icon: const Icon(Icons.percent_outlined, size: 18),

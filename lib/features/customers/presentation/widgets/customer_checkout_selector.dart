@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/customer.dart';
 import '../providers/customers_providers.dart';
+import '../../../pos/presentation/controllers/cart_controller.dart';
 
 class CustomerCheckoutSelector extends ConsumerWidget {
   const CustomerCheckoutSelector({super.key});
@@ -13,36 +14,45 @@ class CustomerCheckoutSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(selectedCheckoutCustomerProvider);
+    final persistedCustomerId = ref.watch(
+      cartControllerProvider.select((cart) => cart.customerId),
+    );
+    final restored = persistedCustomerId == null
+        ? null
+        : ref
+              .watch(customerProfileProvider(persistedCustomerId))
+              .asData
+              ?.value
+              ?.customer;
+    final customer = selected ?? restored;
     return Card(
       child: ListTile(
         leading: const Icon(Icons.person_outline),
-        title: Text(selected?.displayName ?? 'Walk-in customer'),
+        title: Text(customer?.displayName ?? 'Walk-in customer'),
         subtitle: Text(
-          selected == null
+          customer == null
               ? 'Customer attribution is optional.'
               : [
-                  selected.customerNumber,
-                  if (selected.phone != null) selected.phone!,
-                  if (selected.loyaltyPoints case final points?)
+                  customer.customerNumber,
+                  if (customer.phone != null) customer.phone!,
+                  if (customer.loyaltyPoints case final points?)
                     '$points loyalty points',
                 ].join(' • '),
         ),
         trailing: Wrap(
           spacing: AppSpacing.xs,
           children: [
-            if (selected != null)
+            if (customer != null)
               IconButton(
                 tooltip: 'Remove customer',
-                onPressed: () =>
-                    ref.read(selectedCheckoutCustomerProvider.notifier).state =
-                        null,
+                onPressed: () => _clearCustomer(ref),
                 icon: const Icon(Icons.close),
               ),
             TextButton.icon(
               key: const Key('choose-checkout-customer'),
               onPressed: () => _choose(context, ref),
               icon: const Icon(Icons.search),
-              label: Text(selected == null ? 'Choose customer' : 'Change'),
+              label: Text(customer == null ? 'Choose customer' : 'Change'),
             ),
           ],
         ),
@@ -51,14 +61,27 @@ class CustomerCheckoutSelector extends ConsumerWidget {
   }
 
   Future<void> _choose(BuildContext context, WidgetRef ref) async {
-    final customer = await showDialog<CustomerSummary>(
-      context: context,
-      builder: (context) => const _CustomerLookupDialog(),
-    );
+    final customer = await showCustomerLookupDialog(context, ref);
     if (customer != null) {
       ref.read(selectedCheckoutCustomerProvider.notifier).state = customer;
+      ref.read(cartControllerProvider.notifier).setCustomer(customer.id);
     }
   }
+
+  void _clearCustomer(WidgetRef ref) {
+    ref.read(selectedCheckoutCustomerProvider.notifier).state = null;
+    ref.read(cartControllerProvider.notifier).setCustomer(null);
+  }
+}
+
+Future<CustomerSummary?> showCustomerLookupDialog(
+  BuildContext context,
+  WidgetRef ref,
+) {
+  return showDialog<CustomerSummary>(
+    context: context,
+    builder: (context) => const _CustomerLookupDialog(),
+  );
 }
 
 class _CustomerLookupDialog extends ConsumerStatefulWidget {

@@ -12,6 +12,8 @@ import '../widgets/inventory_policy_dialog.dart';
 import '../widgets/start_stock_count_dialog.dart';
 import '../widgets/stock_count_panel.dart';
 import '../widgets/stock_location_dialog.dart';
+import '../../../imports/domain/entities/csv_import.dart';
+import '../../../imports/presentation/widgets/csv_import_dialog.dart';
 
 class InventoryPage extends ConsumerWidget {
   const InventoryPage({super.key});
@@ -48,6 +50,16 @@ class InventoryPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
+                TextButton.icon(
+                  onPressed: () => showDialog<bool>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (_) =>
+                        const CsvImportDialog(kind: CsvImportKind.openingStock),
+                  ),
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Import opening stock'),
+                ),
                 const TabBar(
                   isScrollable: true,
                   tabs: [

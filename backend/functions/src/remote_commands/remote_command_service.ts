@@ -20,6 +20,9 @@ import {applyShiftCommand} from "./shift_commands";
 import {applyStockCountCommand} from "./stock_count_commands";
 import {applyTransferCommand} from "./transfer_commands";
 import {applySettingsCommand} from "./settings_commands";
+import {applyReceiptCommand} from "./receipt_commands";
+import {applyUserRoleCommand} from "./user_role_commands";
+import {applyTaxCategoryCommand} from "./tax_category_commands";
 
 type ProcessedOperationRow = {
   command_type: string;
@@ -44,6 +47,12 @@ export async function processRemoteCommand(
       "SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
       [`${input.organizationId}|${input.operationId}`],
     );
+    // Read administration permissions only after earlier access mutations have
+    // committed; otherwise an administrator could act on revoked access.
+    if (input.commandType.startsWith("user.") || input.commandType.startsWith("role.")) {
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
+        [`access-administration:${input.organizationId}`]);
+    }
     const command = await authorizeCommand(client, input);
     const prior = await client.query<ProcessedOperationRow>(
       `
@@ -153,11 +162,16 @@ function changeType(commandType: string): "upsert" | "tombstone" {
 }
 
 function handlerFor(commandType: string): CommandHandler {
+  if (commandType.startsWith("tax_category.")) return applyTaxCategoryCommand;
   if (commandType === "sale.complete") return completeSale;
+  if (commandType.startsWith("receipt.")) return applyReceiptCommand;
   if (commandType === "sale.return" || commandType === "sale.void") {
     return correctSale;
   }
   if (commandType.startsWith("branch.")) return applyBranchCommand;
+  if (commandType.startsWith("user.") || commandType.startsWith("role.")) {
+    return applyUserRoleCommand;
+  }
   if (commandType.startsWith("register.") || commandType.startsWith("shift.")) {
     return applyShiftCommand;
   }
@@ -247,7 +261,9 @@ function changeFeedBranchId(command: AuthorizedCommand): string | null {
       command.aggregateType === "supplier" ||
       command.aggregateType === "customer" ||
       command.aggregateType === "loyalty_account") return null;
-  if (["product", "category", "unit", "product_image"].includes(command.aggregateType)) {
+  if (["branch", "app_user", "role", "user_role_assignment", "register"]
+    .includes(command.aggregateType)) return null;
+  if (["product", "category", "unit", "tax_category", "product_image"].includes(command.aggregateType)) {
     return null;
   }
   if (command.aggregateType === "product_price") {

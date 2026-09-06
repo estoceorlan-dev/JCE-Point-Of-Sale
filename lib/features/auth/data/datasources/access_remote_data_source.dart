@@ -20,11 +20,14 @@ class CloudFunctionsAccessRemoteDataSource implements AccessRemoteDataSource {
   const CloudFunctionsAccessRemoteDataSource({
     required FirebaseFunctions functions,
     required String functionName,
+    String? acceptInvitationFunctionName,
   }) : _functions = functions,
-       _functionName = functionName;
+       _functionName = functionName,
+       _acceptInvitationFunctionName = acceptInvitationFunctionName;
 
   final FirebaseFunctions _functions;
   final String _functionName;
+  final String? _acceptInvitationFunctionName;
 
   @override
   Future<AppUser?> fetchCurrentProfile({
@@ -32,6 +35,12 @@ class CloudFunctionsAccessRemoteDataSource implements AccessRemoteDataSource {
     required String email,
   }) async {
     try {
+      final acceptFunction = _acceptInvitationFunctionName;
+      if (acceptFunction != null) {
+        await _functions
+            .httpsCallable(acceptFunction)
+            .call<Object?>(const <String, Object?>{});
+      }
       final result = await _functions
           .httpsCallable(_functionName)
           .call<Object?>();
@@ -113,6 +122,18 @@ class CloudFunctionsAccessRemoteDataSource implements AccessRemoteDataSource {
         code: _requiredString(branchPayload, 'code'),
         name: _requiredString(branchPayload, 'name'),
         timezone: _optionalString(branchPayload['timezone']) ?? 'Asia/Manila',
+        addressLineOne: _optionalString(branchPayload['addressLineOne']),
+        addressLineTwo: _optionalString(branchPayload['addressLineTwo']),
+        city: _optionalString(branchPayload['city']),
+        province: _optionalString(branchPayload['province']),
+        postalCode: _optionalString(branchPayload['postalCode']),
+        phone: _optionalString(branchPayload['phone']),
+        email: _optionalString(branchPayload['email']),
+        receiptDisplayName: _optionalString(
+          branchPayload['receiptDisplayName'],
+        ),
+        isActive: branchPayload['isActive'] != false,
+        version: int.tryParse('${branchPayload['version']}') ?? 0,
       ),
       roles: _mapList(payload['roles']).map(_parseRole).toList(growable: false),
     );

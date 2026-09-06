@@ -57,6 +57,12 @@ enum OperationalSettingKey {
     'Require approval at or above this discount in basis points.',
     null,
   ),
+  salesRequireNonCashReference(
+    'sales.require_non_cash_reference',
+    'Require non-cash reference',
+    'Require a transaction reference for card and e-wallet tenders.',
+    false,
+  ),
   shiftsAllowMultipleOpen(
     'shifts.allow_multiple_open_per_user',
     'Multiple open shifts',

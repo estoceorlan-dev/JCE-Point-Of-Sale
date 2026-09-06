@@ -55,6 +55,9 @@ abstract final class CartPricingCalculator {
     var subtotal = 0;
     var itemDiscountTotal = 0;
     for (final line in cart.lines) {
+      if (line.validationMessage case final message?) {
+        throw ValidationFailure(message);
+      }
       if (line.quantityMilli <= 0) {
         throw const ValidationFailure(
           'Cart quantities must be greater than zero.',

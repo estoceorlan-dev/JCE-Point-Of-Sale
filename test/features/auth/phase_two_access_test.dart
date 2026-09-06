@@ -1,6 +1,8 @@
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/core/database/app_database.dart';
+import 'package:jce_pos/core/database/models/outbox_command.dart';
 import 'package:jce_pos/core/error/failures.dart';
 import 'package:jce_pos/core/utils/app_clock.dart';
 import 'package:jce_pos/features/auth/data/datasources/access_local_data_source.dart';
@@ -26,6 +28,118 @@ void main() {
   });
 
   tearDown(() => database.close());
+
+  test(
+    'cached access excludes directory-only branches until access refresh',
+    () async {
+      await localDataSource.replaceProfile(_profile(includeBranchB: false));
+      final now = DateTime.utc(2026, 9, 6);
+      await database
+          .into(database.branches)
+          .insert(
+            BranchesCompanion.insert(
+              id: 'branch-b',
+              organizationId: 'org-a',
+              code: 'B',
+              name: 'Branch B',
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+      var cached = await localDataSource.findByFirebaseUid('firebase-user');
+      expect(cached!.organizations.single.branchById('branch-b'), isNull);
+      await localDataSource.replaceProfile(_profile());
+      cached = await localDataSource.findByFirebaseUid('firebase-user');
+      expect(cached!.organizations.single.branchById('branch-b'), isNotNull);
+      await localDataSource.replaceProfile(_profile(includeBranchB: false));
+      cached = await localDataSource.findByFirebaseUid('firebase-user');
+      expect(cached!.organizations.single.branchById('branch-b'), isNull);
+      expect(await database.select(database.branches).get(), hasLength(2));
+    },
+  );
+
+  test(
+    'refresh and revocation preserve identity and historical assignment rows',
+    () async {
+      await localDataSource.replaceProfile(_profile());
+      final assignments = await database
+          .select(database.userRoleAssignments)
+          .get();
+      await localDataSource.replaceProfile(_profile());
+      expect(
+        await database.select(database.userRoleAssignments).get(),
+        hasLength(assignments.length),
+      );
+      await localDataSource.clearProfile('firebase-user');
+      expect(await localDataSource.findByFirebaseUid('firebase-user'), isNull);
+      expect(await database.select(database.appUsers).get(), hasLength(1));
+      expect(
+        await database.select(database.userRoleAssignments).get(),
+        hasLength(assignments.length),
+      );
+      await localDataSource.replaceProfile(_profile());
+      expect(
+        await localDataSource.findByFirebaseUid('firebase-user'),
+        isNotNull,
+      );
+    },
+  );
+
+  test(
+    'refresh does not overwrite a pending branch operational profile',
+    () async {
+      await localDataSource.replaceProfile(_profile());
+      await (database.update(
+        database.branches,
+      )..where((row) => row.id.equals('branch-a'))).write(
+        const BranchesCompanion(
+          name: Value('Offline name'),
+          addressLineOne: Value('1 Main Street'),
+          receiptDisplayName: Value('Receipt name'),
+          version: Value(1),
+        ),
+      );
+      await database.outboxDao.enqueue(
+        OutboxCommand(
+          operationId: 'pending',
+          commandType: 'branch.update',
+          aggregateType: 'branch',
+          aggregateId: 'branch-a',
+          organizationId: 'org-a',
+          payload: const {},
+          createdAt: DateTime.utc(2026),
+        ),
+      );
+      await localDataSource.replaceProfile(_profile());
+      final cached = await localDataSource.findByFirebaseUid('firebase-user');
+      final branch = cached!.organizations.single
+          .branchById('branch-a')!
+          .branch;
+      expect(branch.name, 'Offline name');
+      expect(branch.receiptDisplayName, 'Receipt name');
+      expect(branch.addressLineOne, '1 Main Street');
+    },
+  );
+
+  test(
+    'unaccepted branch creation remains unavailable even in a stale profile',
+    () async {
+      await localDataSource.replaceProfile(_profile());
+      await database.outboxDao.enqueue(
+        OutboxCommand(
+          operationId: 'create',
+          commandType: 'branch.create',
+          aggregateType: 'branch',
+          aggregateId: 'branch-b',
+          organizationId: 'org-a',
+          payload: const {},
+          createdAt: DateTime.utc(2026),
+        ),
+      );
+      final cached = await localDataSource.findByFirebaseUid('firebase-user');
+      expect(cached!.organizations.single.branchById('branch-b'), isNull);
+    },
+  );
 
   test(
     'access profile round-trips through Drift with role permissions',

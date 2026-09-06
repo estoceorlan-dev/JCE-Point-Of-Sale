@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart' as db;
@@ -28,6 +30,12 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
 
   @override
   Future<model.AppUser?> findByFirebaseUid(String firebaseUid) async {
+    if (await _database.metadataDao.readValue(
+          'auth.access_revoked.$firebaseUid',
+        ) ==
+        'true') {
+      return null;
+    }
     final userRows =
         await (_database.select(_database.appUsers)..where(
               (row) =>
@@ -93,6 +101,7 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
           .whereType<AccessRole>()
           .toList(growable: false);
       final explicitlyAssignedBranchIds = assignments
+          .where((assignment) => rolesById.containsKey(assignment.roleId))
           .map((assignment) => assignment.branchId)
           .whereType<String>()
           .toSet();
@@ -105,6 +114,28 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
               row.deletedAt.isNull(),
         );
       final branchRows = await branchQuery.get();
+      final confirmedJson = await _database.metadataDao.readValue(
+        'auth.confirmed_branches.$firebaseUid.${organizationRow.id}',
+      );
+      final confirmedIds = confirmedJson == null
+          ? null
+          : (jsonDecode(confirmedJson) as List).cast<String>().toSet();
+      final unacceptedCreations =
+          await (_database.select(_database.syncOutboxEntries)..where(
+                (row) =>
+                    row.organizationId.equals(organizationRow.id) &
+                    row.commandType.equals('branch.create') &
+                    row.status.equals('succeeded').not(),
+              ))
+              .get();
+      final blockedIds = unacceptedCreations
+          .map((row) => row.aggregateId)
+          .toSet();
+      branchRows.removeWhere(
+        (branch) =>
+            blockedIds.contains(branch.id) ||
+            (confirmedIds != null && !confirmedIds.contains(branch.id)),
+      );
       final accessibleBranchRows = organizationRoles.isNotEmpty
           ? branchRows
           : branchRows
@@ -133,6 +164,16 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
                   code: branchRow.code,
                   name: branchRow.name,
                   timezone: branchRow.timezone,
+                  addressLineOne: branchRow.addressLineOne,
+                  addressLineTwo: branchRow.addressLineTwo,
+                  city: branchRow.city,
+                  province: branchRow.province,
+                  postalCode: branchRow.postalCode,
+                  phone: branchRow.phone,
+                  email: branchRow.email,
+                  receiptDisplayName: branchRow.receiptDisplayName,
+                  isActive: branchRow.isActive,
+                  version: branchRow.version,
                 ),
                 roles: assignments
                     .where((assignment) => assignment.branchId == branchRow.id)
@@ -160,10 +201,36 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
   @override
   Future<void> replaceProfile(model.AppUser user) {
     return _database.transaction(() async {
-      await clearProfile(user.firebaseUid);
+      await _database.metadataDao.deleteValue(
+        'auth.access_revoked.${user.firebaseUid}',
+      );
       final now = DateTime.now().toUtc();
 
+      // Retain identity and historical assignment rows referenced by sales/audit.
+      final previous = await (_database.select(
+        _database.appUsers,
+      )..where((row) => row.firebaseUid.equals(user.firebaseUid))).get();
+      for (final row in previous) {
+        await (_database.update(_database.userRoleAssignments)..where(
+              (assignment) =>
+                  assignment.userId.equals(row.id) &
+                  assignment.revokedAt.isNull(),
+            ))
+            .write(db.UserRoleAssignmentsCompanion(revokedAt: Value(now)));
+      }
+
       for (final access in user.organizations) {
+        await _database.metadataDao.writeValue(
+          key:
+              'auth.confirmed_branches.${user.firebaseUid}.${access.organization.id}',
+          value: jsonEncode(
+            access.branches
+                .where((item) => item.branch.isActive)
+                .map((item) => item.branch.id)
+                .toList(),
+          ),
+          updatedAt: now,
+        );
         await _database
             .into(_database.organizations)
             .insertOnConflictUpdate(
@@ -198,6 +265,27 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
         };
         for (final branchAccess in access.branches) {
           final branch = branchAccess.branch;
+          final pending =
+              await (_database.select(_database.syncOutboxEntries)
+                    ..where(
+                      (row) =>
+                          row.aggregateType.equals('branch') &
+                          row.aggregateId.equals(branch.id) &
+                          row.status.isIn(const [
+                            'pending',
+                            'processing',
+                            'retryable_failure',
+                            'permanent_failure',
+                            'conflict',
+                          ]),
+                    )
+                    ..limit(1))
+                  .getSingleOrNull();
+          if (pending != null) continue;
+          final existing = await (_database.select(
+            _database.branches,
+          )..where((row) => row.id.equals(branch.id))).getSingleOrNull();
+          if (existing != null && existing.version > branch.version) continue;
           await _database
               .into(_database.branches)
               .insertOnConflictUpdate(
@@ -207,6 +295,16 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
                   code: branch.code,
                   name: branch.name,
                   timezone: Value(branch.timezone),
+                  addressLineOne: Value(branch.addressLineOne),
+                  addressLineTwo: Value(branch.addressLineTwo),
+                  city: Value(branch.city),
+                  province: Value(branch.province),
+                  postalCode: Value(branch.postalCode),
+                  phone: Value(branch.phone),
+                  email: Value(branch.email),
+                  receiptDisplayName: Value(branch.receiptDisplayName),
+                  isActive: Value(branch.isActive),
+                  version: Value(branch.version),
                   createdAt: now,
                   updatedAt: now,
                 ),
@@ -294,27 +392,42 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
     required AccessRole role,
     required String? branchId,
     required DateTime now,
-  }) {
+  }) async {
     final scope = branchId ?? 'organization';
-    return _database
+    final existing =
+        await (_database.select(_database.userRoleAssignments)
+              ..where(
+                (row) =>
+                    row.userId.equals(access.appUserId) &
+                    row.roleId.equals(role.id) &
+                    (branchId == null
+                        ? row.branchId.isNull()
+                        : row.branchId.equals(branchId)),
+              )
+              ..limit(1))
+            .getSingleOrNull();
+    await _database
         .into(_database.userRoleAssignments)
-        .insert(
+        .insertOnConflictUpdate(
           db.UserRoleAssignmentsCompanion.insert(
-            id: '${access.appUserId}:$scope:${role.id}',
+            id: existing?.id ?? '${access.appUserId}:$scope:${role.id}',
             organizationId: access.organization.id,
             branchId: Value(branchId),
             userId: access.appUserId,
             roleId: role.id,
             assignedAt: now,
+            revokedAt: const Value(null),
           ),
         );
   }
 
   @override
   Future<void> clearProfile(String firebaseUid) async {
-    await (_database.delete(
-      _database.appUsers,
-    )..where((row) => row.firebaseUid.equals(firebaseUid))).go();
+    await _database.metadataDao.writeValue(
+      key: 'auth.access_revoked.$firebaseUid',
+      value: 'true',
+      updatedAt: DateTime.now().toUtc(),
+    );
     await _database.metadataDao.deleteValue(_verificationKey(firebaseUid));
   }
 }

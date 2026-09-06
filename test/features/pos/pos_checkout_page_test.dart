@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:drift/native.dart';
+import 'package:jce_pos/core/database/app_database.dart';
+import 'package:jce_pos/core/database/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/features/pos/domain/entities/sale_product.dart';
@@ -8,6 +12,9 @@ import 'package:jce_pos/features/shifts/domain/entities/cash_shift.dart';
 import 'package:jce_pos/features/shifts/presentation/providers/shift_providers.dart';
 
 void main() {
+  late AppDatabase database;
+  setUp(() => database = AppDatabase.forTesting(NativeDatabase.memory()));
+  tearDown(() => database.close());
   testWidgets('cashier can build a cart and open split payment', (
     tester,
   ) async {
@@ -19,6 +26,121 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+          saleProductSearchProvider.overrideWith(
+            (ref, search) => Stream.value(const [_saleProduct]),
+          ),
+          saleProductBrowserProvider.overrideWith(
+            (ref, query) => Stream.value(const [_saleProduct]),
+          ),
+          activeShiftProvider.overrideWith((ref) => Stream.value(null)),
+          shiftPolicyProvider.overrideWith(
+            (ref) => Future.value(
+              const ShiftPolicy(
+                allowMultipleOpenShiftsPerUser: false,
+                allowSalesWithoutOpenShift: true,
+              ),
+            ),
+          ),
+          activePosSessionProvider.overrideWith((ref) => null),
+        ],
+        child: const MaterialApp(home: Scaffold(body: CheckoutPage())),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Products'), findsOneWidget);
+    expect(find.byKey(const Key('pos-product-search')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('add-product-product')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Current sale'), findsOneWidget);
+    expect(find.text('Original Product'), findsWidgets);
+    expect(find.text('PHP 112.00'), findsWidgets);
+    expect(find.byKey(const Key('checkout-button')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('checkout-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Take payment'), findsWidgets);
+    expect(find.byKey(const Key('cash-payment-field')), findsOneWidget);
+    expect(find.byKey(const Key('card-payment-field')), findsOneWidget);
+    expect(find.byKey(const Key('wallet-payment-field')), findsOneWidget);
+    expect(find.byKey(const Key('complete-sale-button')), findsOneWidget);
+    await _dispose(tester);
+  });
+  for (final size in [
+    const Size(1280, 720),
+    const Size(1024, 600),
+    const Size(800, 700),
+    const Size(360, 640),
+  ]) {
+    testWidgets(
+      'terminal fits ${size.width}x${size.height} and supports cart actions',
+      (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              appDatabaseProvider.overrideWithValue(database),
+              saleProductBrowserProvider.overrideWith(
+                (ref, query) => Stream.value(const [_saleProduct]),
+              ),
+              saleProductSearchProvider.overrideWith(
+                (ref, search) => Stream.value(const [_saleProduct]),
+              ),
+              activeShiftProvider.overrideWith((ref) => Stream.value(null)),
+              shiftPolicyProvider.overrideWith(
+                (ref) => Future.value(
+                  const ShiftPolicy(
+                    allowMultipleOpenShiftsPerUser: false,
+                    allowSalesWithoutOpenShift: true,
+                  ),
+                ),
+              ),
+              activePosSessionProvider.overrideWith((ref) => null),
+            ],
+            child: const MaterialApp(home: Scaffold(body: CheckoutPage())),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('add-product-product')));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        if (size.width < 840) {
+          expect(find.byKey(const Key('pos-cart-summary')), findsOneWidget);
+          await tester.tap(find.byKey(const Key('pos-cart-summary')));
+          await tester.pumpAndSettle();
+        }
+        expect(find.text('Current sale'), findsOneWidget);
+        await tester.tap(find.text('Clear'));
+        await tester.pumpAndSettle();
+        expect(find.text('Clear current sale?'), findsOneWidget);
+        await tester.tap(find.text('Keep sale'));
+        await tester.pumpAndSettle();
+        expect(find.text('Original Product'), findsWidgets);
+        expect(tester.takeException(), isNull);
+        await _dispose(tester);
+      },
+    );
+  }
+  testWidgets('F2 keeps search focused and F9 opens only one payment dialog', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+          saleProductBrowserProvider.overrideWith(
+            (ref, query) => Stream.value(const [_saleProduct]),
+          ),
           saleProductSearchProvider.overrideWith(
             (ref, search) => Stream.value(const [_saleProduct]),
           ),
@@ -37,26 +159,25 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-
-    expect(find.text('Point of sale'), findsOneWidget);
-    expect(find.byKey(const Key('pos-product-search')), findsOneWidget);
     await tester.tap(find.byKey(const Key('add-product-product')));
+    await tester.sendKeyEvent(LogicalKeyboardKey.f2);
     await tester.pumpAndSettle();
-
-    expect(find.text('Current sale'), findsOneWidget);
-    expect(find.text('Original Product'), findsWidgets);
-    expect(find.text('PHP 112.00'), findsWidgets);
-    expect(find.byKey(const Key('checkout-button')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('checkout-button')));
+    final search = tester.widget<TextField>(
+      find.byKey(const Key('pos-product-search')),
+    );
+    expect(search.focusNode!.hasFocus, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
     await tester.pumpAndSettle();
-
-    expect(find.text('Take payment'), findsWidgets);
-    expect(find.byKey(const Key('cash-payment-field')), findsOneWidget);
-    expect(find.byKey(const Key('card-payment-field')), findsOneWidget);
-    expect(find.byKey(const Key('wallet-payment-field')), findsOneWidget);
     expect(find.byKey(const Key('complete-sale-button')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await _dispose(tester);
   });
+}
+
+Future<void> _dispose(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pump(const Duration(milliseconds: 1));
 }
 
 const _saleProduct = SaleProduct(

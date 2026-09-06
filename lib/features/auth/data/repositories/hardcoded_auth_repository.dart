@@ -68,7 +68,9 @@ class HardcodedAuthRepository implements AuthRepository {
         timezone: 'Asia/Manila',
       ),
       status: UserAccountStatus.active,
-      organizationRoles: const [],
+      organizationRoles: role == UserRole.owner || role == UserRole.admin
+          ? [accessRole]
+          : const [],
       branches: [
         BranchAccess(
           branch: Branch(
@@ -78,7 +80,9 @@ class HardcodedAuthRepository implements AuthRepository {
             name: 'Demo Branch',
             timezone: 'Asia/Manila',
           ),
-          roles: [accessRole],
+          roles: role == UserRole.owner || role == UserRole.admin
+              ? const []
+              : [accessRole],
         ),
       ],
     );

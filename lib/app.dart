@@ -5,6 +5,7 @@ import 'core/constants/app_constants.dart';
 import 'core/routing/app_router.dart';
 import 'core/sync/sync_lifecycle_listener.dart';
 import 'core/theme/app_theme.dart';
+import 'features/hardware/presentation/widgets/receipt_print_lifecycle_listener.dart';
 
 class JcePosApp extends ConsumerWidget {
   const JcePosApp({super.key});
@@ -20,8 +21,9 @@ class JcePosApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
       routerConfig: router,
-      builder: (context, child) =>
-          SyncLifecycleListener(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => ReceiptPrintLifecycleListener(
+        child: SyncLifecycleListener(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

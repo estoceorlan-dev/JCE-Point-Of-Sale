@@ -6,18 +6,22 @@ class CartLine {
     required this.quantityMilli,
     this.itemDiscountMinor = 0,
     this.discountReason,
+    this.validationMessage,
   });
 
   final SaleProduct product;
   final int quantityMilli;
   final int itemDiscountMinor;
   final String? discountReason;
+  final String? validationMessage;
 
   CartLine copyWith({
     int? quantityMilli,
     int? itemDiscountMinor,
     String? discountReason,
     bool clearDiscountReason = false,
+    String? validationMessage,
+    bool clearValidationMessage = false,
   }) {
     return CartLine(
       product: product,
@@ -26,6 +30,9 @@ class CartLine {
       discountReason: clearDiscountReason
           ? null
           : discountReason ?? this.discountReason,
+      validationMessage: clearValidationMessage
+          ? null
+          : validationMessage ?? this.validationMessage,
     );
   }
 }
@@ -35,19 +42,25 @@ class Cart {
     this.lines = const [],
     this.saleDiscountMinor = 0,
     this.saleDiscountReason,
+    this.customerId,
   });
 
   final List<CartLine> lines;
   final int saleDiscountMinor;
   final String? saleDiscountReason;
+  final String? customerId;
 
   bool get isEmpty => lines.isEmpty;
+  bool get hasInvalidLines =>
+      lines.any((line) => line.validationMessage != null);
 
   Cart copyWith({
     List<CartLine>? lines,
     int? saleDiscountMinor,
     String? saleDiscountReason,
     bool clearSaleDiscountReason = false,
+    String? customerId,
+    bool clearCustomerId = false,
   }) {
     return Cart(
       lines: lines ?? this.lines,
@@ -55,6 +68,7 @@ class Cart {
       saleDiscountReason: clearSaleDiscountReason
           ? null
           : saleDiscountReason ?? this.saleDiscountReason,
+      customerId: clearCustomerId ? null : customerId ?? this.customerId,
     );
   }
 }

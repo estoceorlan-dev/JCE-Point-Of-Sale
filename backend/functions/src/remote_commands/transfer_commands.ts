@@ -92,7 +92,7 @@ async function createTransfer(
   const destination = await client.query(
     `SELECT 1 FROM branches
      WHERE id = $1 AND organization_id = $2
-       AND is_active = true AND deleted_at IS NULL`,
+       AND is_active = true AND deleted_at IS NULL FOR SHARE`,
     [destinationBranchId, command.organizationId],
   );
   if (destination.rowCount !== 1) {

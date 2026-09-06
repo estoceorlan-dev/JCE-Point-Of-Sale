@@ -15,6 +15,36 @@ class ProductCatalogLocalDataSource {
 
   final AppDatabase _database;
 
+  Future<domain_price.ProductPrice?> organizationPrice({
+    required String organizationId,
+    required String productId,
+    required DateTime now,
+  }) async {
+    final row =
+        await (_database.select(_database.productPrices)
+              ..where(
+                (row) =>
+                    row.organizationId.equals(organizationId) &
+                    row.productId.equals(productId) &
+                    row.branchId.isNull() &
+                    row.effectiveFrom.isSmallerOrEqualValue(now) &
+                    (row.effectiveTo.isNull() |
+                        row.effectiveTo.isBiggerThanValue(now)),
+              )
+              ..orderBy([(row) => OrderingTerm.desc(row.effectiveFrom)])
+              ..limit(1))
+            .getSingleOrNull();
+    return row == null
+        ? null
+        : domain_price.ProductPrice(
+            id: row.id,
+            scope: domain_price.PriceScope.organization,
+            unitPriceMinor: row.unitPriceMinor,
+            effectiveFrom: row.effectiveFrom,
+            effectiveTo: row.effectiveTo,
+          );
+  }
+
   Stream<ProductPage> watchProducts({
     required String organizationId,
     required String branchId,

@@ -59,11 +59,13 @@ class DriftSalesRepository implements SalesRepository {
   Stream<List<SaleProduct>> watchSaleProducts({
     required BusinessContext context,
     required String search,
+    String? categoryId,
   }) {
     return _localDataSource.watchSaleProducts(
       organizationId: context.organizationId,
       branchId: context.branchId,
       search: search,
+      categoryId: categoryId,
       now: _clock.nowUtc(),
     );
   }
@@ -481,6 +483,14 @@ class DriftSalesRepository implements SalesRepository {
                 ),
               );
         }
+        await (database.delete(database.posCarts)..where(
+              (row) =>
+                  row.organizationId.equals(context.organizationId) &
+                  row.branchId.equals(context.branchId) &
+                  row.deviceId.equals(draft.deviceId) &
+                  row.status.equals('active'),
+            ))
+            .go();
         return CheckoutResult(saleId: saleId, receiptNumber: receiptNumber);
       },
       auditEntry: _audit(

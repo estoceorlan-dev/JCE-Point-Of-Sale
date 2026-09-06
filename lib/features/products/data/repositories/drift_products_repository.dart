@@ -235,7 +235,16 @@ class DriftProductsRepository implements ProductsRepository {
 
     final now = _clock.nowUtc();
     final operationId = _idGenerator.newId();
-    final shouldAppendPrice = _priceChanged(existing.activePrice, draft.price);
+    final currentPrice =
+        draft.preserveBranchPrices &&
+            draft.priceScope == domain_price.PriceScope.organization
+        ? await _localDataSource.organizationPrice(
+            organizationId: context.organizationId,
+            productId: productId,
+            now: now,
+          )
+        : existing.activePrice;
+    final shouldAppendPrice = _priceChanged(currentPrice, draft.price);
     final priceId = shouldAppendPrice ? _idGenerator.newId() : null;
     return _localMutationTransaction.execute(
       businessWrite: (database) async {
@@ -283,7 +292,7 @@ class DriftProductsRepository implements ProductsRepository {
             productId: productId,
             priceId: priceId,
             draft: draft.price,
-            currentPrice: existing.activePrice,
+            currentPrice: currentPrice,
             now: now,
           );
         }

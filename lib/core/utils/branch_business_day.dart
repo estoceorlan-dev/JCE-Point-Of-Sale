@@ -22,6 +22,11 @@ class BranchBusinessDay {
     _initialized = true;
   }
 
+  static bool isValidTimezone(String name) {
+    _initialize();
+    return timezone.timeZoneDatabase.locations.containsKey(name);
+  }
+
   UtcDateRange range({
     required DateTime fromDate,
     required DateTime toDate,

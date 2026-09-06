@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -86,7 +88,7 @@ class SalesLocalDataSource {
           });
     if (effectivePrices.isEmpty) return null;
 
-    final barcode =
+    final barcodes =
         await (_database.select(_database.productBarcodes)
               ..where(
                 (row) =>
@@ -97,9 +99,8 @@ class SalesLocalDataSource {
               ..orderBy([
                 (row) => OrderingTerm.desc(row.isPrimary),
                 (row) => OrderingTerm.asc(row.createdAt),
-              ])
-              ..limit(1))
-            .getSingleOrNull();
+              ]))
+            .get();
     final balance =
         await (_database.select(_database.inventoryBalances)..where(
               (row) =>
@@ -117,7 +118,9 @@ class SalesLocalDataSource {
       sku: product.sku,
       name: product.name,
       unitName: unit.name,
-      primaryBarcode: barcode?.barcode,
+      primaryBarcode: barcodes.isEmpty ? null : barcodes.first.barcode,
+      barcodes: barcodes.map((row) => row.barcode).toList(growable: false),
+      categoryId: product.categoryId,
       stockLocationId: location.id,
       stockLocationName: location.name,
       unitPriceMinor: effectivePrices.first.unitPriceMinor,
@@ -134,6 +137,7 @@ class SalesLocalDataSource {
     required String branchId,
     required String search,
     required DateTime now,
+    String? categoryId,
   }) {
     final nameSearch = _normalizeName(search);
     final skuSearch = search.trim().toUpperCase();
@@ -143,6 +147,7 @@ class SalesLocalDataSource {
         '''
 SELECT
   p.id,
+  p.category_id,
   p.sku,
   p.name,
   u.name AS unit_name,
@@ -156,6 +161,9 @@ SELECT
     WHERE pb.product_id = p.id AND pb.deleted_at IS NULL
     ORDER BY pb.is_primary DESC, pb.created_at ASC LIMIT 1
   ) AS primary_barcode,
+  (SELECT json_group_array(pb.barcode) FROM product_barcodes pb
+    WHERE pb.product_id = p.id AND pb.organization_id = p.organization_id
+      AND pb.deleted_at IS NULL) AS barcodes_json,
   COALESCE(
     (
       SELECT bp.unit_price_minor FROM product_prices bp
@@ -195,6 +203,7 @@ LEFT JOIN inventory_balances ib
 WHERE p.organization_id = ?
   AND p.is_active = 1
   AND p.deleted_at IS NULL
+  ${categoryId == null ? '' : 'AND p.category_id = ?'}
   ${hasSearch ? '''AND (
     p.normalized_name LIKE ? OR p.normalized_sku LIKE ? OR EXISTS (
       SELECT 1 FROM product_barcodes search_barcode
@@ -222,6 +231,7 @@ LIMIT 100
       Variable<String>(branchId),
       Variable<String>(branchId),
       Variable<String>(organizationId),
+      if (categoryId != null) Variable<String>(categoryId),
       if (hasSearch) ...[
         Variable<String>('%$nameSearch%'),
         Variable<String>('%$skuSearch%'),
@@ -253,6 +263,10 @@ LIMIT 100
                   name: row.read<String>('name'),
                   unitName: row.read<String>('unit_name'),
                   primaryBarcode: row.readNullable<String>('primary_barcode'),
+                  categoryId: row.readNullable<String>('category_id'),
+                  barcodes:
+                      (jsonDecode(row.read<String>('barcodes_json')) as List)
+                          .cast<String>(),
                   stockLocationId: row.read<String>('stock_location_id'),
                   stockLocationName: row.read<String>('stock_location_name'),
                   unitPriceMinor: row.read<int>('unit_price_minor'),

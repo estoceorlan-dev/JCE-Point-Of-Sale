@@ -38,6 +38,25 @@ class AuthSession {
 
   bool can(AppPermission permission) => permissions.contains(permission);
 
+  bool canOrganizationWide(AppPermission permission) => activeOrganization
+      .organizationRoles
+      .any((role) => role.permissions.contains(permission));
+
+  Set<AppPermission> get administrationPermissions => {
+    for (final permission in const [
+      AppPermission.manageBranches,
+      AppPermission.manageUsers,
+      AppPermission.manageRoles,
+      AppPermission.manageRegisters,
+      AppPermission.manageProducts,
+    ])
+      if (canOrganizationWide(permission)) permission,
+  };
+
+  String get administrationScopeKey =>
+      (administrationPermissions.map((value) => value.code).toList()..sort())
+          .join(',');
+
   AuthSession switchTo({
     required String organizationId,
     required String branchId,

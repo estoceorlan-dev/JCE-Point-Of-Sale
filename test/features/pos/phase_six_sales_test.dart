@@ -189,6 +189,64 @@ void main() {
     });
 
     test(
+      'sale commit removes only this terminal active cart atomically',
+      () async {
+        final now = DateTime.utc(2026, 8, 26);
+        final draft = _checkoutDraft(operationId: 'cart-checkout');
+        for (final id in ['active', 'held', 'other-device']) {
+          await database
+              .into(database.posCarts)
+              .insert(
+                PosCartsCompanion.insert(
+                  id: id,
+                  organizationId: _context.organizationId,
+                  branchId: _context.branchId,
+                  deviceId: id == 'other-device'
+                      ? 'other-terminal'
+                      : draft.deviceId,
+                  status: id == 'held' ? 'held' : 'active',
+                  activeScope: Value(id),
+                  createdAt: now,
+                  updatedAt: now,
+                ),
+              );
+          await database
+              .into(database.posCartItems)
+              .insert(
+                PosCartItemsCompanion.insert(
+                  id: 'item-$id',
+                  cartId: id,
+                  productId: 'product',
+                  snapshotSku: 'SKU-1',
+                  snapshotName: 'Product',
+                  quantityMilli: 1000,
+                  position: 0,
+                  createdAt: now,
+                  updatedAt: now,
+                ),
+              );
+        }
+        final result = await repository.checkout(
+          context: _context,
+          draft: draft,
+        );
+        expect(result.isSuccess, isTrue);
+        expect(
+          (await database.select(database.posCarts).get())
+              .map((row) => row.id)
+              .toSet(),
+          {'held', 'other-device'},
+        );
+        expect(
+          (await database.select(database.posCartItems).get())
+              .map((row) => row.cartId)
+              .toSet(),
+          {'held', 'other-device'},
+        );
+      },
+    );
+
+    test(
       'checkout optionally attributes an offline-created customer',
       () async {
         final now = DateTime.utc(2026, 8, 26, 7);

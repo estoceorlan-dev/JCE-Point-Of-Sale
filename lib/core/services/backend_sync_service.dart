@@ -312,15 +312,22 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
             );
           }
           await _applier.apply(change);
-          await _versionDao.save(
+          final knownVersion = await _versionDao.readVersion(
             organizationId: change.organizationId,
-            branchId: change.branchId,
             entityType: change.aggregateType,
             entityId: change.aggregateId,
-            remoteVersion: change.version,
-            operationId: change.operationId,
-            updatedAt: change.occurredAt,
           );
+          if (change.version >= knownVersion) {
+            await _versionDao.save(
+              organizationId: change.organizationId,
+              branchId: change.branchId,
+              entityType: change.aggregateType,
+              entityId: change.aggregateId,
+              remoteVersion: change.version,
+              operationId: change.operationId,
+              updatedAt: change.occurredAt,
+            );
+          }
           nextCursor = change.sequence;
         }
         await _cursorDao.save(

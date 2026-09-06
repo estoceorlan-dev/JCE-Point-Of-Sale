@@ -38,11 +38,13 @@ import 'tables/permissions_table.dart';
 import 'tables/product_barcodes_table.dart';
 import 'tables/product_images_table.dart';
 import 'tables/product_prices_table.dart';
+import 'tables/pos_carts_table.dart';
 import 'tables/products_table.dart';
 import 'tables/purchase_order_items_table.dart';
 import 'tables/purchase_orders_table.dart';
 import 'tables/payments_table.dart';
 import 'tables/receipt_sequences_table.dart';
+import 'tables/receipt_print_jobs_table.dart';
 import 'tables/registers_table.dart';
 import 'tables/reason_codes_table.dart';
 import 'tables/role_permissions_table.dart';
@@ -111,6 +113,7 @@ part 'app_database.g.dart';
     Payments,
     SaleDiscounts,
     ReceiptSequences,
+    ReceiptPrintJobs,
     ApprovalRequests,
     ApprovalDecisions,
     SaleReturns,
@@ -136,6 +139,8 @@ part 'app_database.g.dart';
     NumberSequences,
     ReasonCodes,
     FeatureFlags,
+    PosCarts,
+    PosCartItems,
   ],
   daos: [
     MetadataDao,
@@ -152,7 +157,7 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 12;
+  static const int currentSchemaVersion = 15;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -213,6 +218,16 @@ class AppDatabase extends _$AppDatabase {
           TableMigration(
             branches,
             columnTransformer: {
+              branches.addressLineOne: const CustomExpression<String>('NULL'),
+              branches.addressLineTwo: const CustomExpression<String>('NULL'),
+              branches.city: const CustomExpression<String>('NULL'),
+              branches.province: const CustomExpression<String>('NULL'),
+              branches.postalCode: const CustomExpression<String>('NULL'),
+              branches.phone: const CustomExpression<String>('NULL'),
+              branches.email: const CustomExpression<String>('NULL'),
+              branches.receiptDisplayName: const CustomExpression<String>(
+                'NULL',
+              ),
               branches.allowNegativeStock: const Constant<bool>(false),
               branches.adjustmentApprovalThresholdMilli:
                   const CustomExpression<int>('NULL'),
@@ -229,6 +244,7 @@ class AppDatabase extends _$AppDatabase {
               branches.voidWindowMinutes: const Constant<int>(15),
               branches.transferApprovalThresholdMilli:
                   const CustomExpression<int>('NULL'),
+              branches.version: const Constant<int>(0),
             },
           ),
         );
@@ -432,6 +448,87 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createIndex(reasonCodesScopeIdx);
         await migrator.createIndex(featureFlagsScopeIdx);
         await _installAuditAppendOnlyTriggers();
+      case 13:
+        await migrator.alterTable(
+          TableMigration(
+            registers,
+            columnTransformer: {
+              registers.scannerType: const Constant<String>('keyboard_wedge'),
+              registers.scannerInterCharacterTimeoutMs: const Constant<int>(80),
+              registers.scannerDuplicateSuppressionMs: const Constant<int>(350),
+              registers.printerType: const Constant<String>('screen'),
+              registers.printerAddress: const CustomExpression<String>('NULL'),
+              registers.printerPort: const Constant<int>(9100),
+              registers.printerPaperWidthMm: const Constant<int>(80),
+              registers.cashDrawerEnabled: const Constant<bool>(false),
+              registers.cashDrawerPin: const Constant<int>(0),
+            },
+          ),
+        );
+        await migrator.createTable(receiptPrintJobs);
+        await migrator.createIndex(receiptPrintJobsDueIdx);
+        await migrator.createIndex(receiptPrintJobsRegisterIdx);
+      case 14:
+        if (!await _tableHasColumn('branches', 'address_line_one')) {
+          await migrator.addColumn(branches, branches.addressLineOne);
+        }
+        if (!await _tableHasColumn('branches', 'address_line_two')) {
+          await migrator.addColumn(branches, branches.addressLineTwo);
+        }
+        if (!await _tableHasColumn('branches', 'city')) {
+          await migrator.addColumn(branches, branches.city);
+        }
+        if (!await _tableHasColumn('branches', 'province')) {
+          await migrator.addColumn(branches, branches.province);
+        }
+        if (!await _tableHasColumn('branches', 'postal_code')) {
+          await migrator.addColumn(branches, branches.postalCode);
+        }
+        if (!await _tableHasColumn('branches', 'phone')) {
+          await migrator.addColumn(branches, branches.phone);
+        }
+        if (!await _tableHasColumn('branches', 'email')) {
+          await migrator.addColumn(branches, branches.email);
+        }
+        if (!await _tableHasColumn('branches', 'receipt_display_name')) {
+          await migrator.addColumn(branches, branches.receiptDisplayName);
+        }
+        if (!await _tableHasColumn('branches', 'version')) {
+          await migrator.addColumn(branches, branches.version);
+        }
+        if (!await _tableHasColumn('app_users', 'invited_at')) {
+          await migrator.addColumn(appUsers, appUsers.invitedAt);
+        }
+        if (!await _tableHasColumn('app_users', 'activated_at')) {
+          await migrator.addColumn(appUsers, appUsers.activatedAt);
+        }
+        if (!await _tableHasColumn('app_users', 'version')) {
+          await migrator.addColumn(appUsers, appUsers.version);
+        }
+        if (!await _tableHasColumn('roles', 'version')) {
+          await migrator.addColumn(roles, roles.version);
+        }
+        if (!await _tableHasColumn('user_role_assignments', 'updated_at')) {
+          await migrator.addColumn(
+            userRoleAssignments,
+            userRoleAssignments.updatedAt,
+          );
+          await customUpdate(
+            'UPDATE user_role_assignments SET updated_at = assigned_at '
+            'WHERE updated_at IS NULL',
+            updates: {userRoleAssignments},
+          );
+        }
+        if (!await _tableHasColumn('user_role_assignments', 'version')) {
+          await migrator.addColumn(
+            userRoleAssignments,
+            userRoleAssignments.version,
+          );
+        }
+      case 15:
+        await migrator.createTable(posCarts);
+        await migrator.createTable(posCartItems);
+        await migrator.createIndex(posCartsDeviceStatusIdx);
       default:
         throw StateError('Missing migration for schema version $version.');
     }

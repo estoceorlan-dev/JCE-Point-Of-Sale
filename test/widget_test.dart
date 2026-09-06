@@ -1,9 +1,12 @@
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/app.dart';
 import 'package:jce_pos/core/config/app_config.dart';
 import 'package:jce_pos/core/config/app_environment.dart';
+import 'package:jce_pos/core/database/app_database_config.dart';
+import 'package:jce_pos/core/database/database_provider.dart';
 
 void main() {
   const testConfig = AppConfig(
@@ -12,14 +15,18 @@ void main() {
     enableDiagnostics: true,
     demoBranchId: 'test-branch',
   );
+  Widget buildTestApp() => ProviderScope(
+    overrides: [
+      appConfigProvider.overrideWithValue(testConfig),
+      appDatabaseConfigProvider.overrideWithValue(
+        AppDatabaseConfig(executor: NativeDatabase.memory()),
+      ),
+    ],
+    child: const JcePosApp(),
+  );
 
   testWidgets('JCE POS starts on the login page', (WidgetTester tester) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [appConfigProvider.overrideWithValue(testConfig)],
-        child: const JcePosApp(),
-      ),
-    );
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     expect(
@@ -33,6 +40,9 @@ void main() {
     expect(find.text('Password'), findsOneWidget);
     expect(find.text('Forgot password?'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
   });
 
   testWidgets('hardcoded cashier login opens a role shell', (
@@ -43,12 +53,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [appConfigProvider.overrideWithValue(testConfig)],
-        child: const JcePosApp(),
-      ),
-    );
+    await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -91,5 +96,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Login'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
   });
 }

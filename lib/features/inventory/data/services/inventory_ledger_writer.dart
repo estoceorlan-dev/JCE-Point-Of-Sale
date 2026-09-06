@@ -57,6 +57,24 @@ class InventoryLedgerWriter {
         );
 
     for (final line in draft.lines) {
+      if (draft.type == InventoryTransactionType.openingBalance) {
+        final prior =
+            await (database.select(database.inventoryLedgerEntries)
+                  ..where(
+                    (row) =>
+                        row.organizationId.equals(context.organizationId) &
+                        row.branchId.equals(context.branchId) &
+                        row.stockLocationId.equals(line.stockLocationId) &
+                        row.productId.equals(line.productId),
+                  )
+                  ..limit(1))
+                .getSingleOrNull();
+        if (prior != null) {
+          throw const ConflictFailure(
+            'Opening stock is unavailable after ledger history exists.',
+          );
+        }
+      }
       final existing =
           await (database.select(database.inventoryBalances)..where(
                 (row) =>

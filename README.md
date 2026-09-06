@@ -169,7 +169,19 @@ filterable audit administration screen. Apply
 updated Functions, SQL Connect schema, and schema-version-12 client. See
 [Phase 14 audit and settings](docs/phase_14_audit_settings.md).
 
+Phase 15 adds register-scoped keyboard-wedge scanner settings, network ESC/POS
+printing for 58 mm and 80 mm thermal printers, printer-connected cash-drawer
+pulses, a persistent bounded-retry print queue, marked and synchronized reprint
+audits, and screen/PDF receipt fallback. Apply
+`backend/sql/migrations/0010_phase15_pos_hardware.sql` before deploying the
+updated Functions and schema-version-13 client. See
+[Phase 15 POS hardware](docs/phase_15_pos_hardware.md).
+
 ## Code generation
+
+The ongoing administration and cashier completion work is tracked in
+[Admin/POS implementation status](docs/admin_pos_completion_status.md), including
+what is implemented, the remaining phase exits, verification, and deployment order.
 
 ```sh
 dart run build_runner build --delete-conflicting-outputs --low-resources-mode

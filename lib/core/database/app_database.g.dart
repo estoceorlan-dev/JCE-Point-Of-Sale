@@ -4214,6 +4214,88 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
     requiredDuringInsert: false,
     defaultValue: const Constant<String>('Asia/Manila'),
   );
+  static const VerificationMeta _addressLineOneMeta = const VerificationMeta(
+    'addressLineOne',
+  );
+  @override
+  late final GeneratedColumn<String> addressLineOne = GeneratedColumn<String>(
+    'address_line_one',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _addressLineTwoMeta = const VerificationMeta(
+    'addressLineTwo',
+  );
+  @override
+  late final GeneratedColumn<String> addressLineTwo = GeneratedColumn<String>(
+    'address_line_two',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cityMeta = const VerificationMeta('city');
+  @override
+  late final GeneratedColumn<String> city = GeneratedColumn<String>(
+    'city',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _provinceMeta = const VerificationMeta(
+    'province',
+  );
+  @override
+  late final GeneratedColumn<String> province = GeneratedColumn<String>(
+    'province',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _postalCodeMeta = const VerificationMeta(
+    'postalCode',
+  );
+  @override
+  late final GeneratedColumn<String> postalCode = GeneratedColumn<String>(
+    'postal_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _phoneMeta = const VerificationMeta('phone');
+  @override
+  late final GeneratedColumn<String> phone = GeneratedColumn<String>(
+    'phone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _receiptDisplayNameMeta =
+      const VerificationMeta('receiptDisplayName');
+  @override
+  late final GeneratedColumn<String> receiptDisplayName =
+      GeneratedColumn<String>(
+        'receipt_display_name',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
   );
@@ -4362,6 +4444,19 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
         type: DriftSqlType.int,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -4402,6 +4497,14 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
     code,
     name,
     timezone,
+    addressLineOne,
+    addressLineTwo,
+    city,
+    province,
+    postalCode,
+    phone,
+    email,
+    receiptDisplayName,
     isActive,
     allowNegativeStock,
     adjustmentApprovalThresholdMilli,
@@ -4412,6 +4515,7 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
     returnApprovalThresholdMinor,
     voidWindowMinutes,
     transferApprovalThresholdMilli,
+    version,
     createdAt,
     updatedAt,
     deletedAt,
@@ -4464,6 +4568,63 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
       context.handle(
         _timezoneMeta,
         timezone.isAcceptableOrUnknown(data['timezone']!, _timezoneMeta),
+      );
+    }
+    if (data.containsKey('address_line_one')) {
+      context.handle(
+        _addressLineOneMeta,
+        addressLineOne.isAcceptableOrUnknown(
+          data['address_line_one']!,
+          _addressLineOneMeta,
+        ),
+      );
+    }
+    if (data.containsKey('address_line_two')) {
+      context.handle(
+        _addressLineTwoMeta,
+        addressLineTwo.isAcceptableOrUnknown(
+          data['address_line_two']!,
+          _addressLineTwoMeta,
+        ),
+      );
+    }
+    if (data.containsKey('city')) {
+      context.handle(
+        _cityMeta,
+        city.isAcceptableOrUnknown(data['city']!, _cityMeta),
+      );
+    }
+    if (data.containsKey('province')) {
+      context.handle(
+        _provinceMeta,
+        province.isAcceptableOrUnknown(data['province']!, _provinceMeta),
+      );
+    }
+    if (data.containsKey('postal_code')) {
+      context.handle(
+        _postalCodeMeta,
+        postalCode.isAcceptableOrUnknown(data['postal_code']!, _postalCodeMeta),
+      );
+    }
+    if (data.containsKey('phone')) {
+      context.handle(
+        _phoneMeta,
+        phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta),
+      );
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    }
+    if (data.containsKey('receipt_display_name')) {
+      context.handle(
+        _receiptDisplayNameMeta,
+        receiptDisplayName.isAcceptableOrUnknown(
+          data['receipt_display_name']!,
+          _receiptDisplayNameMeta,
+        ),
       );
     }
     if (data.containsKey('is_active')) {
@@ -4553,6 +4714,12 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
         ),
       );
     }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -4609,6 +4776,38 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
         DriftSqlType.string,
         data['${effectivePrefix}timezone'],
       )!,
+      addressLineOne: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}address_line_one'],
+      ),
+      addressLineTwo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}address_line_two'],
+      ),
+      city: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}city'],
+      ),
+      province: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}province'],
+      ),
+      postalCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}postal_code'],
+      ),
+      phone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phone'],
+      ),
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      ),
+      receiptDisplayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}receipt_display_name'],
+      ),
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
@@ -4649,6 +4848,10 @@ class $BranchesTable extends Branches with TableInfo<$BranchesTable, Branche> {
         DriftSqlType.int,
         data['${effectivePrefix}transfer_approval_threshold_milli'],
       ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -4676,6 +4879,14 @@ class Branche extends DataClass implements Insertable<Branche> {
   final String code;
   final String name;
   final String timezone;
+  final String? addressLineOne;
+  final String? addressLineTwo;
+  final String? city;
+  final String? province;
+  final String? postalCode;
+  final String? phone;
+  final String? email;
+  final String? receiptDisplayName;
   final bool isActive;
   final bool allowNegativeStock;
   final int? adjustmentApprovalThresholdMilli;
@@ -4686,6 +4897,7 @@ class Branche extends DataClass implements Insertable<Branche> {
   final int? returnApprovalThresholdMinor;
   final int voidWindowMinutes;
   final int? transferApprovalThresholdMilli;
+  final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -4695,6 +4907,14 @@ class Branche extends DataClass implements Insertable<Branche> {
     required this.code,
     required this.name,
     required this.timezone,
+    this.addressLineOne,
+    this.addressLineTwo,
+    this.city,
+    this.province,
+    this.postalCode,
+    this.phone,
+    this.email,
+    this.receiptDisplayName,
     required this.isActive,
     required this.allowNegativeStock,
     this.adjustmentApprovalThresholdMilli,
@@ -4705,6 +4925,7 @@ class Branche extends DataClass implements Insertable<Branche> {
     this.returnApprovalThresholdMinor,
     required this.voidWindowMinutes,
     this.transferApprovalThresholdMilli,
+    required this.version,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -4717,6 +4938,30 @@ class Branche extends DataClass implements Insertable<Branche> {
     map['code'] = Variable<String>(code);
     map['name'] = Variable<String>(name);
     map['timezone'] = Variable<String>(timezone);
+    if (!nullToAbsent || addressLineOne != null) {
+      map['address_line_one'] = Variable<String>(addressLineOne);
+    }
+    if (!nullToAbsent || addressLineTwo != null) {
+      map['address_line_two'] = Variable<String>(addressLineTwo);
+    }
+    if (!nullToAbsent || city != null) {
+      map['city'] = Variable<String>(city);
+    }
+    if (!nullToAbsent || province != null) {
+      map['province'] = Variable<String>(province);
+    }
+    if (!nullToAbsent || postalCode != null) {
+      map['postal_code'] = Variable<String>(postalCode);
+    }
+    if (!nullToAbsent || phone != null) {
+      map['phone'] = Variable<String>(phone);
+    }
+    if (!nullToAbsent || email != null) {
+      map['email'] = Variable<String>(email);
+    }
+    if (!nullToAbsent || receiptDisplayName != null) {
+      map['receipt_display_name'] = Variable<String>(receiptDisplayName);
+    }
     map['is_active'] = Variable<bool>(isActive);
     map['allow_negative_stock'] = Variable<bool>(allowNegativeStock);
     if (!nullToAbsent || adjustmentApprovalThresholdMilli != null) {
@@ -4751,6 +4996,7 @@ class Branche extends DataClass implements Insertable<Branche> {
         transferApprovalThresholdMilli,
       );
     }
+    map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -4766,6 +5012,28 @@ class Branche extends DataClass implements Insertable<Branche> {
       code: Value(code),
       name: Value(name),
       timezone: Value(timezone),
+      addressLineOne: addressLineOne == null && nullToAbsent
+          ? const Value.absent()
+          : Value(addressLineOne),
+      addressLineTwo: addressLineTwo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(addressLineTwo),
+      city: city == null && nullToAbsent ? const Value.absent() : Value(city),
+      province: province == null && nullToAbsent
+          ? const Value.absent()
+          : Value(province),
+      postalCode: postalCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(postalCode),
+      phone: phone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phone),
+      email: email == null && nullToAbsent
+          ? const Value.absent()
+          : Value(email),
+      receiptDisplayName: receiptDisplayName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(receiptDisplayName),
       isActive: Value(isActive),
       allowNegativeStock: Value(allowNegativeStock),
       adjustmentApprovalThresholdMilli:
@@ -4791,6 +5059,7 @@ class Branche extends DataClass implements Insertable<Branche> {
           transferApprovalThresholdMilli == null && nullToAbsent
           ? const Value.absent()
           : Value(transferApprovalThresholdMilli),
+      version: Value(version),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -4810,6 +5079,16 @@ class Branche extends DataClass implements Insertable<Branche> {
       code: serializer.fromJson<String>(json['code']),
       name: serializer.fromJson<String>(json['name']),
       timezone: serializer.fromJson<String>(json['timezone']),
+      addressLineOne: serializer.fromJson<String?>(json['addressLineOne']),
+      addressLineTwo: serializer.fromJson<String?>(json['addressLineTwo']),
+      city: serializer.fromJson<String?>(json['city']),
+      province: serializer.fromJson<String?>(json['province']),
+      postalCode: serializer.fromJson<String?>(json['postalCode']),
+      phone: serializer.fromJson<String?>(json['phone']),
+      email: serializer.fromJson<String?>(json['email']),
+      receiptDisplayName: serializer.fromJson<String?>(
+        json['receiptDisplayName'],
+      ),
       isActive: serializer.fromJson<bool>(json['isActive']),
       allowNegativeStock: serializer.fromJson<bool>(json['allowNegativeStock']),
       adjustmentApprovalThresholdMilli: serializer.fromJson<int?>(
@@ -4834,6 +5113,7 @@ class Branche extends DataClass implements Insertable<Branche> {
       transferApprovalThresholdMilli: serializer.fromJson<int?>(
         json['transferApprovalThresholdMilli'],
       ),
+      version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -4848,6 +5128,14 @@ class Branche extends DataClass implements Insertable<Branche> {
       'code': serializer.toJson<String>(code),
       'name': serializer.toJson<String>(name),
       'timezone': serializer.toJson<String>(timezone),
+      'addressLineOne': serializer.toJson<String?>(addressLineOne),
+      'addressLineTwo': serializer.toJson<String?>(addressLineTwo),
+      'city': serializer.toJson<String?>(city),
+      'province': serializer.toJson<String?>(province),
+      'postalCode': serializer.toJson<String?>(postalCode),
+      'phone': serializer.toJson<String?>(phone),
+      'email': serializer.toJson<String?>(email),
+      'receiptDisplayName': serializer.toJson<String?>(receiptDisplayName),
       'isActive': serializer.toJson<bool>(isActive),
       'allowNegativeStock': serializer.toJson<bool>(allowNegativeStock),
       'adjustmentApprovalThresholdMilli': serializer.toJson<int?>(
@@ -4872,6 +5160,7 @@ class Branche extends DataClass implements Insertable<Branche> {
       'transferApprovalThresholdMilli': serializer.toJson<int?>(
         transferApprovalThresholdMilli,
       ),
+      'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -4884,6 +5173,14 @@ class Branche extends DataClass implements Insertable<Branche> {
     String? code,
     String? name,
     String? timezone,
+    Value<String?> addressLineOne = const Value.absent(),
+    Value<String?> addressLineTwo = const Value.absent(),
+    Value<String?> city = const Value.absent(),
+    Value<String?> province = const Value.absent(),
+    Value<String?> postalCode = const Value.absent(),
+    Value<String?> phone = const Value.absent(),
+    Value<String?> email = const Value.absent(),
+    Value<String?> receiptDisplayName = const Value.absent(),
     bool? isActive,
     bool? allowNegativeStock,
     Value<int?> adjustmentApprovalThresholdMilli = const Value.absent(),
@@ -4894,6 +5191,7 @@ class Branche extends DataClass implements Insertable<Branche> {
     Value<int?> returnApprovalThresholdMinor = const Value.absent(),
     int? voidWindowMinutes,
     Value<int?> transferApprovalThresholdMilli = const Value.absent(),
+    int? version,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -4903,6 +5201,20 @@ class Branche extends DataClass implements Insertable<Branche> {
     code: code ?? this.code,
     name: name ?? this.name,
     timezone: timezone ?? this.timezone,
+    addressLineOne: addressLineOne.present
+        ? addressLineOne.value
+        : this.addressLineOne,
+    addressLineTwo: addressLineTwo.present
+        ? addressLineTwo.value
+        : this.addressLineTwo,
+    city: city.present ? city.value : this.city,
+    province: province.present ? province.value : this.province,
+    postalCode: postalCode.present ? postalCode.value : this.postalCode,
+    phone: phone.present ? phone.value : this.phone,
+    email: email.present ? email.value : this.email,
+    receiptDisplayName: receiptDisplayName.present
+        ? receiptDisplayName.value
+        : this.receiptDisplayName,
     isActive: isActive ?? this.isActive,
     allowNegativeStock: allowNegativeStock ?? this.allowNegativeStock,
     adjustmentApprovalThresholdMilli: adjustmentApprovalThresholdMilli.present
@@ -4927,6 +5239,7 @@ class Branche extends DataClass implements Insertable<Branche> {
     transferApprovalThresholdMilli: transferApprovalThresholdMilli.present
         ? transferApprovalThresholdMilli.value
         : this.transferApprovalThresholdMilli,
+    version: version ?? this.version,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -4940,6 +5253,22 @@ class Branche extends DataClass implements Insertable<Branche> {
       code: data.code.present ? data.code.value : this.code,
       name: data.name.present ? data.name.value : this.name,
       timezone: data.timezone.present ? data.timezone.value : this.timezone,
+      addressLineOne: data.addressLineOne.present
+          ? data.addressLineOne.value
+          : this.addressLineOne,
+      addressLineTwo: data.addressLineTwo.present
+          ? data.addressLineTwo.value
+          : this.addressLineTwo,
+      city: data.city.present ? data.city.value : this.city,
+      province: data.province.present ? data.province.value : this.province,
+      postalCode: data.postalCode.present
+          ? data.postalCode.value
+          : this.postalCode,
+      phone: data.phone.present ? data.phone.value : this.phone,
+      email: data.email.present ? data.email.value : this.email,
+      receiptDisplayName: data.receiptDisplayName.present
+          ? data.receiptDisplayName.value
+          : this.receiptDisplayName,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       allowNegativeStock: data.allowNegativeStock.present
           ? data.allowNegativeStock.value
@@ -4973,6 +5302,7 @@ class Branche extends DataClass implements Insertable<Branche> {
           data.transferApprovalThresholdMilli.present
           ? data.transferApprovalThresholdMilli.value
           : this.transferApprovalThresholdMilli,
+      version: data.version.present ? data.version.value : this.version,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -4987,6 +5317,14 @@ class Branche extends DataClass implements Insertable<Branche> {
           ..write('code: $code, ')
           ..write('name: $name, ')
           ..write('timezone: $timezone, ')
+          ..write('addressLineOne: $addressLineOne, ')
+          ..write('addressLineTwo: $addressLineTwo, ')
+          ..write('city: $city, ')
+          ..write('province: $province, ')
+          ..write('postalCode: $postalCode, ')
+          ..write('phone: $phone, ')
+          ..write('email: $email, ')
+          ..write('receiptDisplayName: $receiptDisplayName, ')
           ..write('isActive: $isActive, ')
           ..write('allowNegativeStock: $allowNegativeStock, ')
           ..write(
@@ -5009,6 +5347,7 @@ class Branche extends DataClass implements Insertable<Branche> {
           ..write(
             'transferApprovalThresholdMilli: $transferApprovalThresholdMilli, ',
           )
+          ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -5017,12 +5356,20 @@ class Branche extends DataClass implements Insertable<Branche> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     organizationId,
     code,
     name,
     timezone,
+    addressLineOne,
+    addressLineTwo,
+    city,
+    province,
+    postalCode,
+    phone,
+    email,
+    receiptDisplayName,
     isActive,
     allowNegativeStock,
     adjustmentApprovalThresholdMilli,
@@ -5033,10 +5380,11 @@ class Branche extends DataClass implements Insertable<Branche> {
     returnApprovalThresholdMinor,
     voidWindowMinutes,
     transferApprovalThresholdMilli,
+    version,
     createdAt,
     updatedAt,
     deletedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5046,6 +5394,14 @@ class Branche extends DataClass implements Insertable<Branche> {
           other.code == this.code &&
           other.name == this.name &&
           other.timezone == this.timezone &&
+          other.addressLineOne == this.addressLineOne &&
+          other.addressLineTwo == this.addressLineTwo &&
+          other.city == this.city &&
+          other.province == this.province &&
+          other.postalCode == this.postalCode &&
+          other.phone == this.phone &&
+          other.email == this.email &&
+          other.receiptDisplayName == this.receiptDisplayName &&
           other.isActive == this.isActive &&
           other.allowNegativeStock == this.allowNegativeStock &&
           other.adjustmentApprovalThresholdMilli ==
@@ -5062,6 +5418,7 @@ class Branche extends DataClass implements Insertable<Branche> {
           other.voidWindowMinutes == this.voidWindowMinutes &&
           other.transferApprovalThresholdMilli ==
               this.transferApprovalThresholdMilli &&
+          other.version == this.version &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -5073,6 +5430,14 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
   final Value<String> code;
   final Value<String> name;
   final Value<String> timezone;
+  final Value<String?> addressLineOne;
+  final Value<String?> addressLineTwo;
+  final Value<String?> city;
+  final Value<String?> province;
+  final Value<String?> postalCode;
+  final Value<String?> phone;
+  final Value<String?> email;
+  final Value<String?> receiptDisplayName;
   final Value<bool> isActive;
   final Value<bool> allowNegativeStock;
   final Value<int?> adjustmentApprovalThresholdMilli;
@@ -5083,6 +5448,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
   final Value<int?> returnApprovalThresholdMinor;
   final Value<int> voidWindowMinutes;
   final Value<int?> transferApprovalThresholdMilli;
+  final Value<int> version;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -5093,6 +5459,14 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     this.code = const Value.absent(),
     this.name = const Value.absent(),
     this.timezone = const Value.absent(),
+    this.addressLineOne = const Value.absent(),
+    this.addressLineTwo = const Value.absent(),
+    this.city = const Value.absent(),
+    this.province = const Value.absent(),
+    this.postalCode = const Value.absent(),
+    this.phone = const Value.absent(),
+    this.email = const Value.absent(),
+    this.receiptDisplayName = const Value.absent(),
     this.isActive = const Value.absent(),
     this.allowNegativeStock = const Value.absent(),
     this.adjustmentApprovalThresholdMilli = const Value.absent(),
@@ -5103,6 +5477,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     this.returnApprovalThresholdMinor = const Value.absent(),
     this.voidWindowMinutes = const Value.absent(),
     this.transferApprovalThresholdMilli = const Value.absent(),
+    this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -5114,6 +5489,14 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     required String code,
     required String name,
     this.timezone = const Value.absent(),
+    this.addressLineOne = const Value.absent(),
+    this.addressLineTwo = const Value.absent(),
+    this.city = const Value.absent(),
+    this.province = const Value.absent(),
+    this.postalCode = const Value.absent(),
+    this.phone = const Value.absent(),
+    this.email = const Value.absent(),
+    this.receiptDisplayName = const Value.absent(),
     this.isActive = const Value.absent(),
     this.allowNegativeStock = const Value.absent(),
     this.adjustmentApprovalThresholdMilli = const Value.absent(),
@@ -5124,6 +5507,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     this.returnApprovalThresholdMinor = const Value.absent(),
     this.voidWindowMinutes = const Value.absent(),
     this.transferApprovalThresholdMilli = const Value.absent(),
+    this.version = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -5140,6 +5524,14 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     Expression<String>? code,
     Expression<String>? name,
     Expression<String>? timezone,
+    Expression<String>? addressLineOne,
+    Expression<String>? addressLineTwo,
+    Expression<String>? city,
+    Expression<String>? province,
+    Expression<String>? postalCode,
+    Expression<String>? phone,
+    Expression<String>? email,
+    Expression<String>? receiptDisplayName,
     Expression<bool>? isActive,
     Expression<bool>? allowNegativeStock,
     Expression<int>? adjustmentApprovalThresholdMilli,
@@ -5150,6 +5542,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     Expression<int>? returnApprovalThresholdMinor,
     Expression<int>? voidWindowMinutes,
     Expression<int>? transferApprovalThresholdMilli,
+    Expression<int>? version,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -5161,6 +5554,15 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
       if (code != null) 'code': code,
       if (name != null) 'name': name,
       if (timezone != null) 'timezone': timezone,
+      if (addressLineOne != null) 'address_line_one': addressLineOne,
+      if (addressLineTwo != null) 'address_line_two': addressLineTwo,
+      if (city != null) 'city': city,
+      if (province != null) 'province': province,
+      if (postalCode != null) 'postal_code': postalCode,
+      if (phone != null) 'phone': phone,
+      if (email != null) 'email': email,
+      if (receiptDisplayName != null)
+        'receipt_display_name': receiptDisplayName,
       if (isActive != null) 'is_active': isActive,
       if (allowNegativeStock != null)
         'allow_negative_stock': allowNegativeStock,
@@ -5181,6 +5583,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
       if (voidWindowMinutes != null) 'void_window_minutes': voidWindowMinutes,
       if (transferApprovalThresholdMilli != null)
         'transfer_approval_threshold_milli': transferApprovalThresholdMilli,
+      if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -5194,6 +5597,14 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     Value<String>? code,
     Value<String>? name,
     Value<String>? timezone,
+    Value<String?>? addressLineOne,
+    Value<String?>? addressLineTwo,
+    Value<String?>? city,
+    Value<String?>? province,
+    Value<String?>? postalCode,
+    Value<String?>? phone,
+    Value<String?>? email,
+    Value<String?>? receiptDisplayName,
     Value<bool>? isActive,
     Value<bool>? allowNegativeStock,
     Value<int?>? adjustmentApprovalThresholdMilli,
@@ -5204,6 +5615,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     Value<int?>? returnApprovalThresholdMinor,
     Value<int>? voidWindowMinutes,
     Value<int?>? transferApprovalThresholdMilli,
+    Value<int>? version,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -5215,6 +5627,14 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
       code: code ?? this.code,
       name: name ?? this.name,
       timezone: timezone ?? this.timezone,
+      addressLineOne: addressLineOne ?? this.addressLineOne,
+      addressLineTwo: addressLineTwo ?? this.addressLineTwo,
+      city: city ?? this.city,
+      province: province ?? this.province,
+      postalCode: postalCode ?? this.postalCode,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      receiptDisplayName: receiptDisplayName ?? this.receiptDisplayName,
       isActive: isActive ?? this.isActive,
       allowNegativeStock: allowNegativeStock ?? this.allowNegativeStock,
       adjustmentApprovalThresholdMilli:
@@ -5235,6 +5655,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
       voidWindowMinutes: voidWindowMinutes ?? this.voidWindowMinutes,
       transferApprovalThresholdMilli:
           transferApprovalThresholdMilli ?? this.transferApprovalThresholdMilli,
+      version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -5259,6 +5680,30 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
     }
     if (timezone.present) {
       map['timezone'] = Variable<String>(timezone.value);
+    }
+    if (addressLineOne.present) {
+      map['address_line_one'] = Variable<String>(addressLineOne.value);
+    }
+    if (addressLineTwo.present) {
+      map['address_line_two'] = Variable<String>(addressLineTwo.value);
+    }
+    if (city.present) {
+      map['city'] = Variable<String>(city.value);
+    }
+    if (province.present) {
+      map['province'] = Variable<String>(province.value);
+    }
+    if (postalCode.present) {
+      map['postal_code'] = Variable<String>(postalCode.value);
+    }
+    if (phone.present) {
+      map['phone'] = Variable<String>(phone.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (receiptDisplayName.present) {
+      map['receipt_display_name'] = Variable<String>(receiptDisplayName.value);
     }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
@@ -5304,6 +5749,9 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
         transferApprovalThresholdMilli.value,
       );
     }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -5327,6 +5775,14 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
           ..write('code: $code, ')
           ..write('name: $name, ')
           ..write('timezone: $timezone, ')
+          ..write('addressLineOne: $addressLineOne, ')
+          ..write('addressLineTwo: $addressLineTwo, ')
+          ..write('city: $city, ')
+          ..write('province: $province, ')
+          ..write('postalCode: $postalCode, ')
+          ..write('phone: $phone, ')
+          ..write('email: $email, ')
+          ..write('receiptDisplayName: $receiptDisplayName, ')
           ..write('isActive: $isActive, ')
           ..write('allowNegativeStock: $allowNegativeStock, ')
           ..write(
@@ -5349,6 +5805,7 @@ class BranchesCompanion extends UpdateCompanion<Branche> {
           ..write(
             'transferApprovalThresholdMilli: $transferApprovalThresholdMilli, ',
           )
+          ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -5426,6 +5883,41 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _invitedAtMeta = const VerificationMeta(
+    'invitedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> invitedAt = GeneratedColumn<DateTime>(
+    'invited_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _activatedAtMeta = const VerificationMeta(
+    'activatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> activatedAt = GeneratedColumn<DateTime>(
+    'activated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -5467,6 +5959,9 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
     email,
     displayName,
     status,
+    invitedAt,
+    activatedAt,
+    version,
     createdAt,
     updatedAt,
     deletedAt,
@@ -5535,6 +6030,27 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
     } else if (isInserting) {
       context.missing(_statusMeta);
     }
+    if (data.containsKey('invited_at')) {
+      context.handle(
+        _invitedAtMeta,
+        invitedAt.isAcceptableOrUnknown(data['invited_at']!, _invitedAtMeta),
+      );
+    }
+    if (data.containsKey('activated_at')) {
+      context.handle(
+        _activatedAtMeta,
+        activatedAt.isAcceptableOrUnknown(
+          data['activated_at']!,
+          _activatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -5594,6 +6110,18 @@ class $AppUsersTable extends AppUsers with TableInfo<$AppUsersTable, AppUser> {
         DriftSqlType.string,
         data['${effectivePrefix}status'],
       )!,
+      invitedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}invited_at'],
+      ),
+      activatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}activated_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -5622,6 +6150,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
   final String email;
   final String displayName;
   final String status;
+  final DateTime? invitedAt;
+  final DateTime? activatedAt;
+  final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -5632,6 +6163,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
     required this.email,
     required this.displayName,
     required this.status,
+    this.invitedAt,
+    this.activatedAt,
+    required this.version,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -5647,6 +6181,13 @@ class AppUser extends DataClass implements Insertable<AppUser> {
     map['email'] = Variable<String>(email);
     map['display_name'] = Variable<String>(displayName);
     map['status'] = Variable<String>(status);
+    if (!nullToAbsent || invitedAt != null) {
+      map['invited_at'] = Variable<DateTime>(invitedAt);
+    }
+    if (!nullToAbsent || activatedAt != null) {
+      map['activated_at'] = Variable<DateTime>(activatedAt);
+    }
+    map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -5665,6 +6206,13 @@ class AppUser extends DataClass implements Insertable<AppUser> {
       email: Value(email),
       displayName: Value(displayName),
       status: Value(status),
+      invitedAt: invitedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(invitedAt),
+      activatedAt: activatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(activatedAt),
+      version: Value(version),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -5685,6 +6233,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
       email: serializer.fromJson<String>(json['email']),
       displayName: serializer.fromJson<String>(json['displayName']),
       status: serializer.fromJson<String>(json['status']),
+      invitedAt: serializer.fromJson<DateTime?>(json['invitedAt']),
+      activatedAt: serializer.fromJson<DateTime?>(json['activatedAt']),
+      version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -5700,6 +6251,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
       'email': serializer.toJson<String>(email),
       'displayName': serializer.toJson<String>(displayName),
       'status': serializer.toJson<String>(status),
+      'invitedAt': serializer.toJson<DateTime?>(invitedAt),
+      'activatedAt': serializer.toJson<DateTime?>(activatedAt),
+      'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -5713,6 +6267,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
     String? email,
     String? displayName,
     String? status,
+    Value<DateTime?> invitedAt = const Value.absent(),
+    Value<DateTime?> activatedAt = const Value.absent(),
+    int? version,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -5723,6 +6280,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
     email: email ?? this.email,
     displayName: displayName ?? this.displayName,
     status: status ?? this.status,
+    invitedAt: invitedAt.present ? invitedAt.value : this.invitedAt,
+    activatedAt: activatedAt.present ? activatedAt.value : this.activatedAt,
+    version: version ?? this.version,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -5741,6 +6301,11 @@ class AppUser extends DataClass implements Insertable<AppUser> {
           ? data.displayName.value
           : this.displayName,
       status: data.status.present ? data.status.value : this.status,
+      invitedAt: data.invitedAt.present ? data.invitedAt.value : this.invitedAt,
+      activatedAt: data.activatedAt.present
+          ? data.activatedAt.value
+          : this.activatedAt,
+      version: data.version.present ? data.version.value : this.version,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -5756,6 +6321,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
           ..write('email: $email, ')
           ..write('displayName: $displayName, ')
           ..write('status: $status, ')
+          ..write('invitedAt: $invitedAt, ')
+          ..write('activatedAt: $activatedAt, ')
+          ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -5771,6 +6339,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
     email,
     displayName,
     status,
+    invitedAt,
+    activatedAt,
+    version,
     createdAt,
     updatedAt,
     deletedAt,
@@ -5785,6 +6356,9 @@ class AppUser extends DataClass implements Insertable<AppUser> {
           other.email == this.email &&
           other.displayName == this.displayName &&
           other.status == this.status &&
+          other.invitedAt == this.invitedAt &&
+          other.activatedAt == this.activatedAt &&
+          other.version == this.version &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -5797,6 +6371,9 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
   final Value<String> email;
   final Value<String> displayName;
   final Value<String> status;
+  final Value<DateTime?> invitedAt;
+  final Value<DateTime?> activatedAt;
+  final Value<int> version;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -5808,6 +6385,9 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
     this.email = const Value.absent(),
     this.displayName = const Value.absent(),
     this.status = const Value.absent(),
+    this.invitedAt = const Value.absent(),
+    this.activatedAt = const Value.absent(),
+    this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -5820,6 +6400,9 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
     required String email,
     required String displayName,
     required String status,
+    this.invitedAt = const Value.absent(),
+    this.activatedAt = const Value.absent(),
+    this.version = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -5838,6 +6421,9 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
     Expression<String>? email,
     Expression<String>? displayName,
     Expression<String>? status,
+    Expression<DateTime>? invitedAt,
+    Expression<DateTime>? activatedAt,
+    Expression<int>? version,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -5850,6 +6436,9 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
       if (email != null) 'email': email,
       if (displayName != null) 'display_name': displayName,
       if (status != null) 'status': status,
+      if (invitedAt != null) 'invited_at': invitedAt,
+      if (activatedAt != null) 'activated_at': activatedAt,
+      if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -5864,6 +6453,9 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
     Value<String>? email,
     Value<String>? displayName,
     Value<String>? status,
+    Value<DateTime?>? invitedAt,
+    Value<DateTime?>? activatedAt,
+    Value<int>? version,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -5876,6 +6468,9 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
       email: email ?? this.email,
       displayName: displayName ?? this.displayName,
       status: status ?? this.status,
+      invitedAt: invitedAt ?? this.invitedAt,
+      activatedAt: activatedAt ?? this.activatedAt,
+      version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -5904,6 +6499,15 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
+    if (invitedAt.present) {
+      map['invited_at'] = Variable<DateTime>(invitedAt.value);
+    }
+    if (activatedAt.present) {
+      map['activated_at'] = Variable<DateTime>(activatedAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -5928,6 +6532,9 @@ class AppUsersCompanion extends UpdateCompanion<AppUser> {
           ..write('email: $email, ')
           ..write('displayName: $displayName, ')
           ..write('status: $status, ')
+          ..write('invitedAt: $invitedAt, ')
+          ..write('activatedAt: $activatedAt, ')
+          ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -6009,6 +6616,19 @@ class $RolesTable extends Roles with TableInfo<$RolesTable, Role> {
     ),
     defaultValue: const Constant<bool>(true),
   );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -6050,6 +6670,7 @@ class $RolesTable extends Roles with TableInfo<$RolesTable, Role> {
     name,
     description,
     isActive,
+    version,
     createdAt,
     updatedAt,
     deletedAt,
@@ -6113,6 +6734,12 @@ class $RolesTable extends Roles with TableInfo<$RolesTable, Role> {
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -6172,6 +6799,10 @@ class $RolesTable extends Roles with TableInfo<$RolesTable, Role> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -6200,6 +6831,7 @@ class Role extends DataClass implements Insertable<Role> {
   final String name;
   final String? description;
   final bool isActive;
+  final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -6210,6 +6842,7 @@ class Role extends DataClass implements Insertable<Role> {
     required this.name,
     this.description,
     required this.isActive,
+    required this.version,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -6225,6 +6858,7 @@ class Role extends DataClass implements Insertable<Role> {
       map['description'] = Variable<String>(description);
     }
     map['is_active'] = Variable<bool>(isActive);
+    map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -6243,6 +6877,7 @@ class Role extends DataClass implements Insertable<Role> {
           ? const Value.absent()
           : Value(description),
       isActive: Value(isActive),
+      version: Value(version),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -6263,6 +6898,7 @@ class Role extends DataClass implements Insertable<Role> {
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String?>(json['description']),
       isActive: serializer.fromJson<bool>(json['isActive']),
+      version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -6278,6 +6914,7 @@ class Role extends DataClass implements Insertable<Role> {
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String?>(description),
       'isActive': serializer.toJson<bool>(isActive),
+      'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -6291,6 +6928,7 @@ class Role extends DataClass implements Insertable<Role> {
     String? name,
     Value<String?> description = const Value.absent(),
     bool? isActive,
+    int? version,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -6301,6 +6939,7 @@ class Role extends DataClass implements Insertable<Role> {
     name: name ?? this.name,
     description: description.present ? description.value : this.description,
     isActive: isActive ?? this.isActive,
+    version: version ?? this.version,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -6317,6 +6956,7 @@ class Role extends DataClass implements Insertable<Role> {
           ? data.description.value
           : this.description,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      version: data.version.present ? data.version.value : this.version,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -6332,6 +6972,7 @@ class Role extends DataClass implements Insertable<Role> {
           ..write('name: $name, ')
           ..write('description: $description, ')
           ..write('isActive: $isActive, ')
+          ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -6347,6 +6988,7 @@ class Role extends DataClass implements Insertable<Role> {
     name,
     description,
     isActive,
+    version,
     createdAt,
     updatedAt,
     deletedAt,
@@ -6361,6 +7003,7 @@ class Role extends DataClass implements Insertable<Role> {
           other.name == this.name &&
           other.description == this.description &&
           other.isActive == this.isActive &&
+          other.version == this.version &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -6373,6 +7016,7 @@ class RolesCompanion extends UpdateCompanion<Role> {
   final Value<String> name;
   final Value<String?> description;
   final Value<bool> isActive;
+  final Value<int> version;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -6384,6 +7028,7 @@ class RolesCompanion extends UpdateCompanion<Role> {
     this.name = const Value.absent(),
     this.description = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -6396,6 +7041,7 @@ class RolesCompanion extends UpdateCompanion<Role> {
     required String name,
     this.description = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.version = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -6413,6 +7059,7 @@ class RolesCompanion extends UpdateCompanion<Role> {
     Expression<String>? name,
     Expression<String>? description,
     Expression<bool>? isActive,
+    Expression<int>? version,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -6425,6 +7072,7 @@ class RolesCompanion extends UpdateCompanion<Role> {
       if (name != null) 'name': name,
       if (description != null) 'description': description,
       if (isActive != null) 'is_active': isActive,
+      if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -6439,6 +7087,7 @@ class RolesCompanion extends UpdateCompanion<Role> {
     Value<String>? name,
     Value<String?>? description,
     Value<bool>? isActive,
+    Value<int>? version,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -6451,6 +7100,7 @@ class RolesCompanion extends UpdateCompanion<Role> {
       name: name ?? this.name,
       description: description ?? this.description,
       isActive: isActive ?? this.isActive,
+      version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -6479,6 +7129,9 @@ class RolesCompanion extends UpdateCompanion<Role> {
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -6503,6 +7156,7 @@ class RolesCompanion extends UpdateCompanion<Role> {
           ..write('name: $name, ')
           ..write('description: $description, ')
           ..write('isActive: $isActive, ')
+          ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -7185,6 +7839,17 @@ class $UserRoleAssignmentsTable extends UserRoleAssignments
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _revokedAtMeta = const VerificationMeta(
     'revokedAt',
   );
@@ -7196,6 +7861,19 @@ class $UserRoleAssignmentsTable extends UserRoleAssignments
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('version >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -7204,7 +7882,9 @@ class $UserRoleAssignmentsTable extends UserRoleAssignments
     userId,
     roleId,
     assignedAt,
+    updatedAt,
     revokedAt,
+    version,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7264,10 +7944,22 @@ class $UserRoleAssignmentsTable extends UserRoleAssignments
     } else if (isInserting) {
       context.missing(_assignedAtMeta);
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     if (data.containsKey('revoked_at')) {
       context.handle(
         _revokedAtMeta,
         revokedAt.isAcceptableOrUnknown(data['revoked_at']!, _revokedAtMeta),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
       );
     }
     return context;
@@ -7303,10 +7995,18 @@ class $UserRoleAssignmentsTable extends UserRoleAssignments
         DriftSqlType.dateTime,
         data['${effectivePrefix}assigned_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
       revokedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}revoked_at'],
       ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
     );
   }
 
@@ -7324,7 +8024,9 @@ class UserRoleAssignment extends DataClass
   final String userId;
   final String roleId;
   final DateTime assignedAt;
+  final DateTime? updatedAt;
   final DateTime? revokedAt;
+  final int version;
   const UserRoleAssignment({
     required this.id,
     required this.organizationId,
@@ -7332,7 +8034,9 @@ class UserRoleAssignment extends DataClass
     required this.userId,
     required this.roleId,
     required this.assignedAt,
+    this.updatedAt,
     this.revokedAt,
+    required this.version,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -7345,9 +8049,13 @@ class UserRoleAssignment extends DataClass
     map['user_id'] = Variable<String>(userId);
     map['role_id'] = Variable<String>(roleId);
     map['assigned_at'] = Variable<DateTime>(assignedAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     if (!nullToAbsent || revokedAt != null) {
       map['revoked_at'] = Variable<DateTime>(revokedAt);
     }
+    map['version'] = Variable<int>(version);
     return map;
   }
 
@@ -7361,9 +8069,13 @@ class UserRoleAssignment extends DataClass
       userId: Value(userId),
       roleId: Value(roleId),
       assignedAt: Value(assignedAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
       revokedAt: revokedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(revokedAt),
+      version: Value(version),
     );
   }
 
@@ -7379,7 +8091,9 @@ class UserRoleAssignment extends DataClass
       userId: serializer.fromJson<String>(json['userId']),
       roleId: serializer.fromJson<String>(json['roleId']),
       assignedAt: serializer.fromJson<DateTime>(json['assignedAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
       revokedAt: serializer.fromJson<DateTime?>(json['revokedAt']),
+      version: serializer.fromJson<int>(json['version']),
     );
   }
   @override
@@ -7392,7 +8106,9 @@ class UserRoleAssignment extends DataClass
       'userId': serializer.toJson<String>(userId),
       'roleId': serializer.toJson<String>(roleId),
       'assignedAt': serializer.toJson<DateTime>(assignedAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
       'revokedAt': serializer.toJson<DateTime?>(revokedAt),
+      'version': serializer.toJson<int>(version),
     };
   }
 
@@ -7403,7 +8119,9 @@ class UserRoleAssignment extends DataClass
     String? userId,
     String? roleId,
     DateTime? assignedAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
     Value<DateTime?> revokedAt = const Value.absent(),
+    int? version,
   }) => UserRoleAssignment(
     id: id ?? this.id,
     organizationId: organizationId ?? this.organizationId,
@@ -7411,7 +8129,9 @@ class UserRoleAssignment extends DataClass
     userId: userId ?? this.userId,
     roleId: roleId ?? this.roleId,
     assignedAt: assignedAt ?? this.assignedAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
     revokedAt: revokedAt.present ? revokedAt.value : this.revokedAt,
+    version: version ?? this.version,
   );
   UserRoleAssignment copyWithCompanion(UserRoleAssignmentsCompanion data) {
     return UserRoleAssignment(
@@ -7425,7 +8145,9 @@ class UserRoleAssignment extends DataClass
       assignedAt: data.assignedAt.present
           ? data.assignedAt.value
           : this.assignedAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       revokedAt: data.revokedAt.present ? data.revokedAt.value : this.revokedAt,
+      version: data.version.present ? data.version.value : this.version,
     );
   }
 
@@ -7438,7 +8160,9 @@ class UserRoleAssignment extends DataClass
           ..write('userId: $userId, ')
           ..write('roleId: $roleId, ')
           ..write('assignedAt: $assignedAt, ')
-          ..write('revokedAt: $revokedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('revokedAt: $revokedAt, ')
+          ..write('version: $version')
           ..write(')'))
         .toString();
   }
@@ -7451,7 +8175,9 @@ class UserRoleAssignment extends DataClass
     userId,
     roleId,
     assignedAt,
+    updatedAt,
     revokedAt,
+    version,
   );
   @override
   bool operator ==(Object other) =>
@@ -7463,7 +8189,9 @@ class UserRoleAssignment extends DataClass
           other.userId == this.userId &&
           other.roleId == this.roleId &&
           other.assignedAt == this.assignedAt &&
-          other.revokedAt == this.revokedAt);
+          other.updatedAt == this.updatedAt &&
+          other.revokedAt == this.revokedAt &&
+          other.version == this.version);
 }
 
 class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
@@ -7473,7 +8201,9 @@ class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
   final Value<String> userId;
   final Value<String> roleId;
   final Value<DateTime> assignedAt;
+  final Value<DateTime?> updatedAt;
   final Value<DateTime?> revokedAt;
+  final Value<int> version;
   final Value<int> rowid;
   const UserRoleAssignmentsCompanion({
     this.id = const Value.absent(),
@@ -7482,7 +8212,9 @@ class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
     this.userId = const Value.absent(),
     this.roleId = const Value.absent(),
     this.assignedAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.revokedAt = const Value.absent(),
+    this.version = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserRoleAssignmentsCompanion.insert({
@@ -7492,7 +8224,9 @@ class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
     required String userId,
     required String roleId,
     required DateTime assignedAt,
+    this.updatedAt = const Value.absent(),
     this.revokedAt = const Value.absent(),
+    this.version = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        organizationId = Value(organizationId),
@@ -7506,7 +8240,9 @@ class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
     Expression<String>? userId,
     Expression<String>? roleId,
     Expression<DateTime>? assignedAt,
+    Expression<DateTime>? updatedAt,
     Expression<DateTime>? revokedAt,
+    Expression<int>? version,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -7516,7 +8252,9 @@ class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
       if (userId != null) 'user_id': userId,
       if (roleId != null) 'role_id': roleId,
       if (assignedAt != null) 'assigned_at': assignedAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (revokedAt != null) 'revoked_at': revokedAt,
+      if (version != null) 'version': version,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -7528,7 +8266,9 @@ class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
     Value<String>? userId,
     Value<String>? roleId,
     Value<DateTime>? assignedAt,
+    Value<DateTime?>? updatedAt,
     Value<DateTime?>? revokedAt,
+    Value<int>? version,
     Value<int>? rowid,
   }) {
     return UserRoleAssignmentsCompanion(
@@ -7538,7 +8278,9 @@ class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
       userId: userId ?? this.userId,
       roleId: roleId ?? this.roleId,
       assignedAt: assignedAt ?? this.assignedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       revokedAt: revokedAt ?? this.revokedAt,
+      version: version ?? this.version,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -7564,8 +8306,14 @@ class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
     if (assignedAt.present) {
       map['assigned_at'] = Variable<DateTime>(assignedAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     if (revokedAt.present) {
       map['revoked_at'] = Variable<DateTime>(revokedAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -7582,7 +8330,9 @@ class UserRoleAssignmentsCompanion extends UpdateCompanion<UserRoleAssignment> {
           ..write('userId: $userId, ')
           ..write('roleId: $roleId, ')
           ..write('assignedAt: $assignedAt, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('revokedAt: $revokedAt, ')
+          ..write('version: $version, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -16988,6 +17738,132 @@ class $RegistersTable extends Registers
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _scannerTypeMeta = const VerificationMeta(
+    'scannerType',
+  );
+  @override
+  late final GeneratedColumn<String> scannerType = GeneratedColumn<String>(
+    'scanner_type',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>(
+      "scanner_type IN ('disabled', 'keyboard_wedge', 'camera')",
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<String>('keyboard_wedge'),
+  );
+  static const VerificationMeta _scannerInterCharacterTimeoutMsMeta =
+      const VerificationMeta('scannerInterCharacterTimeoutMs');
+  @override
+  late final GeneratedColumn<int> scannerInterCharacterTimeoutMs =
+      GeneratedColumn<int>(
+        'scanner_inter_character_timeout_ms',
+        aliasedName,
+        false,
+        check: () => const CustomExpression<bool>(
+          'scanner_inter_character_timeout_ms BETWEEN 20 AND 1000',
+        ),
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant<int>(80),
+      );
+  static const VerificationMeta _scannerDuplicateSuppressionMsMeta =
+      const VerificationMeta('scannerDuplicateSuppressionMs');
+  @override
+  late final GeneratedColumn<int> scannerDuplicateSuppressionMs =
+      GeneratedColumn<int>(
+        'scanner_duplicate_suppression_ms',
+        aliasedName,
+        false,
+        check: () => const CustomExpression<bool>(
+          'scanner_duplicate_suppression_ms BETWEEN 0 AND 5000',
+        ),
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant<int>(350),
+      );
+  static const VerificationMeta _printerTypeMeta = const VerificationMeta(
+    'printerType',
+  );
+  @override
+  late final GeneratedColumn<String> printerType = GeneratedColumn<String>(
+    'printer_type',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>(
+      "printer_type IN ('screen', 'network_esc_pos')",
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<String>('screen'),
+  );
+  static const VerificationMeta _printerAddressMeta = const VerificationMeta(
+    'printerAddress',
+  );
+  @override
+  late final GeneratedColumn<String> printerAddress = GeneratedColumn<String>(
+    'printer_address',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _printerPortMeta = const VerificationMeta(
+    'printerPort',
+  );
+  @override
+  late final GeneratedColumn<int> printerPort = GeneratedColumn<int>(
+    'printer_port',
+    aliasedName,
+    false,
+    check: () =>
+        const CustomExpression<bool>('printer_port BETWEEN 1 AND 65535'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(9100),
+  );
+  static const VerificationMeta _printerPaperWidthMmMeta =
+      const VerificationMeta('printerPaperWidthMm');
+  @override
+  late final GeneratedColumn<int> printerPaperWidthMm = GeneratedColumn<int>(
+    'printer_paper_width_mm',
+    aliasedName,
+    false,
+    check: () =>
+        const CustomExpression<bool>('printer_paper_width_mm IN (58, 80)'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(80),
+  );
+  static const VerificationMeta _cashDrawerEnabledMeta = const VerificationMeta(
+    'cashDrawerEnabled',
+  );
+  @override
+  late final GeneratedColumn<bool> cashDrawerEnabled = GeneratedColumn<bool>(
+    'cash_drawer_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("cash_drawer_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant<bool>(false),
+  );
+  static const VerificationMeta _cashDrawerPinMeta = const VerificationMeta(
+    'cashDrawerPin',
+  );
+  @override
+  late final GeneratedColumn<int> cashDrawerPin = GeneratedColumn<int>(
+    'cash_drawer_pin',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('cash_drawer_pin IN (0, 1)'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
   );
@@ -17059,6 +17935,15 @@ class $RegistersTable extends Registers
     assignedDeviceId,
     assignedByUserId,
     assignedAt,
+    scannerType,
+    scannerInterCharacterTimeoutMs,
+    scannerDuplicateSuppressionMs,
+    printerType,
+    printerAddress,
+    printerPort,
+    printerPaperWidthMm,
+    cashDrawerEnabled,
+    cashDrawerPin,
     isActive,
     version,
     createdAt,
@@ -17139,6 +18024,87 @@ class $RegistersTable extends Registers
       context.handle(
         _assignedAtMeta,
         assignedAt.isAcceptableOrUnknown(data['assigned_at']!, _assignedAtMeta),
+      );
+    }
+    if (data.containsKey('scanner_type')) {
+      context.handle(
+        _scannerTypeMeta,
+        scannerType.isAcceptableOrUnknown(
+          data['scanner_type']!,
+          _scannerTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('scanner_inter_character_timeout_ms')) {
+      context.handle(
+        _scannerInterCharacterTimeoutMsMeta,
+        scannerInterCharacterTimeoutMs.isAcceptableOrUnknown(
+          data['scanner_inter_character_timeout_ms']!,
+          _scannerInterCharacterTimeoutMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('scanner_duplicate_suppression_ms')) {
+      context.handle(
+        _scannerDuplicateSuppressionMsMeta,
+        scannerDuplicateSuppressionMs.isAcceptableOrUnknown(
+          data['scanner_duplicate_suppression_ms']!,
+          _scannerDuplicateSuppressionMsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('printer_type')) {
+      context.handle(
+        _printerTypeMeta,
+        printerType.isAcceptableOrUnknown(
+          data['printer_type']!,
+          _printerTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('printer_address')) {
+      context.handle(
+        _printerAddressMeta,
+        printerAddress.isAcceptableOrUnknown(
+          data['printer_address']!,
+          _printerAddressMeta,
+        ),
+      );
+    }
+    if (data.containsKey('printer_port')) {
+      context.handle(
+        _printerPortMeta,
+        printerPort.isAcceptableOrUnknown(
+          data['printer_port']!,
+          _printerPortMeta,
+        ),
+      );
+    }
+    if (data.containsKey('printer_paper_width_mm')) {
+      context.handle(
+        _printerPaperWidthMmMeta,
+        printerPaperWidthMm.isAcceptableOrUnknown(
+          data['printer_paper_width_mm']!,
+          _printerPaperWidthMmMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cash_drawer_enabled')) {
+      context.handle(
+        _cashDrawerEnabledMeta,
+        cashDrawerEnabled.isAcceptableOrUnknown(
+          data['cash_drawer_enabled']!,
+          _cashDrawerEnabledMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cash_drawer_pin')) {
+      context.handle(
+        _cashDrawerPinMeta,
+        cashDrawerPin.isAcceptableOrUnknown(
+          data['cash_drawer_pin']!,
+          _cashDrawerPinMeta,
+        ),
       );
     }
     if (data.containsKey('is_active')) {
@@ -17222,6 +18188,42 @@ class $RegistersTable extends Registers
         DriftSqlType.dateTime,
         data['${effectivePrefix}assigned_at'],
       ),
+      scannerType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scanner_type'],
+      )!,
+      scannerInterCharacterTimeoutMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}scanner_inter_character_timeout_ms'],
+      )!,
+      scannerDuplicateSuppressionMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}scanner_duplicate_suppression_ms'],
+      )!,
+      printerType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}printer_type'],
+      )!,
+      printerAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}printer_address'],
+      ),
+      printerPort: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}printer_port'],
+      )!,
+      printerPaperWidthMm: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}printer_paper_width_mm'],
+      )!,
+      cashDrawerEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}cash_drawer_enabled'],
+      )!,
+      cashDrawerPin: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cash_drawer_pin'],
+      )!,
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
@@ -17260,6 +18262,15 @@ class Register extends DataClass implements Insertable<Register> {
   final String? assignedDeviceId;
   final String? assignedByUserId;
   final DateTime? assignedAt;
+  final String scannerType;
+  final int scannerInterCharacterTimeoutMs;
+  final int scannerDuplicateSuppressionMs;
+  final String printerType;
+  final String? printerAddress;
+  final int printerPort;
+  final int printerPaperWidthMm;
+  final bool cashDrawerEnabled;
+  final int cashDrawerPin;
   final bool isActive;
   final int version;
   final DateTime createdAt;
@@ -17274,6 +18285,15 @@ class Register extends DataClass implements Insertable<Register> {
     this.assignedDeviceId,
     this.assignedByUserId,
     this.assignedAt,
+    required this.scannerType,
+    required this.scannerInterCharacterTimeoutMs,
+    required this.scannerDuplicateSuppressionMs,
+    required this.printerType,
+    this.printerAddress,
+    required this.printerPort,
+    required this.printerPaperWidthMm,
+    required this.cashDrawerEnabled,
+    required this.cashDrawerPin,
     required this.isActive,
     required this.version,
     required this.createdAt,
@@ -17297,6 +18317,21 @@ class Register extends DataClass implements Insertable<Register> {
     if (!nullToAbsent || assignedAt != null) {
       map['assigned_at'] = Variable<DateTime>(assignedAt);
     }
+    map['scanner_type'] = Variable<String>(scannerType);
+    map['scanner_inter_character_timeout_ms'] = Variable<int>(
+      scannerInterCharacterTimeoutMs,
+    );
+    map['scanner_duplicate_suppression_ms'] = Variable<int>(
+      scannerDuplicateSuppressionMs,
+    );
+    map['printer_type'] = Variable<String>(printerType);
+    if (!nullToAbsent || printerAddress != null) {
+      map['printer_address'] = Variable<String>(printerAddress);
+    }
+    map['printer_port'] = Variable<int>(printerPort);
+    map['printer_paper_width_mm'] = Variable<int>(printerPaperWidthMm);
+    map['cash_drawer_enabled'] = Variable<bool>(cashDrawerEnabled);
+    map['cash_drawer_pin'] = Variable<int>(cashDrawerPin);
     map['is_active'] = Variable<bool>(isActive);
     map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -17323,6 +18358,17 @@ class Register extends DataClass implements Insertable<Register> {
       assignedAt: assignedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(assignedAt),
+      scannerType: Value(scannerType),
+      scannerInterCharacterTimeoutMs: Value(scannerInterCharacterTimeoutMs),
+      scannerDuplicateSuppressionMs: Value(scannerDuplicateSuppressionMs),
+      printerType: Value(printerType),
+      printerAddress: printerAddress == null && nullToAbsent
+          ? const Value.absent()
+          : Value(printerAddress),
+      printerPort: Value(printerPort),
+      printerPaperWidthMm: Value(printerPaperWidthMm),
+      cashDrawerEnabled: Value(cashDrawerEnabled),
+      cashDrawerPin: Value(cashDrawerPin),
       isActive: Value(isActive),
       version: Value(version),
       createdAt: Value(createdAt),
@@ -17347,6 +18393,21 @@ class Register extends DataClass implements Insertable<Register> {
       assignedDeviceId: serializer.fromJson<String?>(json['assignedDeviceId']),
       assignedByUserId: serializer.fromJson<String?>(json['assignedByUserId']),
       assignedAt: serializer.fromJson<DateTime?>(json['assignedAt']),
+      scannerType: serializer.fromJson<String>(json['scannerType']),
+      scannerInterCharacterTimeoutMs: serializer.fromJson<int>(
+        json['scannerInterCharacterTimeoutMs'],
+      ),
+      scannerDuplicateSuppressionMs: serializer.fromJson<int>(
+        json['scannerDuplicateSuppressionMs'],
+      ),
+      printerType: serializer.fromJson<String>(json['printerType']),
+      printerAddress: serializer.fromJson<String?>(json['printerAddress']),
+      printerPort: serializer.fromJson<int>(json['printerPort']),
+      printerPaperWidthMm: serializer.fromJson<int>(
+        json['printerPaperWidthMm'],
+      ),
+      cashDrawerEnabled: serializer.fromJson<bool>(json['cashDrawerEnabled']),
+      cashDrawerPin: serializer.fromJson<int>(json['cashDrawerPin']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -17366,6 +18427,19 @@ class Register extends DataClass implements Insertable<Register> {
       'assignedDeviceId': serializer.toJson<String?>(assignedDeviceId),
       'assignedByUserId': serializer.toJson<String?>(assignedByUserId),
       'assignedAt': serializer.toJson<DateTime?>(assignedAt),
+      'scannerType': serializer.toJson<String>(scannerType),
+      'scannerInterCharacterTimeoutMs': serializer.toJson<int>(
+        scannerInterCharacterTimeoutMs,
+      ),
+      'scannerDuplicateSuppressionMs': serializer.toJson<int>(
+        scannerDuplicateSuppressionMs,
+      ),
+      'printerType': serializer.toJson<String>(printerType),
+      'printerAddress': serializer.toJson<String?>(printerAddress),
+      'printerPort': serializer.toJson<int>(printerPort),
+      'printerPaperWidthMm': serializer.toJson<int>(printerPaperWidthMm),
+      'cashDrawerEnabled': serializer.toJson<bool>(cashDrawerEnabled),
+      'cashDrawerPin': serializer.toJson<int>(cashDrawerPin),
       'isActive': serializer.toJson<bool>(isActive),
       'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -17383,6 +18457,15 @@ class Register extends DataClass implements Insertable<Register> {
     Value<String?> assignedDeviceId = const Value.absent(),
     Value<String?> assignedByUserId = const Value.absent(),
     Value<DateTime?> assignedAt = const Value.absent(),
+    String? scannerType,
+    int? scannerInterCharacterTimeoutMs,
+    int? scannerDuplicateSuppressionMs,
+    String? printerType,
+    Value<String?> printerAddress = const Value.absent(),
+    int? printerPort,
+    int? printerPaperWidthMm,
+    bool? cashDrawerEnabled,
+    int? cashDrawerPin,
     bool? isActive,
     int? version,
     DateTime? createdAt,
@@ -17401,6 +18484,19 @@ class Register extends DataClass implements Insertable<Register> {
         ? assignedByUserId.value
         : this.assignedByUserId,
     assignedAt: assignedAt.present ? assignedAt.value : this.assignedAt,
+    scannerType: scannerType ?? this.scannerType,
+    scannerInterCharacterTimeoutMs:
+        scannerInterCharacterTimeoutMs ?? this.scannerInterCharacterTimeoutMs,
+    scannerDuplicateSuppressionMs:
+        scannerDuplicateSuppressionMs ?? this.scannerDuplicateSuppressionMs,
+    printerType: printerType ?? this.printerType,
+    printerAddress: printerAddress.present
+        ? printerAddress.value
+        : this.printerAddress,
+    printerPort: printerPort ?? this.printerPort,
+    printerPaperWidthMm: printerPaperWidthMm ?? this.printerPaperWidthMm,
+    cashDrawerEnabled: cashDrawerEnabled ?? this.cashDrawerEnabled,
+    cashDrawerPin: cashDrawerPin ?? this.cashDrawerPin,
     isActive: isActive ?? this.isActive,
     version: version ?? this.version,
     createdAt: createdAt ?? this.createdAt,
@@ -17425,6 +18521,34 @@ class Register extends DataClass implements Insertable<Register> {
       assignedAt: data.assignedAt.present
           ? data.assignedAt.value
           : this.assignedAt,
+      scannerType: data.scannerType.present
+          ? data.scannerType.value
+          : this.scannerType,
+      scannerInterCharacterTimeoutMs:
+          data.scannerInterCharacterTimeoutMs.present
+          ? data.scannerInterCharacterTimeoutMs.value
+          : this.scannerInterCharacterTimeoutMs,
+      scannerDuplicateSuppressionMs: data.scannerDuplicateSuppressionMs.present
+          ? data.scannerDuplicateSuppressionMs.value
+          : this.scannerDuplicateSuppressionMs,
+      printerType: data.printerType.present
+          ? data.printerType.value
+          : this.printerType,
+      printerAddress: data.printerAddress.present
+          ? data.printerAddress.value
+          : this.printerAddress,
+      printerPort: data.printerPort.present
+          ? data.printerPort.value
+          : this.printerPort,
+      printerPaperWidthMm: data.printerPaperWidthMm.present
+          ? data.printerPaperWidthMm.value
+          : this.printerPaperWidthMm,
+      cashDrawerEnabled: data.cashDrawerEnabled.present
+          ? data.cashDrawerEnabled.value
+          : this.cashDrawerEnabled,
+      cashDrawerPin: data.cashDrawerPin.present
+          ? data.cashDrawerPin.value
+          : this.cashDrawerPin,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       version: data.version.present ? data.version.value : this.version,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -17444,6 +18568,19 @@ class Register extends DataClass implements Insertable<Register> {
           ..write('assignedDeviceId: $assignedDeviceId, ')
           ..write('assignedByUserId: $assignedByUserId, ')
           ..write('assignedAt: $assignedAt, ')
+          ..write('scannerType: $scannerType, ')
+          ..write(
+            'scannerInterCharacterTimeoutMs: $scannerInterCharacterTimeoutMs, ',
+          )
+          ..write(
+            'scannerDuplicateSuppressionMs: $scannerDuplicateSuppressionMs, ',
+          )
+          ..write('printerType: $printerType, ')
+          ..write('printerAddress: $printerAddress, ')
+          ..write('printerPort: $printerPort, ')
+          ..write('printerPaperWidthMm: $printerPaperWidthMm, ')
+          ..write('cashDrawerEnabled: $cashDrawerEnabled, ')
+          ..write('cashDrawerPin: $cashDrawerPin, ')
           ..write('isActive: $isActive, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
@@ -17454,7 +18591,7 @@ class Register extends DataClass implements Insertable<Register> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     organizationId,
     branchId,
@@ -17463,12 +18600,21 @@ class Register extends DataClass implements Insertable<Register> {
     assignedDeviceId,
     assignedByUserId,
     assignedAt,
+    scannerType,
+    scannerInterCharacterTimeoutMs,
+    scannerDuplicateSuppressionMs,
+    printerType,
+    printerAddress,
+    printerPort,
+    printerPaperWidthMm,
+    cashDrawerEnabled,
+    cashDrawerPin,
     isActive,
     version,
     createdAt,
     updatedAt,
     deletedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -17481,6 +18627,17 @@ class Register extends DataClass implements Insertable<Register> {
           other.assignedDeviceId == this.assignedDeviceId &&
           other.assignedByUserId == this.assignedByUserId &&
           other.assignedAt == this.assignedAt &&
+          other.scannerType == this.scannerType &&
+          other.scannerInterCharacterTimeoutMs ==
+              this.scannerInterCharacterTimeoutMs &&
+          other.scannerDuplicateSuppressionMs ==
+              this.scannerDuplicateSuppressionMs &&
+          other.printerType == this.printerType &&
+          other.printerAddress == this.printerAddress &&
+          other.printerPort == this.printerPort &&
+          other.printerPaperWidthMm == this.printerPaperWidthMm &&
+          other.cashDrawerEnabled == this.cashDrawerEnabled &&
+          other.cashDrawerPin == this.cashDrawerPin &&
           other.isActive == this.isActive &&
           other.version == this.version &&
           other.createdAt == this.createdAt &&
@@ -17497,6 +18654,15 @@ class RegistersCompanion extends UpdateCompanion<Register> {
   final Value<String?> assignedDeviceId;
   final Value<String?> assignedByUserId;
   final Value<DateTime?> assignedAt;
+  final Value<String> scannerType;
+  final Value<int> scannerInterCharacterTimeoutMs;
+  final Value<int> scannerDuplicateSuppressionMs;
+  final Value<String> printerType;
+  final Value<String?> printerAddress;
+  final Value<int> printerPort;
+  final Value<int> printerPaperWidthMm;
+  final Value<bool> cashDrawerEnabled;
+  final Value<int> cashDrawerPin;
   final Value<bool> isActive;
   final Value<int> version;
   final Value<DateTime> createdAt;
@@ -17512,6 +18678,15 @@ class RegistersCompanion extends UpdateCompanion<Register> {
     this.assignedDeviceId = const Value.absent(),
     this.assignedByUserId = const Value.absent(),
     this.assignedAt = const Value.absent(),
+    this.scannerType = const Value.absent(),
+    this.scannerInterCharacterTimeoutMs = const Value.absent(),
+    this.scannerDuplicateSuppressionMs = const Value.absent(),
+    this.printerType = const Value.absent(),
+    this.printerAddress = const Value.absent(),
+    this.printerPort = const Value.absent(),
+    this.printerPaperWidthMm = const Value.absent(),
+    this.cashDrawerEnabled = const Value.absent(),
+    this.cashDrawerPin = const Value.absent(),
     this.isActive = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -17528,6 +18703,15 @@ class RegistersCompanion extends UpdateCompanion<Register> {
     this.assignedDeviceId = const Value.absent(),
     this.assignedByUserId = const Value.absent(),
     this.assignedAt = const Value.absent(),
+    this.scannerType = const Value.absent(),
+    this.scannerInterCharacterTimeoutMs = const Value.absent(),
+    this.scannerDuplicateSuppressionMs = const Value.absent(),
+    this.printerType = const Value.absent(),
+    this.printerAddress = const Value.absent(),
+    this.printerPort = const Value.absent(),
+    this.printerPaperWidthMm = const Value.absent(),
+    this.cashDrawerEnabled = const Value.absent(),
+    this.cashDrawerPin = const Value.absent(),
     this.isActive = const Value.absent(),
     this.version = const Value.absent(),
     required DateTime createdAt,
@@ -17550,6 +18734,15 @@ class RegistersCompanion extends UpdateCompanion<Register> {
     Expression<String>? assignedDeviceId,
     Expression<String>? assignedByUserId,
     Expression<DateTime>? assignedAt,
+    Expression<String>? scannerType,
+    Expression<int>? scannerInterCharacterTimeoutMs,
+    Expression<int>? scannerDuplicateSuppressionMs,
+    Expression<String>? printerType,
+    Expression<String>? printerAddress,
+    Expression<int>? printerPort,
+    Expression<int>? printerPaperWidthMm,
+    Expression<bool>? cashDrawerEnabled,
+    Expression<int>? cashDrawerPin,
     Expression<bool>? isActive,
     Expression<int>? version,
     Expression<DateTime>? createdAt,
@@ -17566,6 +18759,18 @@ class RegistersCompanion extends UpdateCompanion<Register> {
       if (assignedDeviceId != null) 'assigned_device_id': assignedDeviceId,
       if (assignedByUserId != null) 'assigned_by_user_id': assignedByUserId,
       if (assignedAt != null) 'assigned_at': assignedAt,
+      if (scannerType != null) 'scanner_type': scannerType,
+      if (scannerInterCharacterTimeoutMs != null)
+        'scanner_inter_character_timeout_ms': scannerInterCharacterTimeoutMs,
+      if (scannerDuplicateSuppressionMs != null)
+        'scanner_duplicate_suppression_ms': scannerDuplicateSuppressionMs,
+      if (printerType != null) 'printer_type': printerType,
+      if (printerAddress != null) 'printer_address': printerAddress,
+      if (printerPort != null) 'printer_port': printerPort,
+      if (printerPaperWidthMm != null)
+        'printer_paper_width_mm': printerPaperWidthMm,
+      if (cashDrawerEnabled != null) 'cash_drawer_enabled': cashDrawerEnabled,
+      if (cashDrawerPin != null) 'cash_drawer_pin': cashDrawerPin,
       if (isActive != null) 'is_active': isActive,
       if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
@@ -17584,6 +18789,15 @@ class RegistersCompanion extends UpdateCompanion<Register> {
     Value<String?>? assignedDeviceId,
     Value<String?>? assignedByUserId,
     Value<DateTime?>? assignedAt,
+    Value<String>? scannerType,
+    Value<int>? scannerInterCharacterTimeoutMs,
+    Value<int>? scannerDuplicateSuppressionMs,
+    Value<String>? printerType,
+    Value<String?>? printerAddress,
+    Value<int>? printerPort,
+    Value<int>? printerPaperWidthMm,
+    Value<bool>? cashDrawerEnabled,
+    Value<int>? cashDrawerPin,
     Value<bool>? isActive,
     Value<int>? version,
     Value<DateTime>? createdAt,
@@ -17600,6 +18814,17 @@ class RegistersCompanion extends UpdateCompanion<Register> {
       assignedDeviceId: assignedDeviceId ?? this.assignedDeviceId,
       assignedByUserId: assignedByUserId ?? this.assignedByUserId,
       assignedAt: assignedAt ?? this.assignedAt,
+      scannerType: scannerType ?? this.scannerType,
+      scannerInterCharacterTimeoutMs:
+          scannerInterCharacterTimeoutMs ?? this.scannerInterCharacterTimeoutMs,
+      scannerDuplicateSuppressionMs:
+          scannerDuplicateSuppressionMs ?? this.scannerDuplicateSuppressionMs,
+      printerType: printerType ?? this.printerType,
+      printerAddress: printerAddress ?? this.printerAddress,
+      printerPort: printerPort ?? this.printerPort,
+      printerPaperWidthMm: printerPaperWidthMm ?? this.printerPaperWidthMm,
+      cashDrawerEnabled: cashDrawerEnabled ?? this.cashDrawerEnabled,
+      cashDrawerPin: cashDrawerPin ?? this.cashDrawerPin,
       isActive: isActive ?? this.isActive,
       version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
@@ -17636,6 +18861,37 @@ class RegistersCompanion extends UpdateCompanion<Register> {
     if (assignedAt.present) {
       map['assigned_at'] = Variable<DateTime>(assignedAt.value);
     }
+    if (scannerType.present) {
+      map['scanner_type'] = Variable<String>(scannerType.value);
+    }
+    if (scannerInterCharacterTimeoutMs.present) {
+      map['scanner_inter_character_timeout_ms'] = Variable<int>(
+        scannerInterCharacterTimeoutMs.value,
+      );
+    }
+    if (scannerDuplicateSuppressionMs.present) {
+      map['scanner_duplicate_suppression_ms'] = Variable<int>(
+        scannerDuplicateSuppressionMs.value,
+      );
+    }
+    if (printerType.present) {
+      map['printer_type'] = Variable<String>(printerType.value);
+    }
+    if (printerAddress.present) {
+      map['printer_address'] = Variable<String>(printerAddress.value);
+    }
+    if (printerPort.present) {
+      map['printer_port'] = Variable<int>(printerPort.value);
+    }
+    if (printerPaperWidthMm.present) {
+      map['printer_paper_width_mm'] = Variable<int>(printerPaperWidthMm.value);
+    }
+    if (cashDrawerEnabled.present) {
+      map['cash_drawer_enabled'] = Variable<bool>(cashDrawerEnabled.value);
+    }
+    if (cashDrawerPin.present) {
+      map['cash_drawer_pin'] = Variable<int>(cashDrawerPin.value);
+    }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
@@ -17668,6 +18924,19 @@ class RegistersCompanion extends UpdateCompanion<Register> {
           ..write('assignedDeviceId: $assignedDeviceId, ')
           ..write('assignedByUserId: $assignedByUserId, ')
           ..write('assignedAt: $assignedAt, ')
+          ..write('scannerType: $scannerType, ')
+          ..write(
+            'scannerInterCharacterTimeoutMs: $scannerInterCharacterTimeoutMs, ',
+          )
+          ..write(
+            'scannerDuplicateSuppressionMs: $scannerDuplicateSuppressionMs, ',
+          )
+          ..write('printerType: $printerType, ')
+          ..write('printerAddress: $printerAddress, ')
+          ..write('printerPort: $printerPort, ')
+          ..write('printerPaperWidthMm: $printerPaperWidthMm, ')
+          ..write('cashDrawerEnabled: $cashDrawerEnabled, ')
+          ..write('cashDrawerPin: $cashDrawerPin, ')
           ..write('isActive: $isActive, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
@@ -26395,6 +27664,953 @@ class ReceiptSequencesCompanion extends UpdateCompanion<ReceiptSequence> {
           ..write('nextSequence: $nextSequence, ')
           ..write('lastIssuedAt: $lastIssuedAt, ')
           ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ReceiptPrintJobsTable extends ReceiptPrintJobs
+    with TableInfo<$ReceiptPrintJobsTable, ReceiptPrintJob> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReceiptPrintJobsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES branches (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _registerIdMeta = const VerificationMeta(
+    'registerId',
+  );
+  @override
+  late final GeneratedColumn<String> registerId = GeneratedColumn<String>(
+    'register_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES registers (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _saleIdMeta = const VerificationMeta('saleId');
+  @override
+  late final GeneratedColumn<String> saleId = GeneratedColumn<String>(
+    'sale_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES sales (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _deduplicationKeyMeta = const VerificationMeta(
+    'deduplicationKey',
+  );
+  @override
+  late final GeneratedColumn<String> deduplicationKey = GeneratedColumn<String>(
+    'deduplication_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _copyTypeMeta = const VerificationMeta(
+    'copyType',
+  );
+  @override
+  late final GeneratedColumn<String> copyType = GeneratedColumn<String>(
+    'copy_type',
+    aliasedName,
+    false,
+    check: () =>
+        const CustomExpression<bool>("copy_type IN ('original', 'reprint')"),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _documentTextMeta = const VerificationMeta(
+    'documentText',
+  );
+  @override
+  late final GeneratedColumn<String> documentText = GeneratedColumn<String>(
+    'document_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>(
+      "status IN ('pending', 'processing', 'succeeded', "
+      "'retryable_failure', 'permanent_failure')",
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<String>('pending'),
+  );
+  static const VerificationMeta _attemptCountMeta = const VerificationMeta(
+    'attemptCount',
+  );
+  @override
+  late final GeneratedColumn<int> attemptCount = GeneratedColumn<int>(
+    'attempt_count',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('attempt_count >= 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _nextAttemptAtMeta = const VerificationMeta(
+    'nextAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextAttemptAt =
+      GeneratedColumn<DateTime>(
+        'next_attempt_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _requestedByUserIdMeta = const VerificationMeta(
+    'requestedByUserId',
+  );
+  @override
+  late final GeneratedColumn<String> requestedByUserId =
+      GeneratedColumn<String>(
+        'requested_by_user_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _printedAtMeta = const VerificationMeta(
+    'printedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> printedAt = GeneratedColumn<DateTime>(
+    'printed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    branchId,
+    registerId,
+    saleId,
+    deduplicationKey,
+    copyType,
+    documentText,
+    status,
+    attemptCount,
+    nextAttemptAt,
+    lastError,
+    requestedByUserId,
+    printedAt,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'receipt_print_jobs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReceiptPrintJob> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('register_id')) {
+      context.handle(
+        _registerIdMeta,
+        registerId.isAcceptableOrUnknown(data['register_id']!, _registerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_registerIdMeta);
+    }
+    if (data.containsKey('sale_id')) {
+      context.handle(
+        _saleIdMeta,
+        saleId.isAcceptableOrUnknown(data['sale_id']!, _saleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_saleIdMeta);
+    }
+    if (data.containsKey('deduplication_key')) {
+      context.handle(
+        _deduplicationKeyMeta,
+        deduplicationKey.isAcceptableOrUnknown(
+          data['deduplication_key']!,
+          _deduplicationKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_deduplicationKeyMeta);
+    }
+    if (data.containsKey('copy_type')) {
+      context.handle(
+        _copyTypeMeta,
+        copyType.isAcceptableOrUnknown(data['copy_type']!, _copyTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_copyTypeMeta);
+    }
+    if (data.containsKey('document_text')) {
+      context.handle(
+        _documentTextMeta,
+        documentText.isAcceptableOrUnknown(
+          data['document_text']!,
+          _documentTextMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentTextMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('attempt_count')) {
+      context.handle(
+        _attemptCountMeta,
+        attemptCount.isAcceptableOrUnknown(
+          data['attempt_count']!,
+          _attemptCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_attempt_at')) {
+      context.handle(
+        _nextAttemptAtMeta,
+        nextAttemptAt.isAcceptableOrUnknown(
+          data['next_attempt_at']!,
+          _nextAttemptAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('requested_by_user_id')) {
+      context.handle(
+        _requestedByUserIdMeta,
+        requestedByUserId.isAcceptableOrUnknown(
+          data['requested_by_user_id']!,
+          _requestedByUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_requestedByUserIdMeta);
+    }
+    if (data.containsKey('printed_at')) {
+      context.handle(
+        _printedAtMeta,
+        printedAt.isAcceptableOrUnknown(data['printed_at']!, _printedAtMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReceiptPrintJob map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReceiptPrintJob(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      registerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_id'],
+      )!,
+      saleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sale_id'],
+      )!,
+      deduplicationKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}deduplication_key'],
+      )!,
+      copyType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}copy_type'],
+      )!,
+      documentText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_text'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      attemptCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempt_count'],
+      )!,
+      nextAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_attempt_at'],
+      ),
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      requestedByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}requested_by_user_id'],
+      )!,
+      printedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}printed_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $ReceiptPrintJobsTable createAlias(String alias) {
+    return $ReceiptPrintJobsTable(attachedDatabase, alias);
+  }
+}
+
+class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
+  final String id;
+  final String organizationId;
+  final String branchId;
+  final String registerId;
+  final String saleId;
+  final String deduplicationKey;
+  final String copyType;
+  final String documentText;
+  final String status;
+  final int attemptCount;
+  final DateTime? nextAttemptAt;
+  final String? lastError;
+  final String requestedByUserId;
+  final DateTime? printedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const ReceiptPrintJob({
+    required this.id,
+    required this.organizationId,
+    required this.branchId,
+    required this.registerId,
+    required this.saleId,
+    required this.deduplicationKey,
+    required this.copyType,
+    required this.documentText,
+    required this.status,
+    required this.attemptCount,
+    this.nextAttemptAt,
+    this.lastError,
+    required this.requestedByUserId,
+    this.printedAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['branch_id'] = Variable<String>(branchId);
+    map['register_id'] = Variable<String>(registerId);
+    map['sale_id'] = Variable<String>(saleId);
+    map['deduplication_key'] = Variable<String>(deduplicationKey);
+    map['copy_type'] = Variable<String>(copyType);
+    map['document_text'] = Variable<String>(documentText);
+    map['status'] = Variable<String>(status);
+    map['attempt_count'] = Variable<int>(attemptCount);
+    if (!nullToAbsent || nextAttemptAt != null) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt);
+    }
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['requested_by_user_id'] = Variable<String>(requestedByUserId);
+    if (!nullToAbsent || printedAt != null) {
+      map['printed_at'] = Variable<DateTime>(printedAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  ReceiptPrintJobsCompanion toCompanion(bool nullToAbsent) {
+    return ReceiptPrintJobsCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      branchId: Value(branchId),
+      registerId: Value(registerId),
+      saleId: Value(saleId),
+      deduplicationKey: Value(deduplicationKey),
+      copyType: Value(copyType),
+      documentText: Value(documentText),
+      status: Value(status),
+      attemptCount: Value(attemptCount),
+      nextAttemptAt: nextAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAttemptAt),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      requestedByUserId: Value(requestedByUserId),
+      printedAt: printedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(printedAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ReceiptPrintJob.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReceiptPrintJob(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      registerId: serializer.fromJson<String>(json['registerId']),
+      saleId: serializer.fromJson<String>(json['saleId']),
+      deduplicationKey: serializer.fromJson<String>(json['deduplicationKey']),
+      copyType: serializer.fromJson<String>(json['copyType']),
+      documentText: serializer.fromJson<String>(json['documentText']),
+      status: serializer.fromJson<String>(json['status']),
+      attemptCount: serializer.fromJson<int>(json['attemptCount']),
+      nextAttemptAt: serializer.fromJson<DateTime?>(json['nextAttemptAt']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      requestedByUserId: serializer.fromJson<String>(json['requestedByUserId']),
+      printedAt: serializer.fromJson<DateTime?>(json['printedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'branchId': serializer.toJson<String>(branchId),
+      'registerId': serializer.toJson<String>(registerId),
+      'saleId': serializer.toJson<String>(saleId),
+      'deduplicationKey': serializer.toJson<String>(deduplicationKey),
+      'copyType': serializer.toJson<String>(copyType),
+      'documentText': serializer.toJson<String>(documentText),
+      'status': serializer.toJson<String>(status),
+      'attemptCount': serializer.toJson<int>(attemptCount),
+      'nextAttemptAt': serializer.toJson<DateTime?>(nextAttemptAt),
+      'lastError': serializer.toJson<String?>(lastError),
+      'requestedByUserId': serializer.toJson<String>(requestedByUserId),
+      'printedAt': serializer.toJson<DateTime?>(printedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ReceiptPrintJob copyWith({
+    String? id,
+    String? organizationId,
+    String? branchId,
+    String? registerId,
+    String? saleId,
+    String? deduplicationKey,
+    String? copyType,
+    String? documentText,
+    String? status,
+    int? attemptCount,
+    Value<DateTime?> nextAttemptAt = const Value.absent(),
+    Value<String?> lastError = const Value.absent(),
+    String? requestedByUserId,
+    Value<DateTime?> printedAt = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => ReceiptPrintJob(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    branchId: branchId ?? this.branchId,
+    registerId: registerId ?? this.registerId,
+    saleId: saleId ?? this.saleId,
+    deduplicationKey: deduplicationKey ?? this.deduplicationKey,
+    copyType: copyType ?? this.copyType,
+    documentText: documentText ?? this.documentText,
+    status: status ?? this.status,
+    attemptCount: attemptCount ?? this.attemptCount,
+    nextAttemptAt: nextAttemptAt.present
+        ? nextAttemptAt.value
+        : this.nextAttemptAt,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    requestedByUserId: requestedByUserId ?? this.requestedByUserId,
+    printedAt: printedAt.present ? printedAt.value : this.printedAt,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  ReceiptPrintJob copyWithCompanion(ReceiptPrintJobsCompanion data) {
+    return ReceiptPrintJob(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      registerId: data.registerId.present
+          ? data.registerId.value
+          : this.registerId,
+      saleId: data.saleId.present ? data.saleId.value : this.saleId,
+      deduplicationKey: data.deduplicationKey.present
+          ? data.deduplicationKey.value
+          : this.deduplicationKey,
+      copyType: data.copyType.present ? data.copyType.value : this.copyType,
+      documentText: data.documentText.present
+          ? data.documentText.value
+          : this.documentText,
+      status: data.status.present ? data.status.value : this.status,
+      attemptCount: data.attemptCount.present
+          ? data.attemptCount.value
+          : this.attemptCount,
+      nextAttemptAt: data.nextAttemptAt.present
+          ? data.nextAttemptAt.value
+          : this.nextAttemptAt,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      requestedByUserId: data.requestedByUserId.present
+          ? data.requestedByUserId.value
+          : this.requestedByUserId,
+      printedAt: data.printedAt.present ? data.printedAt.value : this.printedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReceiptPrintJob(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('registerId: $registerId, ')
+          ..write('saleId: $saleId, ')
+          ..write('deduplicationKey: $deduplicationKey, ')
+          ..write('copyType: $copyType, ')
+          ..write('documentText: $documentText, ')
+          ..write('status: $status, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
+          ..write('lastError: $lastError, ')
+          ..write('requestedByUserId: $requestedByUserId, ')
+          ..write('printedAt: $printedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    branchId,
+    registerId,
+    saleId,
+    deduplicationKey,
+    copyType,
+    documentText,
+    status,
+    attemptCount,
+    nextAttemptAt,
+    lastError,
+    requestedByUserId,
+    printedAt,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReceiptPrintJob &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.branchId == this.branchId &&
+          other.registerId == this.registerId &&
+          other.saleId == this.saleId &&
+          other.deduplicationKey == this.deduplicationKey &&
+          other.copyType == this.copyType &&
+          other.documentText == this.documentText &&
+          other.status == this.status &&
+          other.attemptCount == this.attemptCount &&
+          other.nextAttemptAt == this.nextAttemptAt &&
+          other.lastError == this.lastError &&
+          other.requestedByUserId == this.requestedByUserId &&
+          other.printedAt == this.printedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String> branchId;
+  final Value<String> registerId;
+  final Value<String> saleId;
+  final Value<String> deduplicationKey;
+  final Value<String> copyType;
+  final Value<String> documentText;
+  final Value<String> status;
+  final Value<int> attemptCount;
+  final Value<DateTime?> nextAttemptAt;
+  final Value<String?> lastError;
+  final Value<String> requestedByUserId;
+  final Value<DateTime?> printedAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const ReceiptPrintJobsCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.registerId = const Value.absent(),
+    this.saleId = const Value.absent(),
+    this.deduplicationKey = const Value.absent(),
+    this.copyType = const Value.absent(),
+    this.documentText = const Value.absent(),
+    this.status = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.requestedByUserId = const Value.absent(),
+    this.printedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReceiptPrintJobsCompanion.insert({
+    required String id,
+    required String organizationId,
+    required String branchId,
+    required String registerId,
+    required String saleId,
+    required String deduplicationKey,
+    required String copyType,
+    required String documentText,
+    this.status = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
+    this.lastError = const Value.absent(),
+    required String requestedByUserId,
+    this.printedAt = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       branchId = Value(branchId),
+       registerId = Value(registerId),
+       saleId = Value(saleId),
+       deduplicationKey = Value(deduplicationKey),
+       copyType = Value(copyType),
+       documentText = Value(documentText),
+       requestedByUserId = Value(requestedByUserId),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<ReceiptPrintJob> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? branchId,
+    Expression<String>? registerId,
+    Expression<String>? saleId,
+    Expression<String>? deduplicationKey,
+    Expression<String>? copyType,
+    Expression<String>? documentText,
+    Expression<String>? status,
+    Expression<int>? attemptCount,
+    Expression<DateTime>? nextAttemptAt,
+    Expression<String>? lastError,
+    Expression<String>? requestedByUserId,
+    Expression<DateTime>? printedAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (branchId != null) 'branch_id': branchId,
+      if (registerId != null) 'register_id': registerId,
+      if (saleId != null) 'sale_id': saleId,
+      if (deduplicationKey != null) 'deduplication_key': deduplicationKey,
+      if (copyType != null) 'copy_type': copyType,
+      if (documentText != null) 'document_text': documentText,
+      if (status != null) 'status': status,
+      if (attemptCount != null) 'attempt_count': attemptCount,
+      if (nextAttemptAt != null) 'next_attempt_at': nextAttemptAt,
+      if (lastError != null) 'last_error': lastError,
+      if (requestedByUserId != null) 'requested_by_user_id': requestedByUserId,
+      if (printedAt != null) 'printed_at': printedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReceiptPrintJobsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String>? branchId,
+    Value<String>? registerId,
+    Value<String>? saleId,
+    Value<String>? deduplicationKey,
+    Value<String>? copyType,
+    Value<String>? documentText,
+    Value<String>? status,
+    Value<int>? attemptCount,
+    Value<DateTime?>? nextAttemptAt,
+    Value<String?>? lastError,
+    Value<String>? requestedByUserId,
+    Value<DateTime?>? printedAt,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return ReceiptPrintJobsCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      branchId: branchId ?? this.branchId,
+      registerId: registerId ?? this.registerId,
+      saleId: saleId ?? this.saleId,
+      deduplicationKey: deduplicationKey ?? this.deduplicationKey,
+      copyType: copyType ?? this.copyType,
+      documentText: documentText ?? this.documentText,
+      status: status ?? this.status,
+      attemptCount: attemptCount ?? this.attemptCount,
+      nextAttemptAt: nextAttemptAt ?? this.nextAttemptAt,
+      lastError: lastError ?? this.lastError,
+      requestedByUserId: requestedByUserId ?? this.requestedByUserId,
+      printedAt: printedAt ?? this.printedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (registerId.present) {
+      map['register_id'] = Variable<String>(registerId.value);
+    }
+    if (saleId.present) {
+      map['sale_id'] = Variable<String>(saleId.value);
+    }
+    if (deduplicationKey.present) {
+      map['deduplication_key'] = Variable<String>(deduplicationKey.value);
+    }
+    if (copyType.present) {
+      map['copy_type'] = Variable<String>(copyType.value);
+    }
+    if (documentText.present) {
+      map['document_text'] = Variable<String>(documentText.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (attemptCount.present) {
+      map['attempt_count'] = Variable<int>(attemptCount.value);
+    }
+    if (nextAttemptAt.present) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt.value);
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (requestedByUserId.present) {
+      map['requested_by_user_id'] = Variable<String>(requestedByUserId.value);
+    }
+    if (printedAt.present) {
+      map['printed_at'] = Variable<DateTime>(printedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReceiptPrintJobsCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('registerId: $registerId, ')
+          ..write('saleId: $saleId, ')
+          ..write('deduplicationKey: $deduplicationKey, ')
+          ..write('copyType: $copyType, ')
+          ..write('documentText: $documentText, ')
+          ..write('status: $status, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
+          ..write('lastError: $lastError, ')
+          ..write('requestedByUserId: $requestedByUserId, ')
+          ..write('printedAt: $printedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -45808,6 +48024,1433 @@ class FeatureFlagsCompanion extends UpdateCompanion<FeatureFlag> {
   }
 }
 
+class $PosCartsTable extends PosCarts with TableInfo<$PosCartsTable, PosCart> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PosCartsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES branches (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>("status IN ('active', 'held')"),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customerIdMeta = const VerificationMeta(
+    'customerId',
+  );
+  @override
+  late final GeneratedColumn<String> customerId = GeneratedColumn<String>(
+    'customer_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES customers (id) ON DELETE SET NULL',
+    ),
+  );
+  static const VerificationMeta _saleDiscountMinorMeta = const VerificationMeta(
+    'saleDiscountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> saleDiscountMinor = GeneratedColumn<int>(
+    'sale_discount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _saleDiscountReasonMeta =
+      const VerificationMeta('saleDiscountReason');
+  @override
+  late final GeneratedColumn<String> saleDiscountReason =
+      GeneratedColumn<String>(
+        'sale_discount_reason',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _activeScopeMeta = const VerificationMeta(
+    'activeScope',
+  );
+  @override
+  late final GeneratedColumn<String> activeScope = GeneratedColumn<String>(
+    'active_scope',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    branchId,
+    deviceId,
+    status,
+    title,
+    customerId,
+    saleDiscountMinor,
+    saleDiscountReason,
+    activeScope,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pos_carts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PosCart> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    }
+    if (data.containsKey('customer_id')) {
+      context.handle(
+        _customerIdMeta,
+        customerId.isAcceptableOrUnknown(data['customer_id']!, _customerIdMeta),
+      );
+    }
+    if (data.containsKey('sale_discount_minor')) {
+      context.handle(
+        _saleDiscountMinorMeta,
+        saleDiscountMinor.isAcceptableOrUnknown(
+          data['sale_discount_minor']!,
+          _saleDiscountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sale_discount_reason')) {
+      context.handle(
+        _saleDiscountReasonMeta,
+        saleDiscountReason.isAcceptableOrUnknown(
+          data['sale_discount_reason']!,
+          _saleDiscountReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('active_scope')) {
+      context.handle(
+        _activeScopeMeta,
+        activeScope.isAcceptableOrUnknown(
+          data['active_scope']!,
+          _activeScopeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PosCart map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PosCart(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      ),
+      customerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_id'],
+      ),
+      saleDiscountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sale_discount_minor'],
+      )!,
+      saleDiscountReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sale_discount_reason'],
+      ),
+      activeScope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}active_scope'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PosCartsTable createAlias(String alias) {
+    return $PosCartsTable(attachedDatabase, alias);
+  }
+}
+
+class PosCart extends DataClass implements Insertable<PosCart> {
+  final String id;
+  final String organizationId;
+  final String branchId;
+  final String deviceId;
+  final String status;
+  final String? title;
+  final String? customerId;
+  final int saleDiscountMinor;
+  final String? saleDiscountReason;
+  final String? activeScope;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const PosCart({
+    required this.id,
+    required this.organizationId,
+    required this.branchId,
+    required this.deviceId,
+    required this.status,
+    this.title,
+    this.customerId,
+    required this.saleDiscountMinor,
+    this.saleDiscountReason,
+    this.activeScope,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['branch_id'] = Variable<String>(branchId);
+    map['device_id'] = Variable<String>(deviceId);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || title != null) {
+      map['title'] = Variable<String>(title);
+    }
+    if (!nullToAbsent || customerId != null) {
+      map['customer_id'] = Variable<String>(customerId);
+    }
+    map['sale_discount_minor'] = Variable<int>(saleDiscountMinor);
+    if (!nullToAbsent || saleDiscountReason != null) {
+      map['sale_discount_reason'] = Variable<String>(saleDiscountReason);
+    }
+    if (!nullToAbsent || activeScope != null) {
+      map['active_scope'] = Variable<String>(activeScope);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  PosCartsCompanion toCompanion(bool nullToAbsent) {
+    return PosCartsCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      branchId: Value(branchId),
+      deviceId: Value(deviceId),
+      status: Value(status),
+      title: title == null && nullToAbsent
+          ? const Value.absent()
+          : Value(title),
+      customerId: customerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerId),
+      saleDiscountMinor: Value(saleDiscountMinor),
+      saleDiscountReason: saleDiscountReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(saleDiscountReason),
+      activeScope: activeScope == null && nullToAbsent
+          ? const Value.absent()
+          : Value(activeScope),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PosCart.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PosCart(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      status: serializer.fromJson<String>(json['status']),
+      title: serializer.fromJson<String?>(json['title']),
+      customerId: serializer.fromJson<String?>(json['customerId']),
+      saleDiscountMinor: serializer.fromJson<int>(json['saleDiscountMinor']),
+      saleDiscountReason: serializer.fromJson<String?>(
+        json['saleDiscountReason'],
+      ),
+      activeScope: serializer.fromJson<String?>(json['activeScope']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'branchId': serializer.toJson<String>(branchId),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'status': serializer.toJson<String>(status),
+      'title': serializer.toJson<String?>(title),
+      'customerId': serializer.toJson<String?>(customerId),
+      'saleDiscountMinor': serializer.toJson<int>(saleDiscountMinor),
+      'saleDiscountReason': serializer.toJson<String?>(saleDiscountReason),
+      'activeScope': serializer.toJson<String?>(activeScope),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  PosCart copyWith({
+    String? id,
+    String? organizationId,
+    String? branchId,
+    String? deviceId,
+    String? status,
+    Value<String?> title = const Value.absent(),
+    Value<String?> customerId = const Value.absent(),
+    int? saleDiscountMinor,
+    Value<String?> saleDiscountReason = const Value.absent(),
+    Value<String?> activeScope = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => PosCart(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    branchId: branchId ?? this.branchId,
+    deviceId: deviceId ?? this.deviceId,
+    status: status ?? this.status,
+    title: title.present ? title.value : this.title,
+    customerId: customerId.present ? customerId.value : this.customerId,
+    saleDiscountMinor: saleDiscountMinor ?? this.saleDiscountMinor,
+    saleDiscountReason: saleDiscountReason.present
+        ? saleDiscountReason.value
+        : this.saleDiscountReason,
+    activeScope: activeScope.present ? activeScope.value : this.activeScope,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  PosCart copyWithCompanion(PosCartsCompanion data) {
+    return PosCart(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      status: data.status.present ? data.status.value : this.status,
+      title: data.title.present ? data.title.value : this.title,
+      customerId: data.customerId.present
+          ? data.customerId.value
+          : this.customerId,
+      saleDiscountMinor: data.saleDiscountMinor.present
+          ? data.saleDiscountMinor.value
+          : this.saleDiscountMinor,
+      saleDiscountReason: data.saleDiscountReason.present
+          ? data.saleDiscountReason.value
+          : this.saleDiscountReason,
+      activeScope: data.activeScope.present
+          ? data.activeScope.value
+          : this.activeScope,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PosCart(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('status: $status, ')
+          ..write('title: $title, ')
+          ..write('customerId: $customerId, ')
+          ..write('saleDiscountMinor: $saleDiscountMinor, ')
+          ..write('saleDiscountReason: $saleDiscountReason, ')
+          ..write('activeScope: $activeScope, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    branchId,
+    deviceId,
+    status,
+    title,
+    customerId,
+    saleDiscountMinor,
+    saleDiscountReason,
+    activeScope,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PosCart &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.branchId == this.branchId &&
+          other.deviceId == this.deviceId &&
+          other.status == this.status &&
+          other.title == this.title &&
+          other.customerId == this.customerId &&
+          other.saleDiscountMinor == this.saleDiscountMinor &&
+          other.saleDiscountReason == this.saleDiscountReason &&
+          other.activeScope == this.activeScope &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PosCartsCompanion extends UpdateCompanion<PosCart> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String> branchId;
+  final Value<String> deviceId;
+  final Value<String> status;
+  final Value<String?> title;
+  final Value<String?> customerId;
+  final Value<int> saleDiscountMinor;
+  final Value<String?> saleDiscountReason;
+  final Value<String?> activeScope;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const PosCartsCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.title = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.saleDiscountMinor = const Value.absent(),
+    this.saleDiscountReason = const Value.absent(),
+    this.activeScope = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PosCartsCompanion.insert({
+    required String id,
+    required String organizationId,
+    required String branchId,
+    required String deviceId,
+    required String status,
+    this.title = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.saleDiscountMinor = const Value.absent(),
+    this.saleDiscountReason = const Value.absent(),
+    this.activeScope = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       branchId = Value(branchId),
+       deviceId = Value(deviceId),
+       status = Value(status),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<PosCart> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? branchId,
+    Expression<String>? deviceId,
+    Expression<String>? status,
+    Expression<String>? title,
+    Expression<String>? customerId,
+    Expression<int>? saleDiscountMinor,
+    Expression<String>? saleDiscountReason,
+    Expression<String>? activeScope,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (branchId != null) 'branch_id': branchId,
+      if (deviceId != null) 'device_id': deviceId,
+      if (status != null) 'status': status,
+      if (title != null) 'title': title,
+      if (customerId != null) 'customer_id': customerId,
+      if (saleDiscountMinor != null) 'sale_discount_minor': saleDiscountMinor,
+      if (saleDiscountReason != null)
+        'sale_discount_reason': saleDiscountReason,
+      if (activeScope != null) 'active_scope': activeScope,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PosCartsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String>? branchId,
+    Value<String>? deviceId,
+    Value<String>? status,
+    Value<String?>? title,
+    Value<String?>? customerId,
+    Value<int>? saleDiscountMinor,
+    Value<String?>? saleDiscountReason,
+    Value<String?>? activeScope,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return PosCartsCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      branchId: branchId ?? this.branchId,
+      deviceId: deviceId ?? this.deviceId,
+      status: status ?? this.status,
+      title: title ?? this.title,
+      customerId: customerId ?? this.customerId,
+      saleDiscountMinor: saleDiscountMinor ?? this.saleDiscountMinor,
+      saleDiscountReason: saleDiscountReason ?? this.saleDiscountReason,
+      activeScope: activeScope ?? this.activeScope,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (customerId.present) {
+      map['customer_id'] = Variable<String>(customerId.value);
+    }
+    if (saleDiscountMinor.present) {
+      map['sale_discount_minor'] = Variable<int>(saleDiscountMinor.value);
+    }
+    if (saleDiscountReason.present) {
+      map['sale_discount_reason'] = Variable<String>(saleDiscountReason.value);
+    }
+    if (activeScope.present) {
+      map['active_scope'] = Variable<String>(activeScope.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PosCartsCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('status: $status, ')
+          ..write('title: $title, ')
+          ..write('customerId: $customerId, ')
+          ..write('saleDiscountMinor: $saleDiscountMinor, ')
+          ..write('saleDiscountReason: $saleDiscountReason, ')
+          ..write('activeScope: $activeScope, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PosCartItemsTable extends PosCartItems
+    with TableInfo<$PosCartItemsTable, PosCartItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PosCartItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cartIdMeta = const VerificationMeta('cartId');
+  @override
+  late final GeneratedColumn<String> cartId = GeneratedColumn<String>(
+    'cart_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES pos_carts (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _productIdMeta = const VerificationMeta(
+    'productId',
+  );
+  @override
+  late final GeneratedColumn<String> productId = GeneratedColumn<String>(
+    'product_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _snapshotSkuMeta = const VerificationMeta(
+    'snapshotSku',
+  );
+  @override
+  late final GeneratedColumn<String> snapshotSku = GeneratedColumn<String>(
+    'snapshot_sku',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _snapshotNameMeta = const VerificationMeta(
+    'snapshotName',
+  );
+  @override
+  late final GeneratedColumn<String> snapshotName = GeneratedColumn<String>(
+    'snapshot_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMilliMeta = const VerificationMeta(
+    'quantityMilli',
+  );
+  @override
+  late final GeneratedColumn<int> quantityMilli = GeneratedColumn<int>(
+    'quantity_milli',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>('quantity_milli > 0'),
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemDiscountMinorMeta = const VerificationMeta(
+    'itemDiscountMinor',
+  );
+  @override
+  late final GeneratedColumn<int> itemDiscountMinor = GeneratedColumn<int>(
+    'item_discount_minor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _discountReasonMeta = const VerificationMeta(
+    'discountReason',
+  );
+  @override
+  late final GeneratedColumn<String> discountReason = GeneratedColumn<String>(
+    'discount_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    cartId,
+    productId,
+    snapshotSku,
+    snapshotName,
+    quantityMilli,
+    itemDiscountMinor,
+    discountReason,
+    position,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pos_cart_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PosCartItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('cart_id')) {
+      context.handle(
+        _cartIdMeta,
+        cartId.isAcceptableOrUnknown(data['cart_id']!, _cartIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cartIdMeta);
+    }
+    if (data.containsKey('product_id')) {
+      context.handle(
+        _productIdMeta,
+        productId.isAcceptableOrUnknown(data['product_id']!, _productIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_productIdMeta);
+    }
+    if (data.containsKey('snapshot_sku')) {
+      context.handle(
+        _snapshotSkuMeta,
+        snapshotSku.isAcceptableOrUnknown(
+          data['snapshot_sku']!,
+          _snapshotSkuMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_snapshotSkuMeta);
+    }
+    if (data.containsKey('snapshot_name')) {
+      context.handle(
+        _snapshotNameMeta,
+        snapshotName.isAcceptableOrUnknown(
+          data['snapshot_name']!,
+          _snapshotNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_snapshotNameMeta);
+    }
+    if (data.containsKey('quantity_milli')) {
+      context.handle(
+        _quantityMilliMeta,
+        quantityMilli.isAcceptableOrUnknown(
+          data['quantity_milli']!,
+          _quantityMilliMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMilliMeta);
+    }
+    if (data.containsKey('item_discount_minor')) {
+      context.handle(
+        _itemDiscountMinorMeta,
+        itemDiscountMinor.isAcceptableOrUnknown(
+          data['item_discount_minor']!,
+          _itemDiscountMinorMeta,
+        ),
+      );
+    }
+    if (data.containsKey('discount_reason')) {
+      context.handle(
+        _discountReasonMeta,
+        discountReason.isAcceptableOrUnknown(
+          data['discount_reason']!,
+          _discountReasonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {cartId, productId},
+  ];
+  @override
+  PosCartItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PosCartItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      cartId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cart_id'],
+      )!,
+      productId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}product_id'],
+      )!,
+      snapshotSku: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}snapshot_sku'],
+      )!,
+      snapshotName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}snapshot_name'],
+      )!,
+      quantityMilli: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}quantity_milli'],
+      )!,
+      itemDiscountMinor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}item_discount_minor'],
+      )!,
+      discountReason: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}discount_reason'],
+      ),
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PosCartItemsTable createAlias(String alias) {
+    return $PosCartItemsTable(attachedDatabase, alias);
+  }
+}
+
+class PosCartItem extends DataClass implements Insertable<PosCartItem> {
+  final String id;
+  final String cartId;
+  final String productId;
+  final String snapshotSku;
+  final String snapshotName;
+  final int quantityMilli;
+  final int itemDiscountMinor;
+  final String? discountReason;
+  final int position;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const PosCartItem({
+    required this.id,
+    required this.cartId,
+    required this.productId,
+    required this.snapshotSku,
+    required this.snapshotName,
+    required this.quantityMilli,
+    required this.itemDiscountMinor,
+    this.discountReason,
+    required this.position,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['cart_id'] = Variable<String>(cartId);
+    map['product_id'] = Variable<String>(productId);
+    map['snapshot_sku'] = Variable<String>(snapshotSku);
+    map['snapshot_name'] = Variable<String>(snapshotName);
+    map['quantity_milli'] = Variable<int>(quantityMilli);
+    map['item_discount_minor'] = Variable<int>(itemDiscountMinor);
+    if (!nullToAbsent || discountReason != null) {
+      map['discount_reason'] = Variable<String>(discountReason);
+    }
+    map['position'] = Variable<int>(position);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  PosCartItemsCompanion toCompanion(bool nullToAbsent) {
+    return PosCartItemsCompanion(
+      id: Value(id),
+      cartId: Value(cartId),
+      productId: Value(productId),
+      snapshotSku: Value(snapshotSku),
+      snapshotName: Value(snapshotName),
+      quantityMilli: Value(quantityMilli),
+      itemDiscountMinor: Value(itemDiscountMinor),
+      discountReason: discountReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discountReason),
+      position: Value(position),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PosCartItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PosCartItem(
+      id: serializer.fromJson<String>(json['id']),
+      cartId: serializer.fromJson<String>(json['cartId']),
+      productId: serializer.fromJson<String>(json['productId']),
+      snapshotSku: serializer.fromJson<String>(json['snapshotSku']),
+      snapshotName: serializer.fromJson<String>(json['snapshotName']),
+      quantityMilli: serializer.fromJson<int>(json['quantityMilli']),
+      itemDiscountMinor: serializer.fromJson<int>(json['itemDiscountMinor']),
+      discountReason: serializer.fromJson<String?>(json['discountReason']),
+      position: serializer.fromJson<int>(json['position']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'cartId': serializer.toJson<String>(cartId),
+      'productId': serializer.toJson<String>(productId),
+      'snapshotSku': serializer.toJson<String>(snapshotSku),
+      'snapshotName': serializer.toJson<String>(snapshotName),
+      'quantityMilli': serializer.toJson<int>(quantityMilli),
+      'itemDiscountMinor': serializer.toJson<int>(itemDiscountMinor),
+      'discountReason': serializer.toJson<String?>(discountReason),
+      'position': serializer.toJson<int>(position),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  PosCartItem copyWith({
+    String? id,
+    String? cartId,
+    String? productId,
+    String? snapshotSku,
+    String? snapshotName,
+    int? quantityMilli,
+    int? itemDiscountMinor,
+    Value<String?> discountReason = const Value.absent(),
+    int? position,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => PosCartItem(
+    id: id ?? this.id,
+    cartId: cartId ?? this.cartId,
+    productId: productId ?? this.productId,
+    snapshotSku: snapshotSku ?? this.snapshotSku,
+    snapshotName: snapshotName ?? this.snapshotName,
+    quantityMilli: quantityMilli ?? this.quantityMilli,
+    itemDiscountMinor: itemDiscountMinor ?? this.itemDiscountMinor,
+    discountReason: discountReason.present
+        ? discountReason.value
+        : this.discountReason,
+    position: position ?? this.position,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  PosCartItem copyWithCompanion(PosCartItemsCompanion data) {
+    return PosCartItem(
+      id: data.id.present ? data.id.value : this.id,
+      cartId: data.cartId.present ? data.cartId.value : this.cartId,
+      productId: data.productId.present ? data.productId.value : this.productId,
+      snapshotSku: data.snapshotSku.present
+          ? data.snapshotSku.value
+          : this.snapshotSku,
+      snapshotName: data.snapshotName.present
+          ? data.snapshotName.value
+          : this.snapshotName,
+      quantityMilli: data.quantityMilli.present
+          ? data.quantityMilli.value
+          : this.quantityMilli,
+      itemDiscountMinor: data.itemDiscountMinor.present
+          ? data.itemDiscountMinor.value
+          : this.itemDiscountMinor,
+      discountReason: data.discountReason.present
+          ? data.discountReason.value
+          : this.discountReason,
+      position: data.position.present ? data.position.value : this.position,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PosCartItem(')
+          ..write('id: $id, ')
+          ..write('cartId: $cartId, ')
+          ..write('productId: $productId, ')
+          ..write('snapshotSku: $snapshotSku, ')
+          ..write('snapshotName: $snapshotName, ')
+          ..write('quantityMilli: $quantityMilli, ')
+          ..write('itemDiscountMinor: $itemDiscountMinor, ')
+          ..write('discountReason: $discountReason, ')
+          ..write('position: $position, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    cartId,
+    productId,
+    snapshotSku,
+    snapshotName,
+    quantityMilli,
+    itemDiscountMinor,
+    discountReason,
+    position,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PosCartItem &&
+          other.id == this.id &&
+          other.cartId == this.cartId &&
+          other.productId == this.productId &&
+          other.snapshotSku == this.snapshotSku &&
+          other.snapshotName == this.snapshotName &&
+          other.quantityMilli == this.quantityMilli &&
+          other.itemDiscountMinor == this.itemDiscountMinor &&
+          other.discountReason == this.discountReason &&
+          other.position == this.position &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PosCartItemsCompanion extends UpdateCompanion<PosCartItem> {
+  final Value<String> id;
+  final Value<String> cartId;
+  final Value<String> productId;
+  final Value<String> snapshotSku;
+  final Value<String> snapshotName;
+  final Value<int> quantityMilli;
+  final Value<int> itemDiscountMinor;
+  final Value<String?> discountReason;
+  final Value<int> position;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const PosCartItemsCompanion({
+    this.id = const Value.absent(),
+    this.cartId = const Value.absent(),
+    this.productId = const Value.absent(),
+    this.snapshotSku = const Value.absent(),
+    this.snapshotName = const Value.absent(),
+    this.quantityMilli = const Value.absent(),
+    this.itemDiscountMinor = const Value.absent(),
+    this.discountReason = const Value.absent(),
+    this.position = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PosCartItemsCompanion.insert({
+    required String id,
+    required String cartId,
+    required String productId,
+    required String snapshotSku,
+    required String snapshotName,
+    required int quantityMilli,
+    this.itemDiscountMinor = const Value.absent(),
+    this.discountReason = const Value.absent(),
+    required int position,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       cartId = Value(cartId),
+       productId = Value(productId),
+       snapshotSku = Value(snapshotSku),
+       snapshotName = Value(snapshotName),
+       quantityMilli = Value(quantityMilli),
+       position = Value(position),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<PosCartItem> custom({
+    Expression<String>? id,
+    Expression<String>? cartId,
+    Expression<String>? productId,
+    Expression<String>? snapshotSku,
+    Expression<String>? snapshotName,
+    Expression<int>? quantityMilli,
+    Expression<int>? itemDiscountMinor,
+    Expression<String>? discountReason,
+    Expression<int>? position,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (cartId != null) 'cart_id': cartId,
+      if (productId != null) 'product_id': productId,
+      if (snapshotSku != null) 'snapshot_sku': snapshotSku,
+      if (snapshotName != null) 'snapshot_name': snapshotName,
+      if (quantityMilli != null) 'quantity_milli': quantityMilli,
+      if (itemDiscountMinor != null) 'item_discount_minor': itemDiscountMinor,
+      if (discountReason != null) 'discount_reason': discountReason,
+      if (position != null) 'position': position,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PosCartItemsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? cartId,
+    Value<String>? productId,
+    Value<String>? snapshotSku,
+    Value<String>? snapshotName,
+    Value<int>? quantityMilli,
+    Value<int>? itemDiscountMinor,
+    Value<String?>? discountReason,
+    Value<int>? position,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return PosCartItemsCompanion(
+      id: id ?? this.id,
+      cartId: cartId ?? this.cartId,
+      productId: productId ?? this.productId,
+      snapshotSku: snapshotSku ?? this.snapshotSku,
+      snapshotName: snapshotName ?? this.snapshotName,
+      quantityMilli: quantityMilli ?? this.quantityMilli,
+      itemDiscountMinor: itemDiscountMinor ?? this.itemDiscountMinor,
+      discountReason: discountReason ?? this.discountReason,
+      position: position ?? this.position,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (cartId.present) {
+      map['cart_id'] = Variable<String>(cartId.value);
+    }
+    if (productId.present) {
+      map['product_id'] = Variable<String>(productId.value);
+    }
+    if (snapshotSku.present) {
+      map['snapshot_sku'] = Variable<String>(snapshotSku.value);
+    }
+    if (snapshotName.present) {
+      map['snapshot_name'] = Variable<String>(snapshotName.value);
+    }
+    if (quantityMilli.present) {
+      map['quantity_milli'] = Variable<int>(quantityMilli.value);
+    }
+    if (itemDiscountMinor.present) {
+      map['item_discount_minor'] = Variable<int>(itemDiscountMinor.value);
+    }
+    if (discountReason.present) {
+      map['discount_reason'] = Variable<String>(discountReason.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PosCartItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('cartId: $cartId, ')
+          ..write('productId: $productId, ')
+          ..write('snapshotSku: $snapshotSku, ')
+          ..write('snapshotName: $snapshotName, ')
+          ..write('quantityMilli: $quantityMilli, ')
+          ..write('itemDiscountMinor: $itemDiscountMinor, ')
+          ..write('discountReason: $discountReason, ')
+          ..write('position: $position, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -45861,6 +49504,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ReceiptSequencesTable receiptSequences = $ReceiptSequencesTable(
     this,
   );
+  late final $ReceiptPrintJobsTable receiptPrintJobs = $ReceiptPrintJobsTable(
+    this,
+  );
   late final $ApprovalRequestsTable approvalRequests = $ApprovalRequestsTable(
     this,
   );
@@ -45904,6 +49550,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $ReasonCodesTable reasonCodes = $ReasonCodesTable(this);
   late final $FeatureFlagsTable featureFlags = $FeatureFlagsTable(this);
+  late final $PosCartsTable posCarts = $PosCartsTable(this);
+  late final $PosCartItemsTable posCartItems = $PosCartItemsTable(this);
   late final Index categoriesSearchIdx = Index(
     'categories_search_idx',
     'CREATE INDEX categories_search_idx ON categories (organization_id, normalized_name)',
@@ -45959,6 +49607,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index paymentsShiftIdx = Index(
     'payments_shift_idx',
     'CREATE INDEX payments_shift_idx ON payments (organization_id, branch_id, shift_id, created_at)',
+  );
+  late final Index receiptPrintJobsDueIdx = Index(
+    'receipt_print_jobs_due_idx',
+    'CREATE INDEX receipt_print_jobs_due_idx ON receipt_print_jobs (status, next_attempt_at, created_at)',
+  );
+  late final Index receiptPrintJobsRegisterIdx = Index(
+    'receipt_print_jobs_register_idx',
+    'CREATE INDEX receipt_print_jobs_register_idx ON receipt_print_jobs (organization_id, branch_id, register_id, created_at)',
   );
   late final Index approvalRequestsStatusIdx = Index(
     'approval_requests_status_idx',
@@ -46032,6 +49688,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'feature_flags_scope_idx',
     'CREATE UNIQUE INDEX feature_flags_scope_idx ON feature_flags (organization_id, branch_scope, flag_key)',
   );
+  late final Index posCartsDeviceStatusIdx = Index(
+    'pos_carts_device_status_idx',
+    'CREATE INDEX pos_carts_device_status_idx ON pos_carts (organization_id, branch_id, device_id, status, updated_at)',
+  );
   late final MetadataDao metadataDao = MetadataDao(this as AppDatabase);
   late final OutboxDao outboxDao = OutboxDao(this as AppDatabase);
   late final SyncCursorDao syncCursorDao = SyncCursorDao(this as AppDatabase);
@@ -46083,6 +49743,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     payments,
     saleDiscounts,
     receiptSequences,
+    receiptPrintJobs,
     approvalRequests,
     approvalDecisions,
     saleReturns,
@@ -46107,6 +49768,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     numberSequences,
     reasonCodes,
     featureFlags,
+    posCarts,
+    posCartItems,
     categoriesSearchIdx,
     productsNameSearchIdx,
     productsSkuSearchIdx,
@@ -46121,6 +49784,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     cashMovementsShiftIdx,
     salesHistoryIdx,
     paymentsShiftIdx,
+    receiptPrintJobsDueIdx,
+    receiptPrintJobsRegisterIdx,
     approvalRequestsStatusIdx,
     saleReturnsHistoryIdx,
     stockTransfersSourceStatusIdx,
@@ -46139,6 +49804,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     numberSequencesScopeIdx,
     reasonCodesScopeIdx,
     featureFlagsScopeIdx,
+    posCartsDeviceStatusIdx,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -46183,6 +49849,34 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('product_images', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'organizations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('pos_carts', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'branches',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('pos_carts', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'customers',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('pos_carts', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'pos_carts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('pos_cart_items', kind: UpdateKind.delete)],
     ),
   ]);
   @override
@@ -48611,6 +52305,29 @@ final class $$OrganizationsTableReferences
     );
   }
 
+  static MultiTypedResultKey<$ReceiptPrintJobsTable, List<ReceiptPrintJob>>
+  _receiptPrintJobsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.receiptPrintJobs,
+    aliasName: $_aliasNameGenerator(
+      db.organizations.id,
+      db.receiptPrintJobs.organizationId,
+    ),
+  );
+
+  $$ReceiptPrintJobsTableProcessedTableManager get receiptPrintJobsRefs {
+    final manager = $$ReceiptPrintJobsTableTableManager(
+      $_db,
+      $_db.receiptPrintJobs,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _receiptPrintJobsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$ApprovalRequestsTable, List<ApprovalRequest>>
   _approvalRequestsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.approvalRequests,
@@ -49154,6 +52871,28 @@ final class $$OrganizationsTableReferences
     ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_featureFlagsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PosCartsTable, List<PosCart>> _posCartsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.posCarts,
+    aliasName: $_aliasNameGenerator(
+      db.organizations.id,
+      db.posCarts.organizationId,
+    ),
+  );
+
+  $$PosCartsTableProcessedTableManager get posCartsRefs {
+    final manager = $$PosCartsTableTableManager(
+      $_db,
+      $_db.posCarts,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_posCartsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -49886,6 +53625,31 @@ class $$OrganizationsTableFilterComposer
     return f(composer);
   }
 
+  Expression<bool> receiptPrintJobsRefs(
+    Expression<bool> Function($$ReceiptPrintJobsTableFilterComposer f) f,
+  ) {
+    final $$ReceiptPrintJobsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableFilterComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<bool> approvalRequestsRefs(
     Expression<bool> Function($$ApprovalRequestsTableFilterComposer f) f,
   ) {
@@ -50477,6 +54241,31 @@ class $$OrganizationsTableFilterComposer
           }) => $$FeatureFlagsTableFilterComposer(
             $db: $db,
             $table: $db.featureFlags,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> posCartsRefs(
+    Expression<bool> Function($$PosCartsTableFilterComposer f) f,
+  ) {
+    final $$PosCartsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.posCarts,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartsTableFilterComposer(
+            $db: $db,
+            $table: $db.posCarts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -51249,6 +55038,31 @@ class $$OrganizationsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> receiptPrintJobsRefs<T extends Object>(
+    Expression<T> Function($$ReceiptPrintJobsTableAnnotationComposer a) f,
+  ) {
+    final $$ReceiptPrintJobsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> approvalRequestsRefs<T extends Object>(
     Expression<T> Function($$ApprovalRequestsTableAnnotationComposer a) f,
   ) {
@@ -51855,6 +55669,31 @@ class $$OrganizationsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> posCartsRefs<T extends Object>(
+    Expression<T> Function($$PosCartsTableAnnotationComposer a) f,
+  ) {
+    final $$PosCartsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.posCarts,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.posCarts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$OrganizationsTableTableManager
@@ -51898,6 +55737,7 @@ class $$OrganizationsTableTableManager
             bool paymentsRefs,
             bool saleDiscountsRefs,
             bool receiptSequencesRefs,
+            bool receiptPrintJobsRefs,
             bool approvalRequestsRefs,
             bool approvalDecisionsRefs,
             bool saleReturnsRefs,
@@ -51922,6 +55762,7 @@ class $$OrganizationsTableTableManager
             bool numberSequencesRefs,
             bool reasonCodesRefs,
             bool featureFlagsRefs,
+            bool posCartsRefs,
           })
         > {
   $$OrganizationsTableTableManager(_$AppDatabase db, $OrganizationsTable table)
@@ -52016,6 +55857,7 @@ class $$OrganizationsTableTableManager
                 paymentsRefs = false,
                 saleDiscountsRefs = false,
                 receiptSequencesRefs = false,
+                receiptPrintJobsRefs = false,
                 approvalRequestsRefs = false,
                 approvalDecisionsRefs = false,
                 saleReturnsRefs = false,
@@ -52040,6 +55882,7 @@ class $$OrganizationsTableTableManager
                 numberSequencesRefs = false,
                 reasonCodesRefs = false,
                 featureFlagsRefs = false,
+                posCartsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -52071,6 +55914,7 @@ class $$OrganizationsTableTableManager
                     if (paymentsRefs) db.payments,
                     if (saleDiscountsRefs) db.saleDiscounts,
                     if (receiptSequencesRefs) db.receiptSequences,
+                    if (receiptPrintJobsRefs) db.receiptPrintJobs,
                     if (approvalRequestsRefs) db.approvalRequests,
                     if (approvalDecisionsRefs) db.approvalDecisions,
                     if (saleReturnsRefs) db.saleReturns,
@@ -52095,6 +55939,7 @@ class $$OrganizationsTableTableManager
                     if (numberSequencesRefs) db.numberSequences,
                     if (reasonCodesRefs) db.reasonCodes,
                     if (featureFlagsRefs) db.featureFlags,
+                    if (posCartsRefs) db.posCarts,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -52666,6 +56511,27 @@ class $$OrganizationsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (receiptPrintJobsRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          ReceiptPrintJob
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._receiptPrintJobsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).receiptPrintJobsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (approvalRequestsRefs)
                         await $_getPrefetchedData<
                           Organization,
@@ -53170,6 +57036,27 @@ class $$OrganizationsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (posCartsRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          PosCart
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._posCartsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).posCartsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -53218,6 +57105,7 @@ typedef $$OrganizationsTableProcessedTableManager =
         bool paymentsRefs,
         bool saleDiscountsRefs,
         bool receiptSequencesRefs,
+        bool receiptPrintJobsRefs,
         bool approvalRequestsRefs,
         bool approvalDecisionsRefs,
         bool saleReturnsRefs,
@@ -53242,6 +57130,7 @@ typedef $$OrganizationsTableProcessedTableManager =
         bool numberSequencesRefs,
         bool reasonCodesRefs,
         bool featureFlagsRefs,
+        bool posCartsRefs,
       })
     >;
 typedef $$BranchesTableCreateCompanionBuilder =
@@ -53251,6 +57140,14 @@ typedef $$BranchesTableCreateCompanionBuilder =
       required String code,
       required String name,
       Value<String> timezone,
+      Value<String?> addressLineOne,
+      Value<String?> addressLineTwo,
+      Value<String?> city,
+      Value<String?> province,
+      Value<String?> postalCode,
+      Value<String?> phone,
+      Value<String?> email,
+      Value<String?> receiptDisplayName,
       Value<bool> isActive,
       Value<bool> allowNegativeStock,
       Value<int?> adjustmentApprovalThresholdMilli,
@@ -53261,6 +57158,7 @@ typedef $$BranchesTableCreateCompanionBuilder =
       Value<int?> returnApprovalThresholdMinor,
       Value<int> voidWindowMinutes,
       Value<int?> transferApprovalThresholdMilli,
+      Value<int> version,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -53273,6 +57171,14 @@ typedef $$BranchesTableUpdateCompanionBuilder =
       Value<String> code,
       Value<String> name,
       Value<String> timezone,
+      Value<String?> addressLineOne,
+      Value<String?> addressLineTwo,
+      Value<String?> city,
+      Value<String?> province,
+      Value<String?> postalCode,
+      Value<String?> phone,
+      Value<String?> email,
+      Value<String?> receiptDisplayName,
       Value<bool> isActive,
       Value<bool> allowNegativeStock,
       Value<int?> adjustmentApprovalThresholdMilli,
@@ -53283,6 +57189,7 @@ typedef $$BranchesTableUpdateCompanionBuilder =
       Value<int?> returnApprovalThresholdMinor,
       Value<int> voidWindowMinutes,
       Value<int?> transferApprovalThresholdMilli,
+      Value<int> version,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -53643,6 +57550,29 @@ final class $$BranchesTableReferences
     );
   }
 
+  static MultiTypedResultKey<$ReceiptPrintJobsTable, List<ReceiptPrintJob>>
+  _receiptPrintJobsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.receiptPrintJobs,
+    aliasName: $_aliasNameGenerator(
+      db.branches.id,
+      db.receiptPrintJobs.branchId,
+    ),
+  );
+
+  $$ReceiptPrintJobsTableProcessedTableManager get receiptPrintJobsRefs {
+    final manager = $$ReceiptPrintJobsTableTableManager(
+      $_db,
+      $_db.receiptPrintJobs,
+    ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _receiptPrintJobsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$ApprovalRequestsTable, List<ApprovalRequest>>
   _approvalRequestsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.approvalRequests,
@@ -53907,6 +57837,25 @@ final class $$BranchesTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$PosCartsTable, List<PosCart>> _posCartsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.posCarts,
+    aliasName: $_aliasNameGenerator(db.branches.id, db.posCarts.branchId),
+  );
+
+  $$PosCartsTableProcessedTableManager get posCartsRefs {
+    final manager = $$PosCartsTableTableManager(
+      $_db,
+      $_db.posCarts,
+    ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_posCartsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$BranchesTableFilterComposer
@@ -53935,6 +57884,46 @@ class $$BranchesTableFilterComposer
 
   ColumnFilters<String> get timezone => $composableBuilder(
     column: $table.timezone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get addressLineOne => $composableBuilder(
+    column: $table.addressLineOne,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get addressLineTwo => $composableBuilder(
+    column: $table.addressLineTwo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get city => $composableBuilder(
+    column: $table.city,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get province => $composableBuilder(
+    column: $table.province,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get postalCode => $composableBuilder(
+    column: $table.postalCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phone => $composableBuilder(
+    column: $table.phone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get receiptDisplayName => $composableBuilder(
+    column: $table.receiptDisplayName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -53987,6 +57976,11 @@ class $$BranchesTableFilterComposer
 
   ColumnFilters<int> get transferApprovalThresholdMilli => $composableBuilder(
     column: $table.transferApprovalThresholdMilli,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -54430,6 +58424,31 @@ class $$BranchesTableFilterComposer
     return f(composer);
   }
 
+  Expression<bool> receiptPrintJobsRefs(
+    Expression<bool> Function($$ReceiptPrintJobsTableFilterComposer f) f,
+  ) {
+    final $$ReceiptPrintJobsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableFilterComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<bool> approvalRequestsRefs(
     Expression<bool> Function($$ApprovalRequestsTableFilterComposer f) f,
   ) {
@@ -54754,6 +58773,31 @@ class $$BranchesTableFilterComposer
     );
     return f(composer);
   }
+
+  Expression<bool> posCartsRefs(
+    Expression<bool> Function($$PosCartsTableFilterComposer f) f,
+  ) {
+    final $$PosCartsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.posCarts,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartsTableFilterComposer(
+            $db: $db,
+            $table: $db.posCarts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BranchesTableOrderingComposer
@@ -54782,6 +58826,46 @@ class $$BranchesTableOrderingComposer
 
   ColumnOrderings<String> get timezone => $composableBuilder(
     column: $table.timezone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get addressLineOne => $composableBuilder(
+    column: $table.addressLineOne,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get addressLineTwo => $composableBuilder(
+    column: $table.addressLineTwo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get city => $composableBuilder(
+    column: $table.city,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get province => $composableBuilder(
+    column: $table.province,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get postalCode => $composableBuilder(
+    column: $table.postalCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get phone => $composableBuilder(
+    column: $table.phone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get receiptDisplayName => $composableBuilder(
+    column: $table.receiptDisplayName,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -54836,6 +58920,11 @@ class $$BranchesTableOrderingComposer
 
   ColumnOrderings<int> get transferApprovalThresholdMilli => $composableBuilder(
     column: $table.transferApprovalThresholdMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -54899,6 +58988,38 @@ class $$BranchesTableAnnotationComposer
   GeneratedColumn<String> get timezone =>
       $composableBuilder(column: $table.timezone, builder: (column) => column);
 
+  GeneratedColumn<String> get addressLineOne => $composableBuilder(
+    column: $table.addressLineOne,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get addressLineTwo => $composableBuilder(
+    column: $table.addressLineTwo,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get city =>
+      $composableBuilder(column: $table.city, builder: (column) => column);
+
+  GeneratedColumn<String> get province =>
+      $composableBuilder(column: $table.province, builder: (column) => column);
+
+  GeneratedColumn<String> get postalCode => $composableBuilder(
+    column: $table.postalCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get phone =>
+      $composableBuilder(column: $table.phone, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get receiptDisplayName => $composableBuilder(
+    column: $table.receiptDisplayName,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
 
@@ -54950,6 +59071,9 @@ class $$BranchesTableAnnotationComposer
     column: $table.transferApprovalThresholdMilli,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -55387,6 +59511,31 @@ class $$BranchesTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> receiptPrintJobsRefs<T extends Object>(
+    Expression<T> Function($$ReceiptPrintJobsTableAnnotationComposer a) f,
+  ) {
+    final $$ReceiptPrintJobsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> approvalRequestsRefs<T extends Object>(
     Expression<T> Function($$ApprovalRequestsTableAnnotationComposer a) f,
   ) {
@@ -55713,6 +59862,31 @@ class $$BranchesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> posCartsRefs<T extends Object>(
+    Expression<T> Function($$PosCartsTableAnnotationComposer a) f,
+  ) {
+    final $$PosCartsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.posCarts,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.posCarts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$BranchesTableTableManager
@@ -55746,6 +59920,7 @@ class $$BranchesTableTableManager
             bool paymentsRefs,
             bool saleDiscountsRefs,
             bool receiptSequencesRefs,
+            bool receiptPrintJobsRefs,
             bool approvalRequestsRefs,
             bool approvalDecisionsRefs,
             bool saleReturnsRefs,
@@ -55759,6 +59934,7 @@ class $$BranchesTableTableManager
             bool numberSequencesRefs,
             bool reasonCodesRefs,
             bool featureFlagsRefs,
+            bool posCartsRefs,
           })
         > {
   $$BranchesTableTableManager(_$AppDatabase db, $BranchesTable table)
@@ -55779,6 +59955,14 @@ class $$BranchesTableTableManager
                 Value<String> code = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> timezone = const Value.absent(),
+                Value<String?> addressLineOne = const Value.absent(),
+                Value<String?> addressLineTwo = const Value.absent(),
+                Value<String?> city = const Value.absent(),
+                Value<String?> province = const Value.absent(),
+                Value<String?> postalCode = const Value.absent(),
+                Value<String?> phone = const Value.absent(),
+                Value<String?> email = const Value.absent(),
+                Value<String?> receiptDisplayName = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<bool> allowNegativeStock = const Value.absent(),
                 Value<int?> adjustmentApprovalThresholdMilli =
@@ -55794,6 +59978,7 @@ class $$BranchesTableTableManager
                 Value<int> voidWindowMinutes = const Value.absent(),
                 Value<int?> transferApprovalThresholdMilli =
                     const Value.absent(),
+                Value<int> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -55804,6 +59989,14 @@ class $$BranchesTableTableManager
                 code: code,
                 name: name,
                 timezone: timezone,
+                addressLineOne: addressLineOne,
+                addressLineTwo: addressLineTwo,
+                city: city,
+                province: province,
+                postalCode: postalCode,
+                phone: phone,
+                email: email,
+                receiptDisplayName: receiptDisplayName,
                 isActive: isActive,
                 allowNegativeStock: allowNegativeStock,
                 adjustmentApprovalThresholdMilli:
@@ -55817,6 +60010,7 @@ class $$BranchesTableTableManager
                 returnApprovalThresholdMinor: returnApprovalThresholdMinor,
                 voidWindowMinutes: voidWindowMinutes,
                 transferApprovalThresholdMilli: transferApprovalThresholdMilli,
+                version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -55829,6 +60023,14 @@ class $$BranchesTableTableManager
                 required String code,
                 required String name,
                 Value<String> timezone = const Value.absent(),
+                Value<String?> addressLineOne = const Value.absent(),
+                Value<String?> addressLineTwo = const Value.absent(),
+                Value<String?> city = const Value.absent(),
+                Value<String?> province = const Value.absent(),
+                Value<String?> postalCode = const Value.absent(),
+                Value<String?> phone = const Value.absent(),
+                Value<String?> email = const Value.absent(),
+                Value<String?> receiptDisplayName = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<bool> allowNegativeStock = const Value.absent(),
                 Value<int?> adjustmentApprovalThresholdMilli =
@@ -55844,6 +60046,7 @@ class $$BranchesTableTableManager
                 Value<int> voidWindowMinutes = const Value.absent(),
                 Value<int?> transferApprovalThresholdMilli =
                     const Value.absent(),
+                Value<int> version = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -55854,6 +60057,14 @@ class $$BranchesTableTableManager
                 code: code,
                 name: name,
                 timezone: timezone,
+                addressLineOne: addressLineOne,
+                addressLineTwo: addressLineTwo,
+                city: city,
+                province: province,
+                postalCode: postalCode,
+                phone: phone,
+                email: email,
+                receiptDisplayName: receiptDisplayName,
                 isActive: isActive,
                 allowNegativeStock: allowNegativeStock,
                 adjustmentApprovalThresholdMilli:
@@ -55867,6 +60078,7 @@ class $$BranchesTableTableManager
                 returnApprovalThresholdMinor: returnApprovalThresholdMinor,
                 voidWindowMinutes: voidWindowMinutes,
                 transferApprovalThresholdMilli: transferApprovalThresholdMilli,
+                version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -55899,6 +60111,7 @@ class $$BranchesTableTableManager
                 paymentsRefs = false,
                 saleDiscountsRefs = false,
                 receiptSequencesRefs = false,
+                receiptPrintJobsRefs = false,
                 approvalRequestsRefs = false,
                 approvalDecisionsRefs = false,
                 saleReturnsRefs = false,
@@ -55912,6 +60125,7 @@ class $$BranchesTableTableManager
                 numberSequencesRefs = false,
                 reasonCodesRefs = false,
                 featureFlagsRefs = false,
+                posCartsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -55932,6 +60146,7 @@ class $$BranchesTableTableManager
                     if (paymentsRefs) db.payments,
                     if (saleDiscountsRefs) db.saleDiscounts,
                     if (receiptSequencesRefs) db.receiptSequences,
+                    if (receiptPrintJobsRefs) db.receiptPrintJobs,
                     if (approvalRequestsRefs) db.approvalRequests,
                     if (approvalDecisionsRefs) db.approvalDecisions,
                     if (saleReturnsRefs) db.saleReturns,
@@ -55945,6 +60160,7 @@ class $$BranchesTableTableManager
                     if (numberSequencesRefs) db.numberSequences,
                     if (reasonCodesRefs) db.reasonCodes,
                     if (featureFlagsRefs) db.featureFlags,
+                    if (posCartsRefs) db.posCarts,
                   ],
                   addJoins:
                       <
@@ -56316,6 +60532,27 @@ class $$BranchesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (receiptPrintJobsRefs)
+                        await $_getPrefetchedData<
+                          Branche,
+                          $BranchesTable,
+                          ReceiptPrintJob
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BranchesTableReferences
+                              ._receiptPrintJobsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BranchesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).receiptPrintJobsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.branchId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (approvalRequestsRefs)
                         await $_getPrefetchedData<
                           Branche,
@@ -56589,6 +60826,27 @@ class $$BranchesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (posCartsRefs)
+                        await $_getPrefetchedData<
+                          Branche,
+                          $BranchesTable,
+                          PosCart
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BranchesTableReferences
+                              ._posCartsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BranchesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).posCartsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.branchId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -56627,6 +60885,7 @@ typedef $$BranchesTableProcessedTableManager =
         bool paymentsRefs,
         bool saleDiscountsRefs,
         bool receiptSequencesRefs,
+        bool receiptPrintJobsRefs,
         bool approvalRequestsRefs,
         bool approvalDecisionsRefs,
         bool saleReturnsRefs,
@@ -56640,6 +60899,7 @@ typedef $$BranchesTableProcessedTableManager =
         bool numberSequencesRefs,
         bool reasonCodesRefs,
         bool featureFlagsRefs,
+        bool posCartsRefs,
       })
     >;
 typedef $$AppUsersTableCreateCompanionBuilder =
@@ -56650,6 +60910,9 @@ typedef $$AppUsersTableCreateCompanionBuilder =
       required String email,
       required String displayName,
       required String status,
+      Value<DateTime?> invitedAt,
+      Value<DateTime?> activatedAt,
+      Value<int> version,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -56663,6 +60926,9 @@ typedef $$AppUsersTableUpdateCompanionBuilder =
       Value<String> email,
       Value<String> displayName,
       Value<String> status,
+      Value<DateTime?> invitedAt,
+      Value<DateTime?> activatedAt,
+      Value<int> version,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -56932,6 +61198,21 @@ class $$AppUsersTableFilterComposer
 
   ColumnFilters<String> get status => $composableBuilder(
     column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get invitedAt => $composableBuilder(
+    column: $table.invitedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get activatedAt => $composableBuilder(
+    column: $table.activatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -57233,6 +61514,21 @@ class $$AppUsersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get invitedAt => $composableBuilder(
+    column: $table.invitedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get activatedAt => $composableBuilder(
+    column: $table.activatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -57299,6 +61595,17 @@ class $$AppUsersTableAnnotationComposer
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get invitedAt =>
+      $composableBuilder(column: $table.invitedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get activatedAt => $composableBuilder(
+    column: $table.activatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -57605,6 +61912,9 @@ class $$AppUsersTableTableManager
                 Value<String> email = const Value.absent(),
                 Value<String> displayName = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<DateTime?> invitedAt = const Value.absent(),
+                Value<DateTime?> activatedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -57616,6 +61926,9 @@ class $$AppUsersTableTableManager
                 email: email,
                 displayName: displayName,
                 status: status,
+                invitedAt: invitedAt,
+                activatedAt: activatedAt,
+                version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -57629,6 +61942,9 @@ class $$AppUsersTableTableManager
                 required String email,
                 required String displayName,
                 required String status,
+                Value<DateTime?> invitedAt = const Value.absent(),
+                Value<DateTime?> activatedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -57640,6 +61956,9 @@ class $$AppUsersTableTableManager
                 email: email,
                 displayName: displayName,
                 status: status,
+                invitedAt: invitedAt,
+                activatedAt: activatedAt,
+                version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -57943,6 +62262,7 @@ typedef $$RolesTableCreateCompanionBuilder =
       required String name,
       Value<String?> description,
       Value<bool> isActive,
+      Value<int> version,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -57956,6 +62276,7 @@ typedef $$RolesTableUpdateCompanionBuilder =
       Value<String> name,
       Value<String?> description,
       Value<bool> isActive,
+      Value<int> version,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -58063,6 +62384,11 @@ class $$RolesTableFilterComposer extends Composer<_$AppDatabase, $RolesTable> {
 
   ColumnFilters<bool> get isActive => $composableBuilder(
     column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -58189,6 +62515,11 @@ class $$RolesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -58253,6 +62584,9 @@ class $$RolesTableAnnotationComposer
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -58376,6 +62710,7 @@ class $$RolesTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -58387,6 +62722,7 @@ class $$RolesTableTableManager
                 name: name,
                 description: description,
                 isActive: isActive,
+                version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -58400,6 +62736,7 @@ class $$RolesTableTableManager
                 required String name,
                 Value<String?> description = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -58411,6 +62748,7 @@ class $$RolesTableTableManager
                 name: name,
                 description: description,
                 isActive: isActive,
+                version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -59219,7 +63557,9 @@ typedef $$UserRoleAssignmentsTableCreateCompanionBuilder =
       required String userId,
       required String roleId,
       required DateTime assignedAt,
+      Value<DateTime?> updatedAt,
       Value<DateTime?> revokedAt,
+      Value<int> version,
       Value<int> rowid,
     });
 typedef $$UserRoleAssignmentsTableUpdateCompanionBuilder =
@@ -59230,7 +63570,9 @@ typedef $$UserRoleAssignmentsTableUpdateCompanionBuilder =
       Value<String> userId,
       Value<String> roleId,
       Value<DateTime> assignedAt,
+      Value<DateTime?> updatedAt,
       Value<DateTime?> revokedAt,
+      Value<int> version,
       Value<int> rowid,
     });
 
@@ -59345,8 +63687,18 @@ class $$UserRoleAssignmentsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get revokedAt => $composableBuilder(
     column: $table.revokedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -59462,8 +63814,18 @@ class $$UserRoleAssignmentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get revokedAt => $composableBuilder(
     column: $table.revokedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -59577,8 +63939,14 @@ class $$UserRoleAssignmentsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
   GeneratedColumn<DateTime> get revokedAt =>
       $composableBuilder(column: $table.revokedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
 
   $$OrganizationsTableAnnotationComposer get organizationId {
     final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
@@ -59720,7 +64088,9 @@ class $$UserRoleAssignmentsTableTableManager
                 Value<String> userId = const Value.absent(),
                 Value<String> roleId = const Value.absent(),
                 Value<DateTime> assignedAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
                 Value<DateTime?> revokedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserRoleAssignmentsCompanion(
                 id: id,
@@ -59729,7 +64099,9 @@ class $$UserRoleAssignmentsTableTableManager
                 userId: userId,
                 roleId: roleId,
                 assignedAt: assignedAt,
+                updatedAt: updatedAt,
                 revokedAt: revokedAt,
+                version: version,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -59740,7 +64112,9 @@ class $$UserRoleAssignmentsTableTableManager
                 required String userId,
                 required String roleId,
                 required DateTime assignedAt,
+                Value<DateTime?> updatedAt = const Value.absent(),
                 Value<DateTime?> revokedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserRoleAssignmentsCompanion.insert(
                 id: id,
@@ -59749,7 +64123,9 @@ class $$UserRoleAssignmentsTableTableManager
                 userId: userId,
                 roleId: roleId,
                 assignedAt: assignedAt,
+                updatedAt: updatedAt,
                 revokedAt: revokedAt,
+                version: version,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -70413,6 +74789,15 @@ typedef $$RegistersTableCreateCompanionBuilder =
       Value<String?> assignedDeviceId,
       Value<String?> assignedByUserId,
       Value<DateTime?> assignedAt,
+      Value<String> scannerType,
+      Value<int> scannerInterCharacterTimeoutMs,
+      Value<int> scannerDuplicateSuppressionMs,
+      Value<String> printerType,
+      Value<String?> printerAddress,
+      Value<int> printerPort,
+      Value<int> printerPaperWidthMm,
+      Value<bool> cashDrawerEnabled,
+      Value<int> cashDrawerPin,
       Value<bool> isActive,
       Value<int> version,
       required DateTime createdAt,
@@ -70430,6 +74815,15 @@ typedef $$RegistersTableUpdateCompanionBuilder =
       Value<String?> assignedDeviceId,
       Value<String?> assignedByUserId,
       Value<DateTime?> assignedAt,
+      Value<String> scannerType,
+      Value<int> scannerInterCharacterTimeoutMs,
+      Value<int> scannerDuplicateSuppressionMs,
+      Value<String> printerType,
+      Value<String?> printerAddress,
+      Value<int> printerPort,
+      Value<int> printerPaperWidthMm,
+      Value<bool> cashDrawerEnabled,
+      Value<int> cashDrawerPin,
       Value<bool> isActive,
       Value<int> version,
       Value<DateTime> createdAt,
@@ -70559,6 +74953,29 @@ final class $$RegistersTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$ReceiptPrintJobsTable, List<ReceiptPrintJob>>
+  _receiptPrintJobsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.receiptPrintJobs,
+    aliasName: $_aliasNameGenerator(
+      db.registers.id,
+      db.receiptPrintJobs.registerId,
+    ),
+  );
+
+  $$ReceiptPrintJobsTableProcessedTableManager get receiptPrintJobsRefs {
+    final manager = $$ReceiptPrintJobsTableTableManager(
+      $_db,
+      $_db.receiptPrintJobs,
+    ).filter((f) => f.registerId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _receiptPrintJobsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$RegistersTableFilterComposer
@@ -70597,6 +75014,51 @@ class $$RegistersTableFilterComposer
 
   ColumnFilters<DateTime> get assignedAt => $composableBuilder(
     column: $table.assignedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scannerType => $composableBuilder(
+    column: $table.scannerType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get scannerInterCharacterTimeoutMs => $composableBuilder(
+    column: $table.scannerInterCharacterTimeoutMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get scannerDuplicateSuppressionMs => $composableBuilder(
+    column: $table.scannerDuplicateSuppressionMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get printerType => $composableBuilder(
+    column: $table.printerType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get printerAddress => $composableBuilder(
+    column: $table.printerAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get printerPort => $composableBuilder(
+    column: $table.printerPort,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get printerPaperWidthMm => $composableBuilder(
+    column: $table.printerPaperWidthMm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get cashDrawerEnabled => $composableBuilder(
+    column: $table.cashDrawerEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cashDrawerPin => $composableBuilder(
+    column: $table.cashDrawerPin,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -70770,6 +75232,31 @@ class $$RegistersTableFilterComposer
     );
     return f(composer);
   }
+
+  Expression<bool> receiptPrintJobsRefs(
+    Expression<bool> Function($$ReceiptPrintJobsTableFilterComposer f) f,
+  ) {
+    final $$ReceiptPrintJobsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.registerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableFilterComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RegistersTableOrderingComposer
@@ -70808,6 +75295,51 @@ class $$RegistersTableOrderingComposer
 
   ColumnOrderings<DateTime> get assignedAt => $composableBuilder(
     column: $table.assignedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get scannerType => $composableBuilder(
+    column: $table.scannerType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get scannerInterCharacterTimeoutMs => $composableBuilder(
+    column: $table.scannerInterCharacterTimeoutMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get scannerDuplicateSuppressionMs => $composableBuilder(
+    column: $table.scannerDuplicateSuppressionMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get printerType => $composableBuilder(
+    column: $table.printerType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get printerAddress => $composableBuilder(
+    column: $table.printerAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get printerPort => $composableBuilder(
+    column: $table.printerPort,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get printerPaperWidthMm => $composableBuilder(
+    column: $table.printerPaperWidthMm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get cashDrawerEnabled => $composableBuilder(
+    column: $table.cashDrawerEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cashDrawerPin => $composableBuilder(
+    column: $table.cashDrawerPin,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -70913,6 +75445,51 @@ class $$RegistersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get assignedAt => $composableBuilder(
     column: $table.assignedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get scannerType => $composableBuilder(
+    column: $table.scannerType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get scannerInterCharacterTimeoutMs => $composableBuilder(
+    column: $table.scannerInterCharacterTimeoutMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get scannerDuplicateSuppressionMs => $composableBuilder(
+    column: $table.scannerDuplicateSuppressionMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get printerType => $composableBuilder(
+    column: $table.printerType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get printerAddress => $composableBuilder(
+    column: $table.printerAddress,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get printerPort => $composableBuilder(
+    column: $table.printerPort,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get printerPaperWidthMm => $composableBuilder(
+    column: $table.printerPaperWidthMm,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get cashDrawerEnabled => $composableBuilder(
+    column: $table.cashDrawerEnabled,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get cashDrawerPin => $composableBuilder(
+    column: $table.cashDrawerPin,
     builder: (column) => column,
   );
 
@@ -71076,6 +75653,31 @@ class $$RegistersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> receiptPrintJobsRefs<T extends Object>(
+    Expression<T> Function($$ReceiptPrintJobsTableAnnotationComposer a) f,
+  ) {
+    final $$ReceiptPrintJobsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.registerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RegistersTableTableManager
@@ -71098,6 +75700,7 @@ class $$RegistersTableTableManager
             bool cashMovementsRefs,
             bool salesRefs,
             bool receiptSequencesRefs,
+            bool receiptPrintJobsRefs,
           })
         > {
   $$RegistersTableTableManager(_$AppDatabase db, $RegistersTable table)
@@ -71121,6 +75724,16 @@ class $$RegistersTableTableManager
                 Value<String?> assignedDeviceId = const Value.absent(),
                 Value<String?> assignedByUserId = const Value.absent(),
                 Value<DateTime?> assignedAt = const Value.absent(),
+                Value<String> scannerType = const Value.absent(),
+                Value<int> scannerInterCharacterTimeoutMs =
+                    const Value.absent(),
+                Value<int> scannerDuplicateSuppressionMs = const Value.absent(),
+                Value<String> printerType = const Value.absent(),
+                Value<String?> printerAddress = const Value.absent(),
+                Value<int> printerPort = const Value.absent(),
+                Value<int> printerPaperWidthMm = const Value.absent(),
+                Value<bool> cashDrawerEnabled = const Value.absent(),
+                Value<int> cashDrawerPin = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -71136,6 +75749,15 @@ class $$RegistersTableTableManager
                 assignedDeviceId: assignedDeviceId,
                 assignedByUserId: assignedByUserId,
                 assignedAt: assignedAt,
+                scannerType: scannerType,
+                scannerInterCharacterTimeoutMs: scannerInterCharacterTimeoutMs,
+                scannerDuplicateSuppressionMs: scannerDuplicateSuppressionMs,
+                printerType: printerType,
+                printerAddress: printerAddress,
+                printerPort: printerPort,
+                printerPaperWidthMm: printerPaperWidthMm,
+                cashDrawerEnabled: cashDrawerEnabled,
+                cashDrawerPin: cashDrawerPin,
                 isActive: isActive,
                 version: version,
                 createdAt: createdAt,
@@ -71153,6 +75775,16 @@ class $$RegistersTableTableManager
                 Value<String?> assignedDeviceId = const Value.absent(),
                 Value<String?> assignedByUserId = const Value.absent(),
                 Value<DateTime?> assignedAt = const Value.absent(),
+                Value<String> scannerType = const Value.absent(),
+                Value<int> scannerInterCharacterTimeoutMs =
+                    const Value.absent(),
+                Value<int> scannerDuplicateSuppressionMs = const Value.absent(),
+                Value<String> printerType = const Value.absent(),
+                Value<String?> printerAddress = const Value.absent(),
+                Value<int> printerPort = const Value.absent(),
+                Value<int> printerPaperWidthMm = const Value.absent(),
+                Value<bool> cashDrawerEnabled = const Value.absent(),
+                Value<int> cashDrawerPin = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<int> version = const Value.absent(),
                 required DateTime createdAt,
@@ -71168,6 +75800,15 @@ class $$RegistersTableTableManager
                 assignedDeviceId: assignedDeviceId,
                 assignedByUserId: assignedByUserId,
                 assignedAt: assignedAt,
+                scannerType: scannerType,
+                scannerInterCharacterTimeoutMs: scannerInterCharacterTimeoutMs,
+                scannerDuplicateSuppressionMs: scannerDuplicateSuppressionMs,
+                printerType: printerType,
+                printerAddress: printerAddress,
+                printerPort: printerPort,
+                printerPaperWidthMm: printerPaperWidthMm,
+                cashDrawerEnabled: cashDrawerEnabled,
+                cashDrawerPin: cashDrawerPin,
                 isActive: isActive,
                 version: version,
                 createdAt: createdAt,
@@ -71191,6 +75832,7 @@ class $$RegistersTableTableManager
                 cashMovementsRefs = false,
                 salesRefs = false,
                 receiptSequencesRefs = false,
+                receiptPrintJobsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -71199,6 +75841,7 @@ class $$RegistersTableTableManager
                     if (cashMovementsRefs) db.cashMovements,
                     if (salesRefs) db.sales,
                     if (receiptSequencesRefs) db.receiptSequences,
+                    if (receiptPrintJobsRefs) db.receiptPrintJobs,
                   ],
                   addJoins:
                       <
@@ -71331,6 +75974,27 @@ class $$RegistersTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (receiptPrintJobsRefs)
+                        await $_getPrefetchedData<
+                          Register,
+                          $RegistersTable,
+                          ReceiptPrintJob
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RegistersTableReferences
+                              ._receiptPrintJobsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RegistersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).receiptPrintJobsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.registerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -71358,6 +76022,7 @@ typedef $$RegistersTableProcessedTableManager =
         bool cashMovementsRefs,
         bool salesRefs,
         bool receiptSequencesRefs,
+        bool receiptPrintJobsRefs,
       })
     >;
 typedef $$ShiftsTableCreateCompanionBuilder =
@@ -74391,6 +79056,25 @@ final class $$CustomersTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$PosCartsTable, List<PosCart>> _posCartsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.posCarts,
+    aliasName: $_aliasNameGenerator(db.customers.id, db.posCarts.customerId),
+  );
+
+  $$PosCartsTableProcessedTableManager get posCartsRefs {
+    final manager = $$PosCartsTableTableManager(
+      $_db,
+      $_db.posCarts,
+    ).filter((f) => f.customerId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_posCartsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$CustomersTableFilterComposer
@@ -74601,6 +79285,31 @@ class $$CustomersTableFilterComposer
           }) => $$LoyaltyAccountsTableFilterComposer(
             $db: $db,
             $table: $db.loyaltyAccounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> posCartsRefs(
+    Expression<bool> Function($$PosCartsTableFilterComposer f) f,
+  ) {
+    final $$PosCartsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.posCarts,
+      getReferencedColumn: (t) => t.customerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartsTableFilterComposer(
+            $db: $db,
+            $table: $db.posCarts,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -74930,6 +79639,31 @@ class $$CustomersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> posCartsRefs<T extends Object>(
+    Expression<T> Function($$PosCartsTableAnnotationComposer a) f,
+  ) {
+    final $$PosCartsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.posCarts,
+      getReferencedColumn: (t) => t.customerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.posCarts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CustomersTableTableManager
@@ -74951,6 +79685,7 @@ class $$CustomersTableTableManager
             bool customerAddressesRefs,
             bool customerNotesRefs,
             bool loyaltyAccountsRefs,
+            bool posCartsRefs,
           })
         > {
   $$CustomersTableTableManager(_$AppDatabase db, $CustomersTable table)
@@ -75063,6 +79798,7 @@ class $$CustomersTableTableManager
                 customerAddressesRefs = false,
                 customerNotesRefs = false,
                 loyaltyAccountsRefs = false,
+                posCartsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -75071,6 +79807,7 @@ class $$CustomersTableTableManager
                     if (customerAddressesRefs) db.customerAddresses,
                     if (customerNotesRefs) db.customerNotes,
                     if (loyaltyAccountsRefs) db.loyaltyAccounts,
+                    if (posCartsRefs) db.posCarts,
                   ],
                   addJoins:
                       <
@@ -75190,6 +79927,27 @@ class $$CustomersTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (posCartsRefs)
+                        await $_getPrefetchedData<
+                          Customer,
+                          $CustomersTable,
+                          PosCart
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CustomersTableReferences
+                              ._posCartsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$CustomersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).posCartsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.customerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -75216,6 +79974,7 @@ typedef $$CustomersTableProcessedTableManager =
         bool customerAddressesRefs,
         bool customerNotesRefs,
         bool loyaltyAccountsRefs,
+        bool posCartsRefs,
       })
     >;
 typedef $$SalesTableCreateCompanionBuilder =
@@ -75441,6 +80200,26 @@ final class $$SalesTableReferences
     ).filter((f) => f.saleId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_saleDiscountsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ReceiptPrintJobsTable, List<ReceiptPrintJob>>
+  _receiptPrintJobsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.receiptPrintJobs,
+    aliasName: $_aliasNameGenerator(db.sales.id, db.receiptPrintJobs.saleId),
+  );
+
+  $$ReceiptPrintJobsTableProcessedTableManager get receiptPrintJobsRefs {
+    final manager = $$ReceiptPrintJobsTableTableManager(
+      $_db,
+      $_db.receiptPrintJobs,
+    ).filter((f) => f.saleId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _receiptPrintJobsRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -75791,6 +80570,31 @@ class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
           }) => $$SaleDiscountsTableFilterComposer(
             $db: $db,
             $table: $db.saleDiscounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> receiptPrintJobsRefs(
+    Expression<bool> Function($$ReceiptPrintJobsTableFilterComposer f) f,
+  ) {
+    final $$ReceiptPrintJobsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.saleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableFilterComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -76381,6 +81185,31 @@ class $$SalesTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> receiptPrintJobsRefs<T extends Object>(
+    Expression<T> Function($$ReceiptPrintJobsTableAnnotationComposer a) f,
+  ) {
+    final $$ReceiptPrintJobsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.saleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> saleReturnsRefs<T extends Object>(
     Expression<T> Function($$SaleReturnsTableAnnotationComposer a) f,
   ) {
@@ -76456,6 +81285,7 @@ class $$SalesTableTableManager
             bool saleItemsRefs,
             bool paymentsRefs,
             bool saleDiscountsRefs,
+            bool receiptPrintJobsRefs,
             bool saleReturnsRefs,
             bool loyaltyLedgerEntriesRefs,
           })
@@ -76592,6 +81422,7 @@ class $$SalesTableTableManager
                 saleItemsRefs = false,
                 paymentsRefs = false,
                 saleDiscountsRefs = false,
+                receiptPrintJobsRefs = false,
                 saleReturnsRefs = false,
                 loyaltyLedgerEntriesRefs = false,
               }) {
@@ -76601,6 +81432,7 @@ class $$SalesTableTableManager
                     if (saleItemsRefs) db.saleItems,
                     if (paymentsRefs) db.payments,
                     if (saleDiscountsRefs) db.saleDiscounts,
+                    if (receiptPrintJobsRefs) db.receiptPrintJobs,
                     if (saleReturnsRefs) db.saleReturns,
                     if (loyaltyLedgerEntriesRefs) db.loyaltyLedgerEntries,
                   ],
@@ -76758,6 +81590,27 @@ class $$SalesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (receiptPrintJobsRefs)
+                        await $_getPrefetchedData<
+                          Sale,
+                          $SalesTable,
+                          ReceiptPrintJob
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SalesTableReferences
+                              ._receiptPrintJobsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SalesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).receiptPrintJobsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.saleId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (saleReturnsRefs)
                         await $_getPrefetchedData<
                           Sale,
@@ -76830,6 +81683,7 @@ typedef $$SalesTableProcessedTableManager =
         bool saleItemsRefs,
         bool paymentsRefs,
         bool saleDiscountsRefs,
+        bool receiptPrintJobsRefs,
         bool saleReturnsRefs,
         bool loyaltyLedgerEntriesRefs,
       })
@@ -80144,6 +84998,841 @@ typedef $$ReceiptSequencesTableProcessedTableManager =
         bool organizationId,
         bool branchId,
         bool registerId,
+      })
+    >;
+typedef $$ReceiptPrintJobsTableCreateCompanionBuilder =
+    ReceiptPrintJobsCompanion Function({
+      required String id,
+      required String organizationId,
+      required String branchId,
+      required String registerId,
+      required String saleId,
+      required String deduplicationKey,
+      required String copyType,
+      required String documentText,
+      Value<String> status,
+      Value<int> attemptCount,
+      Value<DateTime?> nextAttemptAt,
+      Value<String?> lastError,
+      required String requestedByUserId,
+      Value<DateTime?> printedAt,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$ReceiptPrintJobsTableUpdateCompanionBuilder =
+    ReceiptPrintJobsCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String> branchId,
+      Value<String> registerId,
+      Value<String> saleId,
+      Value<String> deduplicationKey,
+      Value<String> copyType,
+      Value<String> documentText,
+      Value<String> status,
+      Value<int> attemptCount,
+      Value<DateTime?> nextAttemptAt,
+      Value<String?> lastError,
+      Value<String> requestedByUserId,
+      Value<DateTime?> printedAt,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$ReceiptPrintJobsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $ReceiptPrintJobsTable, ReceiptPrintJob> {
+  $$ReceiptPrintJobsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.receiptPrintJobs.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BranchesTable _branchIdTable(_$AppDatabase db) =>
+      db.branches.createAlias(
+        $_aliasNameGenerator(db.receiptPrintJobs.branchId, db.branches.id),
+      );
+
+  $$BranchesTableProcessedTableManager get branchId {
+    final $_column = $_itemColumn<String>('branch_id')!;
+
+    final manager = $$BranchesTableTableManager(
+      $_db,
+      $_db.branches,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegistersTable _registerIdTable(_$AppDatabase db) =>
+      db.registers.createAlias(
+        $_aliasNameGenerator(db.receiptPrintJobs.registerId, db.registers.id),
+      );
+
+  $$RegistersTableProcessedTableManager get registerId {
+    final $_column = $_itemColumn<String>('register_id')!;
+
+    final manager = $$RegistersTableTableManager(
+      $_db,
+      $_db.registers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_registerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $SalesTable _saleIdTable(_$AppDatabase db) => db.sales.createAlias(
+    $_aliasNameGenerator(db.receiptPrintJobs.saleId, db.sales.id),
+  );
+
+  $$SalesTableProcessedTableManager get saleId {
+    final $_column = $_itemColumn<String>('sale_id')!;
+
+    final manager = $$SalesTableTableManager(
+      $_db,
+      $_db.sales,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_saleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ReceiptPrintJobsTableFilterComposer
+    extends Composer<_$AppDatabase, $ReceiptPrintJobsTable> {
+  $$ReceiptPrintJobsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deduplicationKey => $composableBuilder(
+    column: $table.deduplicationKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get copyType => $composableBuilder(
+    column: $table.copyType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentText => $composableBuilder(
+    column: $table.documentText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get requestedByUserId => $composableBuilder(
+    column: $table.requestedByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get printedAt => $composableBuilder(
+    column: $table.printedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistersTableFilterComposer get registerId {
+    final $$RegistersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerId,
+      referencedTable: $db.registers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistersTableFilterComposer(
+            $db: $db,
+            $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SalesTableFilterComposer get saleId {
+    final $$SalesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleId,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableFilterComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReceiptPrintJobsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReceiptPrintJobsTable> {
+  $$ReceiptPrintJobsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deduplicationKey => $composableBuilder(
+    column: $table.deduplicationKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get copyType => $composableBuilder(
+    column: $table.copyType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentText => $composableBuilder(
+    column: $table.documentText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get requestedByUserId => $composableBuilder(
+    column: $table.requestedByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get printedAt => $composableBuilder(
+    column: $table.printedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableOrderingComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistersTableOrderingComposer get registerId {
+    final $$RegistersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerId,
+      referencedTable: $db.registers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistersTableOrderingComposer(
+            $db: $db,
+            $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SalesTableOrderingComposer get saleId {
+    final $$SalesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleId,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableOrderingComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReceiptPrintJobsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReceiptPrintJobsTable> {
+  $$ReceiptPrintJobsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get deduplicationKey => $composableBuilder(
+    column: $table.deduplicationKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get copyType =>
+      $composableBuilder(column: $table.copyType, builder: (column) => column);
+
+  GeneratedColumn<String> get documentText => $composableBuilder(
+    column: $table.documentText,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<String> get requestedByUserId => $composableBuilder(
+    column: $table.requestedByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get printedAt =>
+      $composableBuilder(column: $table.printedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistersTableAnnotationComposer get registerId {
+    final $$RegistersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerId,
+      referencedTable: $db.registers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SalesTableAnnotationComposer get saleId {
+    final $$SalesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleId,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ReceiptPrintJobsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReceiptPrintJobsTable,
+          ReceiptPrintJob,
+          $$ReceiptPrintJobsTableFilterComposer,
+          $$ReceiptPrintJobsTableOrderingComposer,
+          $$ReceiptPrintJobsTableAnnotationComposer,
+          $$ReceiptPrintJobsTableCreateCompanionBuilder,
+          $$ReceiptPrintJobsTableUpdateCompanionBuilder,
+          (ReceiptPrintJob, $$ReceiptPrintJobsTableReferences),
+          ReceiptPrintJob,
+          PrefetchHooks Function({
+            bool organizationId,
+            bool branchId,
+            bool registerId,
+            bool saleId,
+          })
+        > {
+  $$ReceiptPrintJobsTableTableManager(
+    _$AppDatabase db,
+    $ReceiptPrintJobsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReceiptPrintJobsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReceiptPrintJobsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReceiptPrintJobsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> registerId = const Value.absent(),
+                Value<String> saleId = const Value.absent(),
+                Value<String> deduplicationKey = const Value.absent(),
+                Value<String> copyType = const Value.absent(),
+                Value<String> documentText = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<String> requestedByUserId = const Value.absent(),
+                Value<DateTime?> printedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReceiptPrintJobsCompanion(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                registerId: registerId,
+                saleId: saleId,
+                deduplicationKey: deduplicationKey,
+                copyType: copyType,
+                documentText: documentText,
+                status: status,
+                attemptCount: attemptCount,
+                nextAttemptAt: nextAttemptAt,
+                lastError: lastError,
+                requestedByUserId: requestedByUserId,
+                printedAt: printedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                required String branchId,
+                required String registerId,
+                required String saleId,
+                required String deduplicationKey,
+                required String copyType,
+                required String documentText,
+                Value<String> status = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                required String requestedByUserId,
+                Value<DateTime?> printedAt = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ReceiptPrintJobsCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                registerId: registerId,
+                saleId: saleId,
+                deduplicationKey: deduplicationKey,
+                copyType: copyType,
+                documentText: documentText,
+                status: status,
+                attemptCount: attemptCount,
+                nextAttemptAt: nextAttemptAt,
+                lastError: lastError,
+                requestedByUserId: requestedByUserId,
+                printedAt: printedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ReceiptPrintJobsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                organizationId = false,
+                branchId = false,
+                registerId = false,
+                saleId = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (organizationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.organizationId,
+                                    referencedTable:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._organizationIdTable(db),
+                                    referencedColumn:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._organizationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (branchId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.branchId,
+                                    referencedTable:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._branchIdTable(db),
+                                    referencedColumn:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._branchIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (registerId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.registerId,
+                                    referencedTable:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._registerIdTable(db),
+                                    referencedColumn:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._registerIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (saleId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.saleId,
+                                    referencedTable:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._saleIdTable(db),
+                                    referencedColumn:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._saleIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$ReceiptPrintJobsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReceiptPrintJobsTable,
+      ReceiptPrintJob,
+      $$ReceiptPrintJobsTableFilterComposer,
+      $$ReceiptPrintJobsTableOrderingComposer,
+      $$ReceiptPrintJobsTableAnnotationComposer,
+      $$ReceiptPrintJobsTableCreateCompanionBuilder,
+      $$ReceiptPrintJobsTableUpdateCompanionBuilder,
+      (ReceiptPrintJob, $$ReceiptPrintJobsTableReferences),
+      ReceiptPrintJob,
+      PrefetchHooks Function({
+        bool organizationId,
+        bool branchId,
+        bool registerId,
+        bool saleId,
       })
     >;
 typedef $$ApprovalRequestsTableCreateCompanionBuilder =
@@ -98588,6 +104277,1189 @@ typedef $$FeatureFlagsTableProcessedTableManager =
       FeatureFlag,
       PrefetchHooks Function({bool organizationId, bool branchId})
     >;
+typedef $$PosCartsTableCreateCompanionBuilder =
+    PosCartsCompanion Function({
+      required String id,
+      required String organizationId,
+      required String branchId,
+      required String deviceId,
+      required String status,
+      Value<String?> title,
+      Value<String?> customerId,
+      Value<int> saleDiscountMinor,
+      Value<String?> saleDiscountReason,
+      Value<String?> activeScope,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$PosCartsTableUpdateCompanionBuilder =
+    PosCartsCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String> branchId,
+      Value<String> deviceId,
+      Value<String> status,
+      Value<String?> title,
+      Value<String?> customerId,
+      Value<int> saleDiscountMinor,
+      Value<String?> saleDiscountReason,
+      Value<String?> activeScope,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$PosCartsTableReferences
+    extends BaseReferences<_$AppDatabase, $PosCartsTable, PosCart> {
+  $$PosCartsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(db.posCarts.organizationId, db.organizations.id),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BranchesTable _branchIdTable(_$AppDatabase db) => db.branches
+      .createAlias($_aliasNameGenerator(db.posCarts.branchId, db.branches.id));
+
+  $$BranchesTableProcessedTableManager get branchId {
+    final $_column = $_itemColumn<String>('branch_id')!;
+
+    final manager = $$BranchesTableTableManager(
+      $_db,
+      $_db.branches,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $CustomersTable _customerIdTable(_$AppDatabase db) =>
+      db.customers.createAlias(
+        $_aliasNameGenerator(db.posCarts.customerId, db.customers.id),
+      );
+
+  $$CustomersTableProcessedTableManager? get customerId {
+    final $_column = $_itemColumn<String>('customer_id');
+    if ($_column == null) return null;
+    final manager = $$CustomersTableTableManager(
+      $_db,
+      $_db.customers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_customerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$PosCartItemsTable, List<PosCartItem>>
+  _posCartItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.posCartItems,
+    aliasName: $_aliasNameGenerator(db.posCarts.id, db.posCartItems.cartId),
+  );
+
+  $$PosCartItemsTableProcessedTableManager get posCartItemsRefs {
+    final manager = $$PosCartItemsTableTableManager(
+      $_db,
+      $_db.posCartItems,
+    ).filter((f) => f.cartId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_posCartItemsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$PosCartsTableFilterComposer
+    extends Composer<_$AppDatabase, $PosCartsTable> {
+  $$PosCartsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get saleDiscountMinor => $composableBuilder(
+    column: $table.saleDiscountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get saleDiscountReason => $composableBuilder(
+    column: $table.saleDiscountReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get activeScope => $composableBuilder(
+    column: $table.activeScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CustomersTableFilterComposer get customerId {
+    final $$CustomersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableFilterComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> posCartItemsRefs(
+    Expression<bool> Function($$PosCartItemsTableFilterComposer f) f,
+  ) {
+    final $$PosCartItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.posCartItems,
+      getReferencedColumn: (t) => t.cartId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.posCartItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$PosCartsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PosCartsTable> {
+  $$PosCartsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get saleDiscountMinor => $composableBuilder(
+    column: $table.saleDiscountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get saleDiscountReason => $composableBuilder(
+    column: $table.saleDiscountReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get activeScope => $composableBuilder(
+    column: $table.activeScope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableOrderingComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CustomersTableOrderingComposer get customerId {
+    final $$CustomersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableOrderingComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PosCartsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PosCartsTable> {
+  $$PosCartsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<int> get saleDiscountMinor => $composableBuilder(
+    column: $table.saleDiscountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get saleDiscountReason => $composableBuilder(
+    column: $table.saleDiscountReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get activeScope => $composableBuilder(
+    column: $table.activeScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CustomersTableAnnotationComposer get customerId {
+    final $$CustomersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.customerId,
+      referencedTable: $db.customers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CustomersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.customers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> posCartItemsRefs<T extends Object>(
+    Expression<T> Function($$PosCartItemsTableAnnotationComposer a) f,
+  ) {
+    final $$PosCartItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.posCartItems,
+      getReferencedColumn: (t) => t.cartId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.posCartItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$PosCartsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PosCartsTable,
+          PosCart,
+          $$PosCartsTableFilterComposer,
+          $$PosCartsTableOrderingComposer,
+          $$PosCartsTableAnnotationComposer,
+          $$PosCartsTableCreateCompanionBuilder,
+          $$PosCartsTableUpdateCompanionBuilder,
+          (PosCart, $$PosCartsTableReferences),
+          PosCart,
+          PrefetchHooks Function({
+            bool organizationId,
+            bool branchId,
+            bool customerId,
+            bool posCartItemsRefs,
+          })
+        > {
+  $$PosCartsTableTableManager(_$AppDatabase db, $PosCartsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PosCartsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PosCartsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PosCartsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> title = const Value.absent(),
+                Value<String?> customerId = const Value.absent(),
+                Value<int> saleDiscountMinor = const Value.absent(),
+                Value<String?> saleDiscountReason = const Value.absent(),
+                Value<String?> activeScope = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PosCartsCompanion(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                deviceId: deviceId,
+                status: status,
+                title: title,
+                customerId: customerId,
+                saleDiscountMinor: saleDiscountMinor,
+                saleDiscountReason: saleDiscountReason,
+                activeScope: activeScope,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                required String branchId,
+                required String deviceId,
+                required String status,
+                Value<String?> title = const Value.absent(),
+                Value<String?> customerId = const Value.absent(),
+                Value<int> saleDiscountMinor = const Value.absent(),
+                Value<String?> saleDiscountReason = const Value.absent(),
+                Value<String?> activeScope = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PosCartsCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                deviceId: deviceId,
+                status: status,
+                title: title,
+                customerId: customerId,
+                saleDiscountMinor: saleDiscountMinor,
+                saleDiscountReason: saleDiscountReason,
+                activeScope: activeScope,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PosCartsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                organizationId = false,
+                branchId = false,
+                customerId = false,
+                posCartItemsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (posCartItemsRefs) db.posCartItems,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (organizationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.organizationId,
+                                    referencedTable: $$PosCartsTableReferences
+                                        ._organizationIdTable(db),
+                                    referencedColumn: $$PosCartsTableReferences
+                                        ._organizationIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+                        if (branchId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.branchId,
+                                    referencedTable: $$PosCartsTableReferences
+                                        ._branchIdTable(db),
+                                    referencedColumn: $$PosCartsTableReferences
+                                        ._branchIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+                        if (customerId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.customerId,
+                                    referencedTable: $$PosCartsTableReferences
+                                        ._customerIdTable(db),
+                                    referencedColumn: $$PosCartsTableReferences
+                                        ._customerIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (posCartItemsRefs)
+                        await $_getPrefetchedData<
+                          PosCart,
+                          $PosCartsTable,
+                          PosCartItem
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PosCartsTableReferences
+                              ._posCartItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PosCartsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).posCartItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.cartId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$PosCartsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PosCartsTable,
+      PosCart,
+      $$PosCartsTableFilterComposer,
+      $$PosCartsTableOrderingComposer,
+      $$PosCartsTableAnnotationComposer,
+      $$PosCartsTableCreateCompanionBuilder,
+      $$PosCartsTableUpdateCompanionBuilder,
+      (PosCart, $$PosCartsTableReferences),
+      PosCart,
+      PrefetchHooks Function({
+        bool organizationId,
+        bool branchId,
+        bool customerId,
+        bool posCartItemsRefs,
+      })
+    >;
+typedef $$PosCartItemsTableCreateCompanionBuilder =
+    PosCartItemsCompanion Function({
+      required String id,
+      required String cartId,
+      required String productId,
+      required String snapshotSku,
+      required String snapshotName,
+      required int quantityMilli,
+      Value<int> itemDiscountMinor,
+      Value<String?> discountReason,
+      required int position,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$PosCartItemsTableUpdateCompanionBuilder =
+    PosCartItemsCompanion Function({
+      Value<String> id,
+      Value<String> cartId,
+      Value<String> productId,
+      Value<String> snapshotSku,
+      Value<String> snapshotName,
+      Value<int> quantityMilli,
+      Value<int> itemDiscountMinor,
+      Value<String?> discountReason,
+      Value<int> position,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$PosCartItemsTableReferences
+    extends BaseReferences<_$AppDatabase, $PosCartItemsTable, PosCartItem> {
+  $$PosCartItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PosCartsTable _cartIdTable(_$AppDatabase db) =>
+      db.posCarts.createAlias(
+        $_aliasNameGenerator(db.posCartItems.cartId, db.posCarts.id),
+      );
+
+  $$PosCartsTableProcessedTableManager get cartId {
+    final $_column = $_itemColumn<String>('cart_id')!;
+
+    final manager = $$PosCartsTableTableManager(
+      $_db,
+      $_db.posCarts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_cartIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PosCartItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $PosCartItemsTable> {
+  $$PosCartItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get productId => $composableBuilder(
+    column: $table.productId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get snapshotSku => $composableBuilder(
+    column: $table.snapshotSku,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get snapshotName => $composableBuilder(
+    column: $table.snapshotName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get quantityMilli => $composableBuilder(
+    column: $table.quantityMilli,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get itemDiscountMinor => $composableBuilder(
+    column: $table.itemDiscountMinor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get discountReason => $composableBuilder(
+    column: $table.discountReason,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PosCartsTableFilterComposer get cartId {
+    final $$PosCartsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.cartId,
+      referencedTable: $db.posCarts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartsTableFilterComposer(
+            $db: $db,
+            $table: $db.posCarts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PosCartItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PosCartItemsTable> {
+  $$PosCartItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get productId => $composableBuilder(
+    column: $table.productId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get snapshotSku => $composableBuilder(
+    column: $table.snapshotSku,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get snapshotName => $composableBuilder(
+    column: $table.snapshotName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get quantityMilli => $composableBuilder(
+    column: $table.quantityMilli,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get itemDiscountMinor => $composableBuilder(
+    column: $table.itemDiscountMinor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get discountReason => $composableBuilder(
+    column: $table.discountReason,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PosCartsTableOrderingComposer get cartId {
+    final $$PosCartsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.cartId,
+      referencedTable: $db.posCarts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartsTableOrderingComposer(
+            $db: $db,
+            $table: $db.posCarts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PosCartItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PosCartItemsTable> {
+  $$PosCartItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get productId =>
+      $composableBuilder(column: $table.productId, builder: (column) => column);
+
+  GeneratedColumn<String> get snapshotSku => $composableBuilder(
+    column: $table.snapshotSku,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get snapshotName => $composableBuilder(
+    column: $table.snapshotName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get quantityMilli => $composableBuilder(
+    column: $table.quantityMilli,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get itemDiscountMinor => $composableBuilder(
+    column: $table.itemDiscountMinor,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get discountReason => $composableBuilder(
+    column: $table.discountReason,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$PosCartsTableAnnotationComposer get cartId {
+    final $$PosCartsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.cartId,
+      referencedTable: $db.posCarts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PosCartsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.posCarts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PosCartItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PosCartItemsTable,
+          PosCartItem,
+          $$PosCartItemsTableFilterComposer,
+          $$PosCartItemsTableOrderingComposer,
+          $$PosCartItemsTableAnnotationComposer,
+          $$PosCartItemsTableCreateCompanionBuilder,
+          $$PosCartItemsTableUpdateCompanionBuilder,
+          (PosCartItem, $$PosCartItemsTableReferences),
+          PosCartItem,
+          PrefetchHooks Function({bool cartId})
+        > {
+  $$PosCartItemsTableTableManager(_$AppDatabase db, $PosCartItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PosCartItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PosCartItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PosCartItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> cartId = const Value.absent(),
+                Value<String> productId = const Value.absent(),
+                Value<String> snapshotSku = const Value.absent(),
+                Value<String> snapshotName = const Value.absent(),
+                Value<int> quantityMilli = const Value.absent(),
+                Value<int> itemDiscountMinor = const Value.absent(),
+                Value<String?> discountReason = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PosCartItemsCompanion(
+                id: id,
+                cartId: cartId,
+                productId: productId,
+                snapshotSku: snapshotSku,
+                snapshotName: snapshotName,
+                quantityMilli: quantityMilli,
+                itemDiscountMinor: itemDiscountMinor,
+                discountReason: discountReason,
+                position: position,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String cartId,
+                required String productId,
+                required String snapshotSku,
+                required String snapshotName,
+                required int quantityMilli,
+                Value<int> itemDiscountMinor = const Value.absent(),
+                Value<String?> discountReason = const Value.absent(),
+                required int position,
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PosCartItemsCompanion.insert(
+                id: id,
+                cartId: cartId,
+                productId: productId,
+                snapshotSku: snapshotSku,
+                snapshotName: snapshotName,
+                quantityMilli: quantityMilli,
+                itemDiscountMinor: itemDiscountMinor,
+                discountReason: discountReason,
+                position: position,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PosCartItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({cartId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (cartId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.cartId,
+                                referencedTable: $$PosCartItemsTableReferences
+                                    ._cartIdTable(db),
+                                referencedColumn: $$PosCartItemsTableReferences
+                                    ._cartIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PosCartItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PosCartItemsTable,
+      PosCartItem,
+      $$PosCartItemsTableFilterComposer,
+      $$PosCartItemsTableOrderingComposer,
+      $$PosCartItemsTableAnnotationComposer,
+      $$PosCartItemsTableCreateCompanionBuilder,
+      $$PosCartItemsTableUpdateCompanionBuilder,
+      (PosCartItem, $$PosCartItemsTableReferences),
+      PosCartItem,
+      PrefetchHooks Function({bool cartId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -98667,6 +105539,8 @@ class $AppDatabaseManager {
       $$SaleDiscountsTableTableManager(_db, _db.saleDiscounts);
   $$ReceiptSequencesTableTableManager get receiptSequences =>
       $$ReceiptSequencesTableTableManager(_db, _db.receiptSequences);
+  $$ReceiptPrintJobsTableTableManager get receiptPrintJobs =>
+      $$ReceiptPrintJobsTableTableManager(_db, _db.receiptPrintJobs);
   $$ApprovalRequestsTableTableManager get approvalRequests =>
       $$ApprovalRequestsTableTableManager(_db, _db.approvalRequests);
   $$ApprovalDecisionsTableTableManager get approvalDecisions =>
@@ -98715,4 +105589,8 @@ class $AppDatabaseManager {
       $$ReasonCodesTableTableManager(_db, _db.reasonCodes);
   $$FeatureFlagsTableTableManager get featureFlags =>
       $$FeatureFlagsTableTableManager(_db, _db.featureFlags);
+  $$PosCartsTableTableManager get posCarts =>
+      $$PosCartsTableTableManager(_db, _db.posCarts);
+  $$PosCartItemsTableTableManager get posCartItems =>
+      $$PosCartItemsTableTableManager(_db, _db.posCartItems);
 }

@@ -122,6 +122,15 @@ export async function postInventoryTransaction(
 
   const balances: Record<string, unknown>[] = [];
   for (const line of lines) {
+    if (transactionType === "opening_balance") {
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
+        [`${command.organizationId}|${command.branchId}|${line.stockLocationId}|${line.productId}`]);
+      const prior = await client.query(
+        `SELECT 1 FROM inventory_ledger_entries WHERE organization_id = $1 AND branch_id = $2
+         AND stock_location_id = $3 AND product_id = $4 LIMIT 1`,
+        [command.organizationId, command.branchId, line.stockLocationId, line.productId]);
+      if (prior.rowCount !== 0) throw new RemoteCommandError("failed-precondition", "Opening stock cannot replace existing ledger history.");
+    }
     const balance = await applyInventoryLine(client, command, line, branch.allow_negative_stock);
     balances.push(balance);
     await client.query(

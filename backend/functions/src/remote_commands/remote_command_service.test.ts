@@ -26,6 +26,9 @@ class FakePoolClient {
   async query(text: string, values?: unknown[]): Promise<unknown> {
     const normalized = text.replace(/\s+/g, " ").trim();
     this.statements.push(normalized);
+    if (normalized.startsWith("SELECT id FROM branches") && normalized.endsWith("FOR SHARE")) {
+      return result([{id: "branch-1"}]);
+    }
     if (normalized === "BEGIN" || normalized.startsWith("SELECT pg_advisory_xact_lock")) {
       return result([]);
     }
