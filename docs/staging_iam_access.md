@@ -6,10 +6,14 @@ the production project or the POS application password for these steps.
 ## Target and current state
 
 Update: the operator completed the temporary role grant. IAM `SET ROLE`, schema
-USAGE/CREATE and live migrations through corrected `0011` subsequently passed.
+USAGE/CREATE and live migrations through `0012` subsequently passed.
 The instructions below remain the reproducible setup/cleanup procedure; do not
-repeat grants unnecessarily. Functions Auth permissions and application-role
-provisioning are separate pending approvals. See the staging checkpoint.
+repeat grants unnecessarily. The user approved Functions Auth permissions and
+application-role provisioning; both are configured, and staging schema/connector
+and all eight Functions are deployed. The custom runtime Auth role contains only
+users.create/get/sendEmail/update. Approved administration grants were audited.
+Temporary migration membership remains present: perform step 5 after database
+work is finished. See the staging checkpoint.
 
 - Project: `jce-pos-staging-259528`
 - Cloud SQL instance: `jce-pos-instance`, region `asia-southeast1`
@@ -17,9 +21,9 @@ provisioning are separate pending approvals. See the staging checkpoint.
 - Human IAM database user: `estoce.orlan@gmail.com`
 - Existing PostgreSQL schema-object owner: `jce_pos_migrator`
 
-The live check on 2026-09-06 successfully authenticated this IAM user. Migrations
+The initial preflight on 2026-09-06 successfully authenticated this IAM user. Migrations
 `0001`-`0004` matched, `0005`-`0011` were pending, and migration-role membership
-was false. The problem is PostgreSQL authorization, not application authentication.
+was false. That initial PostgreSQL authorization blocker is now resolved.
 
 ## 1. Verify Google Cloud access
 

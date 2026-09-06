@@ -6,8 +6,10 @@ async function main() {
       !region || !/^[a-z0-9-]+$/.test(region)) {
     throw new Error("Explicit staging project and Functions region are required.");
   }
-  const functions = ["getMyAccessProfile", "applyRemoteCommand"];
-  const results = await Promise.all(Array.from({length: 4}, async (_, index) => {
+  const functions = ["getMyAccessProfile", "applyRemoteCommand", "registerDevice",
+    "updateBranchName", "finalizeProductImage", "generateStaffInviteLink",
+    "acceptStaffInvitation", "getAdministrationSnapshot"];
+  const results = await Promise.all(Array.from({length: functions.length * 2}, async (_, index) => {
     const name = functions[index % functions.length];
     const response = await fetch(`https://${region}-${project}.cloudfunctions.net/${name}`, {
       method: "POST", headers: {"Content-Type": "application/json"},

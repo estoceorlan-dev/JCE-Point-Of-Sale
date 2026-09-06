@@ -42,7 +42,8 @@ HAVING count(*) > 1;
 ```
 
 Resolve any returned duplicates through an approved migration. Apply migrations
-through `0010_phase15_pos_hardware.sql`, then `0011_admin_operations.sql`, before
+through `0010_phase15_pos_hardware.sql`, then `0011_admin_operations.sql` and
+`0012_change_feed_tombstones.sql`, before
 deploying Functions/SQL Connect and the schema-15 client. Do not alter checksums of
 already applied migrations; if staging already has an earlier `0011`, add a new
 migration for the normalized index instead.
@@ -55,19 +56,24 @@ See [staging IAM access](staging_iam_access.md) for operator setup and verificat
 
 ## Outstanding external acceptance
 
-Local checkpoint: 233 Flutter tests and 35 Functions tests pass. SQL Connect SDK
+Local checkpoint: 233 Flutter tests and 36 Functions tests pass. SQL Connect SDK
 generation succeeded. These checks include the preserved hardware/receipt and
 released Drift migration tests, not live device or PostgreSQL acceptance.
 
-Live staging migrations `0005`-`0011` are now applied after a fresh backup and
-successful local restore/rehearsal. All 11 checksums match; all 60 tables remain
-migration-owned. PostgreSQL locking primitive checks pass. Firebase application
-deployment, pilot flag changes and complete signed-in workflow concurrency remain
-pending. See [staging checkpoint](staging_acceptance_checkpoint.md).
+Live staging migrations through `0012` are applied after verified backups and
+local restore/rehearsals. All 12 checksums match; all 60 tables remain
+migration-owned. Schema/connector and all eight Functions are deployed. Approved
+Auth/application-role grants are configured. Signed-in invite setup/acceptance,
+branch duplicate/stale-edit concurrency, archive/restore, cashier denial and
+refresh-token revocation passed. Sixteen unauthenticated probes were rejected.
+The Windows staging release is built, not installed/physically accepted.
+Pilot flags are unchanged; broader workflow concurrency remains pending. See [staging checkpoint](staging_acceptance_checkpoint.md).
 
 Before calling all Phase 0–2 exit criteria complete:
 
-1. Validate migration order/checksums and SQL Connect schema diff against staging.
+1. Migration order/checksums are verified. Validate live connector query/read
+   visibility; do not apply the generated SQL that proposes recreating
+   migration-owned tables. Existing remote validation NONE was preserved.
 2. Exercise each limited administration permission with real Firebase accounts;
    verify cross-organization and branch-only mutation rejection and review
    incremental-feed read visibility separately from snapshot permissions.

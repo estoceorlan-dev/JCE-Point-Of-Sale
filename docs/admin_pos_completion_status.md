@@ -2,7 +2,8 @@
 
 Updated 2026-09-06. This tracks the requested **Phases 0–7**, separately from the
 repository's historical Phase 15 hardware work. **The full delivery plan is not
-complete and has not been deployed.** Existing hardware/receipt work is preserved.
+complete. The staging backend is deployed; full pilot acceptance is pending.**
+Existing hardware/receipt work is preserved.
 
 ## Working implementation
 
@@ -54,13 +55,13 @@ complete and has not been deployed.** Existing hardware/receipt work is preserve
 | Phase | Remaining exit requirements |
 | --- | --- |
 | 0 | Local navigation and hardware regression implementation is verified; native Windows/Android/web and physical-device acceptance remain. Startup tests own and close isolated databases without suppressing production Drift warnings. |
-| 1 | Staging migration/schema-diff execution, live permission/concurrency tests, and incremental-feed read-visibility review. Snapshot scopes, navigation, replay and atomic remote-conflict recovery now have regression coverage. Failed creations with no remote record remain explicit recovery cases. |
+| 1 | Staging migrations through 0012 and backend deployment are complete. Broader live limited-permission/concurrency tests, connector query validation, and incremental-feed read-visibility review remain. Snapshot scopes, navigation, replay and atomic remote-conflict recovery now have regression coverage. Failed creations with no remote record remain explicit recovery cases. |
 | 2 | Live two-device pending-branch selection/access-refresh acceptance and concurrent archival tests. Validate archived-history/reporting navigation without switching operational context into an archived branch. Directory/details and matching-branch receipt-profile rendering have desktop/compact and unit coverage. |
-| 3 | **Offline supervisor approvals are not implemented.** Deliver secure six-digit PIN enrollment, device-bound encrypted/signed credentials, expiry/revocation, lockout, ApprovalGrant contracts and all protected-workflow integrations. Complete branch/role filters and staff pending-sync indicators. Validate invite acceptance/reactivation/email-identity lifecycle against Firebase Auth. |
+| 3 | Invite setup/acceptance/replay and disablement/token revocation passed live staging probes; negative identity lifecycle cases remain. **Offline supervisor approvals are not implemented.** Deliver secure six-digit PIN enrollment, device-bound encrypted/signed credentials, expiry/revocation, lockout, ApprovalGrant contracts and all protected-workflow integrations. Complete branch/role filters and staff pending-sync indicators. Validate invite acceptance/reactivation/email-identity lifecycle against Firebase Auth. |
 | 4 | Finish stock-location edit/archive/restore and remaining administration UX; measure 10,000-product/import/outbox performance; add broader tax/register/import widget and remote convergence tests. |
 | 5 | Integrate the shared supervisor approval contract into discounts, corrections, stock operations, transfers, purchases, and shift discrepancies; expand failure/crash-recovery scenarios. |
 | 6 | Complete numeric/touch payment entry, focus/shortcut and loading/error/offline golden coverage, long-label/large-text layouts, and physical scanner/printer pilot tests. |
-| 7 | PostgreSQL migration/concurrency integration tests, invite/credential negative tests, complete offline end-to-end scenarios, pilot performance measurements, admin/approval rollout flags, staging deployment, reconciliation and user acceptance. |
+| 7 | PostgreSQL migration/concurrency integration tests, invite/credential negative tests, complete offline end-to-end scenarios, pilot performance measurements, admin/approval rollout flags, client rollout, reconciliation and user acceptance. Staging backend deployment is complete. |
 
 Do not substitute a typed approver ID or locally stored plaintext PIN for the
 remaining approval implementation. Current protected actions still use the
@@ -97,7 +98,7 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
 
 - `flutter analyze`: no issues.
 - `flutter test`: **233 tests passed**.
-- Functions TypeScript build and `npm test`: **33 tests passed**.
+- Functions TypeScript build and `npm test`: **36 tests passed** (latest staging continuation).
 - `npm run lint`: passed, including the client-admin-provisioning security check.
 - Startup cleanup tests: **2 passed**, with the multiple-instance warning removed.
 - Terminal widget coverage: 1280×720, 1024×600, 800×700, 360×640; clear confirmation,
@@ -109,28 +110,33 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
   PostgreSQL locking, Firebase Auth, staging, or physical-hardware acceptance.
 - `git diff --check`: passed.
 - SQL Connect SDK regeneration: succeeded for the aligned administration schema;
-  no deployment or live database schema diff was performed.
+  schema/connector are now deployed to staging. Proposed SQL table recreation was not applied; existing externally managed validation NONE was preserved.
 - Phase 0–2 regression coverage includes limited-role navigation, 1280×720 and
   360×640 branch layouts, pending branch selection, historical identity retention,
   normalized legacy code collisions, receipt numbering, snapshot scope upgrades,
   replay protection and failed/atomic remote-conflict recovery.
 
-## Deployment order — staging database complete; application deployment pending
+## Deployment order — staging backend complete; client/pilot acceptance pending
 
 1. Back up and validate staging PostgreSQL; apply historical migrations through
-   `0010_phase15_pos_hardware.sql`, then `0011_admin_operations.sql`.
-   **Completed on staging:** corrected migrations through `0011` applied,
+   `0010_phase15_pos_hardware.sql`, then `0011_admin_operations.sql` and
+   `0012_change_feed_tombstones.sql`.
+   **Completed on staging:** all 12 migrations applied,
    checksums verified, and all 60 public tables retain the migration owner.
-2. Build/deploy Functions and review SQL Connect changes. New callables:
+2. **Completed on staging:** schema/connector and all eight Functions deployed.
+   Explicit Auth and application-role permissions provisioned with approval.
+   New callables:
    `getAdministrationSnapshot`, `generateStaffInviteLink`,
    `acceptStaffInvitation`. Client function names remain configurable.
-3. Deploy the schema-15 client to staging with `pos.terminal` disabled.
+3. Windows schema-15 staging release is built with demo auth disabled; install
+   the complete Release bundle on the pilot terminal. Pilot flags are unchanged.
 4. Finish the outstanding security/lifecycle tests and approval implementation
    before enabling the requested protected offline workflows.
 5. Enable only for the pilot branch after migration, sales/stock/shift
    reconciliation, device tests, performance measurement and acceptance.
 
-No production database, Firebase deployment, or pilot settings were changed.
+No production environment or pilot settings were changed. Firebase staging
+schema/connector and Functions deployment is complete.
 
 See [Phase 0–2 staging handoff](phase_0_2_validation.md) for the implemented
 boundaries, normalized-code preflight, and outstanding external acceptance.
@@ -142,7 +148,8 @@ checksums, rollback-only locking primitives and unauthenticated Firebase rejecti
 The staging public-schema logical backup restored all 39 tables into an isolated
 local PostgreSQL cluster, and pending migrations `0005`-`0011` passed there.
 The operator then granted migration-owner access and live staging migrations
-through corrected `0011` completed. Remaining prerequisites are approved
-application-admin grants, Functions Firebase Auth access, backend/client
-deployment, signed-in command concurrency and physical acceptance.
+through corrected `0011` and new `0012` completed. Approved application-admin
+and Functions Auth grants are configured; staging backend deployment and a
+signed-in branch/invite concurrency subset passed. Client installation, wider
+live security/concurrency coverage and physical acceptance remain.
 See [live staging checkpoint](staging_acceptance_checkpoint.md).
