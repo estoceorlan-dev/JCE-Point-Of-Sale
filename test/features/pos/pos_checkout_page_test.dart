@@ -5,7 +5,10 @@ import 'package:jce_pos/core/database/app_database.dart';
 import 'package:jce_pos/core/database/database_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jce_pos/features/pos/domain/entities/checkout_attempt.dart';
+import 'package:jce_pos/features/pos/domain/entities/payment.dart';
 import 'package:jce_pos/features/pos/domain/entities/sale_product.dart';
+import 'package:jce_pos/features/pos/presentation/controllers/cart_controller.dart';
 import 'package:jce_pos/features/pos/presentation/pages/checkout_page.dart';
 import 'package:jce_pos/features/pos/presentation/providers/pos_providers.dart';
 import 'package:jce_pos/features/shifts/domain/entities/cash_shift.dart';
@@ -67,6 +70,103 @@ void main() {
     expect(find.byKey(const Key('card-payment-field')), findsOneWidget);
     expect(find.byKey(const Key('wallet-payment-field')), findsOneWidget);
     expect(find.byKey(const Key('complete-sale-button')), findsOneWidget);
+    await _dispose(tester);
+  });
+  testWidgets('approved external payment visibly locks cart edits', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+          saleProductBrowserProvider.overrideWith(
+            (ref, query) => Stream.value(const [_saleProduct]),
+          ),
+          saleProductSearchProvider.overrideWith(
+            (ref, search) => Stream.value(const [_saleProduct]),
+          ),
+          activeShiftProvider.overrideWith((ref) => Stream.value(null)),
+          shiftPolicyProvider.overrideWith(
+            (ref) => Future.value(
+              const ShiftPolicy(
+                allowMultipleOpenShiftsPerUser: false,
+                allowSalesWithoutOpenShift: true,
+              ),
+            ),
+          ),
+          activePosSessionProvider.overrideWith((ref) => null),
+        ],
+        child: const MaterialApp(home: Scaffold(body: CheckoutPage())),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(CheckoutPage)),
+    );
+    final cartController = container.read(cartControllerProvider.notifier);
+    cartController.addProduct(_saleProduct);
+    cartController.recordCheckoutAttempt(
+      CheckoutAttempt(
+        operationId: 'checkout-recovery',
+        tenders: const [
+          PaymentTender(
+            method: SalePaymentMethod.card,
+            tenderedAmountMinor: 11200,
+            reference: 'APPROVED-REFERENCE',
+          ),
+        ],
+        externalPaymentApproved: true,
+        attemptedAt: DateTime.utc(2026, 9, 8),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('external-payment-recovery-banner')),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .widget<IconButton>(
+            find.widgetWithIcon(IconButton, Icons.pause_circle_outline),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<TextButton>(find.widgetWithText(TextButton, 'Clear'))
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<IconButton>(find.widgetWithIcon(IconButton, Icons.close))
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<FilledButton>(find.byKey(const Key('checkout-button')))
+          .onPressed,
+      isNotNull,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.f4);
+    await tester.pump();
+    expect(find.text('Hold current sale'), findsNothing);
+    expect(
+      find.text(
+        'Complete the saved payment recovery before changing this sale.',
+      ),
+      findsOneWidget,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    expect(find.text('Clear current sale?'), findsNothing);
     await _dispose(tester);
   });
   for (final size in [

@@ -7,6 +7,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/logger/app_logger.dart';
 import '../../domain/entities/cart.dart';
+import '../../domain/entities/checkout_attempt.dart';
 import '../../domain/entities/sale_product.dart';
 import '../../domain/value_objects/cart_pricing.dart';
 import '../../../../core/error/failure_mapper.dart';
@@ -55,6 +56,9 @@ class CartController extends Notifier<Cart> {
   }
 
   Result<void, Failure> addProduct(SaleProduct product) {
+    if (_externalPaymentLock case final failure?) {
+      return Result.failure(failure);
+    }
     if (product.unitPriceMinor <= 0) {
       return const Result.failure(
         ValidationFailure(
@@ -71,14 +75,14 @@ class CartController extends Notifier<Cart> {
           ValidationFailure('There is not enough stock for this product.'),
         );
       }
-      state = state.copyWith(
-        lines: [
-          ...state.lines,
-          CartLine(product: product, quantityMilli: 1000),
-        ],
+      return _commit(
+        state.copyWith(
+          lines: [
+            ...state.lines,
+            CartLine(product: product, quantityMilli: 1000),
+          ],
+        ),
       );
-      _changed();
-      return const Result.success(null);
     }
     final lines = [...state.lines];
     final existing = lines[index];
@@ -91,9 +95,7 @@ class CartController extends Notifier<Cart> {
       quantityMilli: existing.quantityMilli + 1000,
       clearValidationMessage: true,
     );
-    state = state.copyWith(lines: lines);
-    _changed();
-    return const Result.success(null);
+    return _commit(state.copyWith(lines: lines));
   }
 
   Result<void, Failure> setQuantity(String productId, int quantityMilli) {
@@ -154,30 +156,36 @@ class CartController extends Notifier<Cart> {
     );
   }
 
-  void removeProduct(String productId) {
-    state = state.copyWith(
+  Result<void, Failure> removeProduct(String productId) {
+    if (_externalPaymentLock case final failure?) {
+      return Result.failure(failure);
+    }
+    final next = state.copyWith(
       lines: state.lines
           .where((line) => line.product.id != productId)
           .toList(growable: false),
     );
-    if (state.lines.isEmpty) {
-      clear();
-    } else {
-      _changed();
-    }
+    return _commit(next.lines.isEmpty ? const Cart() : next);
   }
 
-  void setCustomer(String? customerId) {
-    state = state.copyWith(
-      customerId: customerId,
-      clearCustomerId: customerId == null,
+  Result<void, Failure> setCustomer(String? customerId) {
+    return _commit(
+      state.copyWith(
+        customerId: customerId,
+        clearCustomerId: customerId == null,
+      ),
     );
-    _changed();
   }
 
-  void clear() {
+  Result<void, Failure> clear() => _commit(const Cart());
+
+  void recordCheckoutAttempt(CheckoutAttempt attempt) {
+    state = state.copyWith(checkoutAttempt: attempt);
+  }
+
+  void clearAfterCheckout() {
+    _mutation++;
     state = const Cart();
-    _changed();
   }
 
   Future<Result<String, Failure>> hold({required String title}) async {
@@ -189,6 +197,9 @@ class CartController extends Notifier<Cart> {
     }
     if (state.isEmpty) {
       return const Result.failure(ValidationFailure('The cart is empty.'));
+    }
+    if (_externalPaymentLock case final failure?) {
+      return Result.failure(failure);
     }
     try {
       await _saveChain;
@@ -257,15 +268,26 @@ class CartController extends Notifier<Cart> {
   }
 
   Result<void, Failure> _commit(Cart next) {
+    if (_externalPaymentLock case final failure?) {
+      return Result.failure(failure);
+    }
     try {
-      CartPricingCalculator.calculate(next);
-      state = next;
+      if (!next.isEmpty) CartPricingCalculator.calculate(next);
+      state = next.copyWith(clearCheckoutAttempt: true);
       _changed();
       return const Result.success(null);
     } on Failure catch (failure) {
       return Result.failure(failure);
     }
   }
+
+  Failure? get _externalPaymentLock =>
+      state.checkoutAttempt?.externalPaymentApproved == true
+      ? const ConflictFailure(
+          'An externally approved payment is awaiting reconciliation. '
+          'Retry the saved checkout; do not change or clear this cart.',
+        )
+      : null;
 
   void _changed() {
     _mutation++;

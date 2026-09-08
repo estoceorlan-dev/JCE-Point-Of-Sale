@@ -2,11 +2,13 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/core/database/app_database.dart';
+import 'package:jce_pos/core/error/failure.dart';
 import 'package:jce_pos/core/utils/app_clock.dart';
 import 'package:jce_pos/core/utils/id_generator.dart';
 import 'package:jce_pos/features/pos/data/data_sources/sales_local_data_source.dart';
 import 'package:jce_pos/features/pos/data/repositories/drift_pos_cart_repository.dart';
 import 'package:jce_pos/features/pos/domain/entities/cart.dart';
+import 'package:jce_pos/features/pos/domain/entities/payment.dart';
 import 'package:jce_pos/features/pos/domain/entities/sale_product.dart';
 import 'package:jce_pos/shared/models/business_context.dart';
 
@@ -100,6 +102,149 @@ void main() {
           .watchHeld(context: _context, deviceId: 'terminal-a')
           .first,
       isEmpty,
+    );
+  });
+
+  test(
+    'external checkout attempt survives restart and reuses its operation id',
+    () async {
+      await repository.saveActive(
+        context: _context,
+        deviceId: 'terminal-a',
+        cart: const Cart(
+          lines: [CartLine(product: _saleProduct, quantityMilli: 1000)],
+        ),
+      );
+      const tenders = [
+        PaymentTender(
+          method: SalePaymentMethod.card,
+          tenderedAmountMinor: 11200,
+          reference: 'APPROVED-REFERENCE',
+        ),
+      ];
+      final prepared = await repository.prepareCheckoutAttempt(
+        context: _context,
+        deviceId: 'terminal-a',
+        tenders: tenders,
+        externalPaymentsConfirmed: true,
+      );
+
+      final restored = await repository.loadActive(
+        context: _context,
+        deviceId: 'terminal-a',
+      );
+      final retry = await repository.prepareCheckoutAttempt(
+        context: _context,
+        deviceId: 'terminal-a',
+        tenders: tenders,
+        externalPaymentsConfirmed: true,
+      );
+
+      expect(
+        restored.checkoutAttempt?.operationId,
+        prepared.valueOrNull?.operationId,
+      );
+      expect(restored.checkoutAttempt?.externalPaymentApproved, isTrue);
+      expect(
+        restored.checkoutAttempt?.tenders.single.reference,
+        'APPROVED-REFERENCE',
+      );
+      expect(retry.valueOrNull?.operationId, prepared.valueOrNull?.operationId);
+    },
+  );
+
+  test('external checkout attempt rejects changed retry tenders', () async {
+    await repository.saveActive(
+      context: _context,
+      deviceId: 'terminal-a',
+      cart: const Cart(
+        lines: [CartLine(product: _saleProduct, quantityMilli: 1000)],
+      ),
+    );
+    await repository.prepareCheckoutAttempt(
+      context: _context,
+      deviceId: 'terminal-a',
+      tenders: const [
+        PaymentTender(
+          method: SalePaymentMethod.card,
+          tenderedAmountMinor: 11200,
+          reference: 'APPROVED-REFERENCE',
+        ),
+      ],
+      externalPaymentsConfirmed: true,
+    );
+
+    final changed = await repository.prepareCheckoutAttempt(
+      context: _context,
+      deviceId: 'terminal-a',
+      tenders: const [
+        PaymentTender(
+          method: SalePaymentMethod.card,
+          tenderedAmountMinor: 11100,
+          reference: 'APPROVED-REFERENCE',
+        ),
+      ],
+      externalPaymentsConfirmed: true,
+    );
+
+    expect(changed.failureOrNull?.type, FailureType.conflict);
+    expect(changed.failureOrNull?.message, contains('do not charge again'));
+  });
+
+  test('invalid external tender cannot create a recovery lock', () async {
+    await repository.saveActive(
+      context: _context,
+      deviceId: 'terminal-a',
+      cart: const Cart(
+        lines: [CartLine(product: _saleProduct, quantityMilli: 1000)],
+      ),
+    );
+
+    final result = await repository.prepareCheckoutAttempt(
+      context: _context,
+      deviceId: 'terminal-a',
+      tenders: const [
+        PaymentTender(
+          method: SalePaymentMethod.card,
+          tenderedAmountMinor: 0,
+          reference: 'INVALID',
+        ),
+      ],
+      externalPaymentsConfirmed: true,
+    );
+    final restored = await repository.loadActive(
+      context: _context,
+      deviceId: 'terminal-a',
+    );
+
+    expect(result.failureOrNull?.type, FailureType.validation);
+    expect(restored.checkoutAttempt, equals(null));
+  });
+
+  test('unknown persisted payment method fails closed', () async {
+    await repository.saveActive(
+      context: _context,
+      deviceId: 'terminal-a',
+      cart: const Cart(
+        lines: [CartLine(product: _saleProduct, quantityMilli: 1000)],
+      ),
+    );
+    await database
+        .update(database.posCarts)
+        .write(
+          PosCartsCompanion(
+            checkoutOperationId: const Value('corrupt-attempt'),
+            checkoutTendersJson: const Value(
+              '[{"method":"gift_card","amountMinor":11200,"reference":"X"}]',
+            ),
+            externalPaymentApproved: const Value(true),
+            checkoutAttemptedAt: Value(DateTime.utc(2026, 9, 8)),
+          ),
+        );
+
+    await expectLater(
+      repository.loadActive(context: _context, deviceId: 'terminal-a'),
+      throwsA(isA<FormatException>()),
     );
   });
 

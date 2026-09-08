@@ -27,6 +27,11 @@ class PosCarts extends Table {
   IntColumn get saleDiscountMinor => integer().withDefault(const Constant(0))();
   TextColumn get saleDiscountReason => text().nullable()();
   TextColumn get activeScope => text().nullable().unique()();
+  TextColumn get checkoutOperationId => text().nullable()();
+  TextColumn get checkoutTendersJson => text().nullable()();
+  BoolColumn get externalPaymentApproved =>
+      boolean().withDefault(const Constant(false))();
+  DateTimeColumn get checkoutAttemptedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 

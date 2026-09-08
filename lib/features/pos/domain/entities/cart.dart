@@ -1,4 +1,5 @@
 import 'sale_product.dart';
+import 'checkout_attempt.dart';
 
 class CartLine {
   const CartLine({
@@ -43,12 +44,14 @@ class Cart {
     this.saleDiscountMinor = 0,
     this.saleDiscountReason,
     this.customerId,
+    this.checkoutAttempt,
   });
 
   final List<CartLine> lines;
   final int saleDiscountMinor;
   final String? saleDiscountReason;
   final String? customerId;
+  final CheckoutAttempt? checkoutAttempt;
 
   bool get isEmpty => lines.isEmpty;
   bool get hasInvalidLines =>
@@ -61,6 +64,8 @@ class Cart {
     bool clearSaleDiscountReason = false,
     String? customerId,
     bool clearCustomerId = false,
+    CheckoutAttempt? checkoutAttempt,
+    bool clearCheckoutAttempt = false,
   }) {
     return Cart(
       lines: lines ?? this.lines,
@@ -69,6 +74,9 @@ class Cart {
           ? null
           : saleDiscountReason ?? this.saleDiscountReason,
       customerId: clearCustomerId ? null : customerId ?? this.customerId,
+      checkoutAttempt: clearCheckoutAttempt
+          ? null
+          : checkoutAttempt ?? this.checkoutAttempt,
     );
   }
 }

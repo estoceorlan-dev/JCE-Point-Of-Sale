@@ -4,7 +4,7 @@ import '../../../../core/error/failure.dart';
 import '../../../../core/error/failure_mapper.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';
-import '../../../../core/utils/id_generator.dart';
+import '../../../../shared/providers/app_providers.dart';
 import '../../../shifts/presentation/providers/shift_providers.dart';
 import '../../../customers/presentation/providers/customers_providers.dart';
 import '../../domain/entities/payment.dart';
@@ -24,6 +24,7 @@ class CheckoutController extends AsyncNotifier<void> {
   Future<Result<CheckoutResult, Failure>> checkout({
     required List<PaymentTender> tenders,
     required bool approveDiscountAsManager,
+    required bool externalPaymentsConfirmed,
   }) async {
     if (_submitting) {
       return const Result.failure(
@@ -34,8 +35,37 @@ class CheckoutController extends AsyncNotifier<void> {
     state = const AsyncLoading();
     late final Result<CheckoutResult, Failure> result;
     try {
+      final cartController = ref.read(cartControllerProvider.notifier);
+      final refreshed = await cartController.refresh();
+      if (refreshed case FailureResult(:final failure)) {
+        result = Result.failure(failure);
+        state = AsyncError(failure, failure.stackTrace ?? StackTrace.current);
+        _submitting = false;
+        return result;
+      }
       final deviceId = await ref.read(currentDeviceIdProvider.future);
-      final operationId = ref.read(idGeneratorProvider).newId();
+      final context = ref.read(businessContextProvider);
+      if (context == null) {
+        throw const AuthorizationFailure(
+          'Choose an organization and branch before checkout.',
+        );
+      }
+      final attemptResult = await ref
+          .read(posCartRepositoryProvider)
+          .prepareCheckoutAttempt(
+            context: context,
+            deviceId: deviceId,
+            tenders: tenders,
+            externalPaymentsConfirmed: externalPaymentsConfirmed,
+          );
+      if (attemptResult case FailureResult(:final failure)) {
+        result = Result.failure(failure);
+        state = AsyncError(failure, failure.stackTrace ?? StackTrace.current);
+        _submitting = false;
+        return result;
+      }
+      final attempt = attemptResult.valueOrNull!;
+      cartController.recordCheckoutAttempt(attempt);
       result = await ref.read(checkoutSaleUseCaseProvider)(
         session: ref.read(activePosSessionProvider),
         draft: CheckoutDraft(
@@ -43,7 +73,7 @@ class CheckoutController extends AsyncNotifier<void> {
           tenders: tenders,
           deviceId: deviceId,
           customerId: ref.read(cartControllerProvider).customerId,
-          operationId: operationId,
+          operationId: attempt.operationId,
         ),
         approveDiscountAsManager: approveDiscountAsManager,
       );
@@ -56,7 +86,7 @@ class CheckoutController extends AsyncNotifier<void> {
           AsyncError(failure, failure.stackTrace ?? StackTrace.current),
     );
     if (result.isSuccess) {
-      ref.read(cartControllerProvider.notifier).clear();
+      ref.read(cartControllerProvider.notifier).clearAfterCheckout();
       ref.read(selectedCheckoutCustomerProvider.notifier).state = null;
     }
     _submitting = false;

@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/features/pos/domain/entities/cart.dart';
+import 'package:jce_pos/features/pos/domain/entities/checkout_attempt.dart';
 import 'package:jce_pos/features/pos/domain/entities/held_cart.dart';
+import 'package:jce_pos/features/pos/domain/entities/payment.dart';
 import 'package:jce_pos/features/pos/domain/entities/sale_product.dart';
 import 'package:jce_pos/features/pos/domain/repositories/pos_cart_repository.dart';
 import 'package:jce_pos/features/pos/presentation/controllers/cart_controller.dart';
@@ -10,6 +12,8 @@ import 'package:jce_pos/features/pos/presentation/providers/pos_providers.dart';
 import 'package:jce_pos/features/shifts/presentation/providers/shift_providers.dart';
 import 'package:jce_pos/shared/models/business_context.dart';
 import 'package:jce_pos/shared/providers/app_providers.dart';
+import 'package:jce_pos/core/error/failure.dart';
+import 'package:jce_pos/core/error/result.dart';
 
 void main() {
   final scope = StateProvider<BusinessContext>((ref) => _context('a'));
@@ -64,6 +68,40 @@ void main() {
       controller.setQuantity('product', 2000);
       expect((await controller.refresh()).isSuccess, isTrue);
       expect(container.read(cartPersistenceFailureProvider), isNull);
+    },
+  );
+
+  test(
+    'externally approved checkout locks cart mutations after restore',
+    () async {
+      store.saved['a'] = Cart(
+        lines: const [CartLine(product: _product, quantityMilli: 1000)],
+        checkoutAttempt: CheckoutAttempt(
+          operationId: 'checkout-operation',
+          tenders: const [
+            PaymentTender(
+              method: SalePaymentMethod.card,
+              tenderedAmountMinor: 100,
+              reference: 'APPROVED-1',
+            ),
+          ],
+          externalPaymentApproved: true,
+          attemptedAt: DateTime.utc(2026, 9, 8),
+        ),
+      );
+      final controller = container.read(cartControllerProvider.notifier);
+      await controller.refresh();
+
+      final add = controller.addProduct(_product);
+      final customer = controller.setCustomer('customer');
+      final clear = controller.clear();
+      final hold = await controller.hold(title: 'Unsafe hold');
+
+      expect(add.failureOrNull?.type, FailureType.conflict);
+      expect(customer.failureOrNull?.type, FailureType.conflict);
+      expect(clear.failureOrNull?.type, FailureType.conflict);
+      expect(hold.failureOrNull?.type, FailureType.conflict);
+      expect(container.read(cartControllerProvider).lines, hasLength(1));
     },
   );
 
@@ -160,4 +198,19 @@ class _CartStore implements PosCartRepository {
     required String deviceId,
     required String heldCartId,
   }) async {}
+
+  @override
+  Future<Result<CheckoutAttempt, Failure>> prepareCheckoutAttempt({
+    required BusinessContext context,
+    required String deviceId,
+    required List<PaymentTender> tenders,
+    required bool externalPaymentsConfirmed,
+  }) async => Result.success(
+    CheckoutAttempt(
+      operationId: 'checkout-operation',
+      tenders: tenders,
+      externalPaymentApproved: externalPaymentsConfirmed,
+      attemptedAt: DateTime.utc(2026, 9, 8),
+    ),
+  );
 }

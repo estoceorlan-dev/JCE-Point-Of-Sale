@@ -48191,6 +48191,54 @@ class $PosCartsTable extends PosCarts with TableInfo<$PosCartsTable, PosCart> {
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
+  static const VerificationMeta _checkoutOperationIdMeta =
+      const VerificationMeta('checkoutOperationId');
+  @override
+  late final GeneratedColumn<String> checkoutOperationId =
+      GeneratedColumn<String>(
+        'checkout_operation_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _checkoutTendersJsonMeta =
+      const VerificationMeta('checkoutTendersJson');
+  @override
+  late final GeneratedColumn<String> checkoutTendersJson =
+      GeneratedColumn<String>(
+        'checkout_tenders_json',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _externalPaymentApprovedMeta =
+      const VerificationMeta('externalPaymentApproved');
+  @override
+  late final GeneratedColumn<bool> externalPaymentApproved =
+      GeneratedColumn<bool>(
+        'external_payment_approved',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("external_payment_approved" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _checkoutAttemptedAtMeta =
+      const VerificationMeta('checkoutAttemptedAt');
+  @override
+  late final GeneratedColumn<DateTime> checkoutAttemptedAt =
+      GeneratedColumn<DateTime>(
+        'checkout_attempted_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -48225,6 +48273,10 @@ class $PosCartsTable extends PosCarts with TableInfo<$PosCartsTable, PosCart> {
     saleDiscountMinor,
     saleDiscountReason,
     activeScope,
+    checkoutOperationId,
+    checkoutTendersJson,
+    externalPaymentApproved,
+    checkoutAttemptedAt,
     createdAt,
     updatedAt,
   ];
@@ -48319,6 +48371,42 @@ class $PosCartsTable extends PosCarts with TableInfo<$PosCartsTable, PosCart> {
         ),
       );
     }
+    if (data.containsKey('checkout_operation_id')) {
+      context.handle(
+        _checkoutOperationIdMeta,
+        checkoutOperationId.isAcceptableOrUnknown(
+          data['checkout_operation_id']!,
+          _checkoutOperationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('checkout_tenders_json')) {
+      context.handle(
+        _checkoutTendersJsonMeta,
+        checkoutTendersJson.isAcceptableOrUnknown(
+          data['checkout_tenders_json']!,
+          _checkoutTendersJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('external_payment_approved')) {
+      context.handle(
+        _externalPaymentApprovedMeta,
+        externalPaymentApproved.isAcceptableOrUnknown(
+          data['external_payment_approved']!,
+          _externalPaymentApprovedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('checkout_attempted_at')) {
+      context.handle(
+        _checkoutAttemptedAtMeta,
+        checkoutAttemptedAt.isAcceptableOrUnknown(
+          data['checkout_attempted_at']!,
+          _checkoutAttemptedAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -48384,6 +48472,22 @@ class $PosCartsTable extends PosCarts with TableInfo<$PosCartsTable, PosCart> {
         DriftSqlType.string,
         data['${effectivePrefix}active_scope'],
       ),
+      checkoutOperationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}checkout_operation_id'],
+      ),
+      checkoutTendersJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}checkout_tenders_json'],
+      ),
+      externalPaymentApproved: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}external_payment_approved'],
+      )!,
+      checkoutAttemptedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}checkout_attempted_at'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -48412,6 +48516,10 @@ class PosCart extends DataClass implements Insertable<PosCart> {
   final int saleDiscountMinor;
   final String? saleDiscountReason;
   final String? activeScope;
+  final String? checkoutOperationId;
+  final String? checkoutTendersJson;
+  final bool externalPaymentApproved;
+  final DateTime? checkoutAttemptedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   const PosCart({
@@ -48425,6 +48533,10 @@ class PosCart extends DataClass implements Insertable<PosCart> {
     required this.saleDiscountMinor,
     this.saleDiscountReason,
     this.activeScope,
+    this.checkoutOperationId,
+    this.checkoutTendersJson,
+    required this.externalPaymentApproved,
+    this.checkoutAttemptedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -48448,6 +48560,16 @@ class PosCart extends DataClass implements Insertable<PosCart> {
     }
     if (!nullToAbsent || activeScope != null) {
       map['active_scope'] = Variable<String>(activeScope);
+    }
+    if (!nullToAbsent || checkoutOperationId != null) {
+      map['checkout_operation_id'] = Variable<String>(checkoutOperationId);
+    }
+    if (!nullToAbsent || checkoutTendersJson != null) {
+      map['checkout_tenders_json'] = Variable<String>(checkoutTendersJson);
+    }
+    map['external_payment_approved'] = Variable<bool>(externalPaymentApproved);
+    if (!nullToAbsent || checkoutAttemptedAt != null) {
+      map['checkout_attempted_at'] = Variable<DateTime>(checkoutAttemptedAt);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -48474,6 +48596,16 @@ class PosCart extends DataClass implements Insertable<PosCart> {
       activeScope: activeScope == null && nullToAbsent
           ? const Value.absent()
           : Value(activeScope),
+      checkoutOperationId: checkoutOperationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkoutOperationId),
+      checkoutTendersJson: checkoutTendersJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkoutTendersJson),
+      externalPaymentApproved: Value(externalPaymentApproved),
+      checkoutAttemptedAt: checkoutAttemptedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkoutAttemptedAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -48497,6 +48629,18 @@ class PosCart extends DataClass implements Insertable<PosCart> {
         json['saleDiscountReason'],
       ),
       activeScope: serializer.fromJson<String?>(json['activeScope']),
+      checkoutOperationId: serializer.fromJson<String?>(
+        json['checkoutOperationId'],
+      ),
+      checkoutTendersJson: serializer.fromJson<String?>(
+        json['checkoutTendersJson'],
+      ),
+      externalPaymentApproved: serializer.fromJson<bool>(
+        json['externalPaymentApproved'],
+      ),
+      checkoutAttemptedAt: serializer.fromJson<DateTime?>(
+        json['checkoutAttemptedAt'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -48515,6 +48659,12 @@ class PosCart extends DataClass implements Insertable<PosCart> {
       'saleDiscountMinor': serializer.toJson<int>(saleDiscountMinor),
       'saleDiscountReason': serializer.toJson<String?>(saleDiscountReason),
       'activeScope': serializer.toJson<String?>(activeScope),
+      'checkoutOperationId': serializer.toJson<String?>(checkoutOperationId),
+      'checkoutTendersJson': serializer.toJson<String?>(checkoutTendersJson),
+      'externalPaymentApproved': serializer.toJson<bool>(
+        externalPaymentApproved,
+      ),
+      'checkoutAttemptedAt': serializer.toJson<DateTime?>(checkoutAttemptedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -48531,6 +48681,10 @@ class PosCart extends DataClass implements Insertable<PosCart> {
     int? saleDiscountMinor,
     Value<String?> saleDiscountReason = const Value.absent(),
     Value<String?> activeScope = const Value.absent(),
+    Value<String?> checkoutOperationId = const Value.absent(),
+    Value<String?> checkoutTendersJson = const Value.absent(),
+    bool? externalPaymentApproved,
+    Value<DateTime?> checkoutAttemptedAt = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => PosCart(
@@ -48546,6 +48700,17 @@ class PosCart extends DataClass implements Insertable<PosCart> {
         ? saleDiscountReason.value
         : this.saleDiscountReason,
     activeScope: activeScope.present ? activeScope.value : this.activeScope,
+    checkoutOperationId: checkoutOperationId.present
+        ? checkoutOperationId.value
+        : this.checkoutOperationId,
+    checkoutTendersJson: checkoutTendersJson.present
+        ? checkoutTendersJson.value
+        : this.checkoutTendersJson,
+    externalPaymentApproved:
+        externalPaymentApproved ?? this.externalPaymentApproved,
+    checkoutAttemptedAt: checkoutAttemptedAt.present
+        ? checkoutAttemptedAt.value
+        : this.checkoutAttemptedAt,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -48571,6 +48736,18 @@ class PosCart extends DataClass implements Insertable<PosCart> {
       activeScope: data.activeScope.present
           ? data.activeScope.value
           : this.activeScope,
+      checkoutOperationId: data.checkoutOperationId.present
+          ? data.checkoutOperationId.value
+          : this.checkoutOperationId,
+      checkoutTendersJson: data.checkoutTendersJson.present
+          ? data.checkoutTendersJson.value
+          : this.checkoutTendersJson,
+      externalPaymentApproved: data.externalPaymentApproved.present
+          ? data.externalPaymentApproved.value
+          : this.externalPaymentApproved,
+      checkoutAttemptedAt: data.checkoutAttemptedAt.present
+          ? data.checkoutAttemptedAt.value
+          : this.checkoutAttemptedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -48589,6 +48766,10 @@ class PosCart extends DataClass implements Insertable<PosCart> {
           ..write('saleDiscountMinor: $saleDiscountMinor, ')
           ..write('saleDiscountReason: $saleDiscountReason, ')
           ..write('activeScope: $activeScope, ')
+          ..write('checkoutOperationId: $checkoutOperationId, ')
+          ..write('checkoutTendersJson: $checkoutTendersJson, ')
+          ..write('externalPaymentApproved: $externalPaymentApproved, ')
+          ..write('checkoutAttemptedAt: $checkoutAttemptedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -48607,6 +48788,10 @@ class PosCart extends DataClass implements Insertable<PosCart> {
     saleDiscountMinor,
     saleDiscountReason,
     activeScope,
+    checkoutOperationId,
+    checkoutTendersJson,
+    externalPaymentApproved,
+    checkoutAttemptedAt,
     createdAt,
     updatedAt,
   );
@@ -48624,6 +48809,10 @@ class PosCart extends DataClass implements Insertable<PosCart> {
           other.saleDiscountMinor == this.saleDiscountMinor &&
           other.saleDiscountReason == this.saleDiscountReason &&
           other.activeScope == this.activeScope &&
+          other.checkoutOperationId == this.checkoutOperationId &&
+          other.checkoutTendersJson == this.checkoutTendersJson &&
+          other.externalPaymentApproved == this.externalPaymentApproved &&
+          other.checkoutAttemptedAt == this.checkoutAttemptedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -48639,6 +48828,10 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
   final Value<int> saleDiscountMinor;
   final Value<String?> saleDiscountReason;
   final Value<String?> activeScope;
+  final Value<String?> checkoutOperationId;
+  final Value<String?> checkoutTendersJson;
+  final Value<bool> externalPaymentApproved;
+  final Value<DateTime?> checkoutAttemptedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -48653,6 +48846,10 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     this.saleDiscountMinor = const Value.absent(),
     this.saleDiscountReason = const Value.absent(),
     this.activeScope = const Value.absent(),
+    this.checkoutOperationId = const Value.absent(),
+    this.checkoutTendersJson = const Value.absent(),
+    this.externalPaymentApproved = const Value.absent(),
+    this.checkoutAttemptedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -48668,6 +48865,10 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     this.saleDiscountMinor = const Value.absent(),
     this.saleDiscountReason = const Value.absent(),
     this.activeScope = const Value.absent(),
+    this.checkoutOperationId = const Value.absent(),
+    this.checkoutTendersJson = const Value.absent(),
+    this.externalPaymentApproved = const Value.absent(),
+    this.checkoutAttemptedAt = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -48689,6 +48890,10 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     Expression<int>? saleDiscountMinor,
     Expression<String>? saleDiscountReason,
     Expression<String>? activeScope,
+    Expression<String>? checkoutOperationId,
+    Expression<String>? checkoutTendersJson,
+    Expression<bool>? externalPaymentApproved,
+    Expression<DateTime>? checkoutAttemptedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -48705,6 +48910,14 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
       if (saleDiscountReason != null)
         'sale_discount_reason': saleDiscountReason,
       if (activeScope != null) 'active_scope': activeScope,
+      if (checkoutOperationId != null)
+        'checkout_operation_id': checkoutOperationId,
+      if (checkoutTendersJson != null)
+        'checkout_tenders_json': checkoutTendersJson,
+      if (externalPaymentApproved != null)
+        'external_payment_approved': externalPaymentApproved,
+      if (checkoutAttemptedAt != null)
+        'checkout_attempted_at': checkoutAttemptedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -48722,6 +48935,10 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     Value<int>? saleDiscountMinor,
     Value<String?>? saleDiscountReason,
     Value<String?>? activeScope,
+    Value<String?>? checkoutOperationId,
+    Value<String?>? checkoutTendersJson,
+    Value<bool>? externalPaymentApproved,
+    Value<DateTime?>? checkoutAttemptedAt,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -48737,6 +48954,11 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
       saleDiscountMinor: saleDiscountMinor ?? this.saleDiscountMinor,
       saleDiscountReason: saleDiscountReason ?? this.saleDiscountReason,
       activeScope: activeScope ?? this.activeScope,
+      checkoutOperationId: checkoutOperationId ?? this.checkoutOperationId,
+      checkoutTendersJson: checkoutTendersJson ?? this.checkoutTendersJson,
+      externalPaymentApproved:
+          externalPaymentApproved ?? this.externalPaymentApproved,
+      checkoutAttemptedAt: checkoutAttemptedAt ?? this.checkoutAttemptedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -48776,6 +48998,26 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     if (activeScope.present) {
       map['active_scope'] = Variable<String>(activeScope.value);
     }
+    if (checkoutOperationId.present) {
+      map['checkout_operation_id'] = Variable<String>(
+        checkoutOperationId.value,
+      );
+    }
+    if (checkoutTendersJson.present) {
+      map['checkout_tenders_json'] = Variable<String>(
+        checkoutTendersJson.value,
+      );
+    }
+    if (externalPaymentApproved.present) {
+      map['external_payment_approved'] = Variable<bool>(
+        externalPaymentApproved.value,
+      );
+    }
+    if (checkoutAttemptedAt.present) {
+      map['checkout_attempted_at'] = Variable<DateTime>(
+        checkoutAttemptedAt.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -48801,6 +49043,10 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
           ..write('saleDiscountMinor: $saleDiscountMinor, ')
           ..write('saleDiscountReason: $saleDiscountReason, ')
           ..write('activeScope: $activeScope, ')
+          ..write('checkoutOperationId: $checkoutOperationId, ')
+          ..write('checkoutTendersJson: $checkoutTendersJson, ')
+          ..write('externalPaymentApproved: $externalPaymentApproved, ')
+          ..write('checkoutAttemptedAt: $checkoutAttemptedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -104354,6 +104600,10 @@ typedef $$PosCartsTableCreateCompanionBuilder =
       Value<int> saleDiscountMinor,
       Value<String?> saleDiscountReason,
       Value<String?> activeScope,
+      Value<String?> checkoutOperationId,
+      Value<String?> checkoutTendersJson,
+      Value<bool> externalPaymentApproved,
+      Value<DateTime?> checkoutAttemptedAt,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -104370,6 +104620,10 @@ typedef $$PosCartsTableUpdateCompanionBuilder =
       Value<int> saleDiscountMinor,
       Value<String?> saleDiscountReason,
       Value<String?> activeScope,
+      Value<String?> checkoutOperationId,
+      Value<String?> checkoutTendersJson,
+      Value<bool> externalPaymentApproved,
+      Value<DateTime?> checkoutAttemptedAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -104494,6 +104748,26 @@ class $$PosCartsTableFilterComposer
 
   ColumnFilters<String> get activeScope => $composableBuilder(
     column: $table.activeScope,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get checkoutOperationId => $composableBuilder(
+    column: $table.checkoutOperationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get checkoutTendersJson => $composableBuilder(
+    column: $table.checkoutTendersJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get externalPaymentApproved => $composableBuilder(
+    column: $table.externalPaymentApproved,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get checkoutAttemptedAt => $composableBuilder(
+    column: $table.checkoutAttemptedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -104646,6 +104920,26 @@ class $$PosCartsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get checkoutOperationId => $composableBuilder(
+    column: $table.checkoutOperationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get checkoutTendersJson => $composableBuilder(
+    column: $table.checkoutTendersJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get externalPaymentApproved => $composableBuilder(
+    column: $table.externalPaymentApproved,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get checkoutAttemptedAt => $composableBuilder(
+    column: $table.checkoutAttemptedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -104759,6 +105053,26 @@ class $$PosCartsTableAnnotationComposer
 
   GeneratedColumn<String> get activeScope => $composableBuilder(
     column: $table.activeScope,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get checkoutOperationId => $composableBuilder(
+    column: $table.checkoutOperationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get checkoutTendersJson => $composableBuilder(
+    column: $table.checkoutTendersJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get externalPaymentApproved => $composableBuilder(
+    column: $table.externalPaymentApproved,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get checkoutAttemptedAt => $composableBuilder(
+    column: $table.checkoutAttemptedAt,
     builder: (column) => column,
   );
 
@@ -104906,6 +105220,10 @@ class $$PosCartsTableTableManager
                 Value<int> saleDiscountMinor = const Value.absent(),
                 Value<String?> saleDiscountReason = const Value.absent(),
                 Value<String?> activeScope = const Value.absent(),
+                Value<String?> checkoutOperationId = const Value.absent(),
+                Value<String?> checkoutTendersJson = const Value.absent(),
+                Value<bool> externalPaymentApproved = const Value.absent(),
+                Value<DateTime?> checkoutAttemptedAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -104920,6 +105238,10 @@ class $$PosCartsTableTableManager
                 saleDiscountMinor: saleDiscountMinor,
                 saleDiscountReason: saleDiscountReason,
                 activeScope: activeScope,
+                checkoutOperationId: checkoutOperationId,
+                checkoutTendersJson: checkoutTendersJson,
+                externalPaymentApproved: externalPaymentApproved,
+                checkoutAttemptedAt: checkoutAttemptedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -104936,6 +105258,10 @@ class $$PosCartsTableTableManager
                 Value<int> saleDiscountMinor = const Value.absent(),
                 Value<String?> saleDiscountReason = const Value.absent(),
                 Value<String?> activeScope = const Value.absent(),
+                Value<String?> checkoutOperationId = const Value.absent(),
+                Value<String?> checkoutTendersJson = const Value.absent(),
+                Value<bool> externalPaymentApproved = const Value.absent(),
+                Value<DateTime?> checkoutAttemptedAt = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -104950,6 +105276,10 @@ class $$PosCartsTableTableManager
                 saleDiscountMinor: saleDiscountMinor,
                 saleDiscountReason: saleDiscountReason,
                 activeScope: activeScope,
+                checkoutOperationId: checkoutOperationId,
+                checkoutTendersJson: checkoutTendersJson,
+                externalPaymentApproved: externalPaymentApproved,
+                checkoutAttemptedAt: checkoutAttemptedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

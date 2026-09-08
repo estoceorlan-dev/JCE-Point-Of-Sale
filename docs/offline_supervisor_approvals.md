@@ -1,6 +1,6 @@
 # Offline supervisor approvals: contract and implementation gates
 
-Updated 2026-09-07. **Contract foundation only; offline approval is unavailable.**
+Updated 2026-09-09. **Contract foundation only; offline approval is unavailable.**
 The default Riverpod service rejects both enrollment and approval on every
 platform. A feature flag cannot enable it. Existing signed-in manager checks
 remain in force; constructing an ApprovalGrant does not confer permission.
@@ -58,8 +58,11 @@ compromised OS can bypass local UI controls; server revalidation is mandatory.
 
 ## First workflow: sale discounts (not integrated)
 
-Allocate stable sale/checkout operation IDs before approval. Freeze a canonical,
-versioned operation snapshot containing organization, branch, register, shift,
+Checkout now allocates and persists a stable device-local operation ID before a
+payment save, including restart recovery for externally approved tenders. This
+is only an identity/recovery prerequisite; it does not create or consume an
+ApprovalGrant. Approval integration must still freeze a canonical, versioned
+operation snapshot containing organization, branch, register, shift,
 device, cashier, sale/cart version, customer, ordered stable line IDs, product
 and location IDs, milli-quantities, price/tax versions, integer money totals,
 discount amounts/rules/reason, and applicable approval-policy version. Hash this
@@ -111,8 +114,9 @@ These references guide the design; they do not certify this implementation.
    rewrite deployed migration checksums. Deployment needs separate approval.
 2. Persistent five-attempt/15-minute lockout, signed evidence staging, shared
    Dart/TypeScript canonicalization fixtures and negative crypto tests.
-3. Schema migration for non-secret decision IDs/atomic claims, stable checkout
-   identity, core sync evidence delivery and server replay checks.
+3. Schema migration for non-secret decision IDs/atomic claims, core sync
+   evidence delivery and server replay checks. The local stable checkout identity
+   prerequisite exists, but it is not an approval replay claim.
 4. Integrate only sale discounts first, with independent security tests for
    forged signature, wrong device/org/branch/permission/requester, modified
    operation, expiry/revocation, restart/rollback, duplicate/replayed grants,
@@ -123,7 +127,7 @@ These references guide the design; they do not certify this implementation.
 
 Local contract tests cannot substitute for any of these gates.
 
-Verification on 2026-09-07: the full Flutter suite passed 254 tests; analysis
+Verification on 2026-09-09: the full Flutter suite passed 270 tests; analysis
 and formatting passed. Three approval contract tests cover all binding fields,
 time boundaries/malformed metadata and rejecting service defaults. They do not
 test crypto, PIN enrollment, persistent lockout, secure storage or replay claims,

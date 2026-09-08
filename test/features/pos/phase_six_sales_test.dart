@@ -341,16 +341,49 @@ void main() {
     );
 
     test(
-      'a late sale insert failure leaves inventory and sequence unchanged',
+      'a late sale failure keeps the external-payment recovery attempt',
       () async {
+        final now = DateTime.utc(2026, 8, 26, 7, 55);
+        await database
+            .into(database.posCarts)
+            .insert(
+              PosCartsCompanion.insert(
+                id: 'active-payment-recovery',
+                organizationId: _context.organizationId,
+                branchId: _context.branchId,
+                deviceId: 'device-a',
+                status: 'active',
+                activeScope: const Value('organization|branch|device-a'),
+                checkoutOperationId: const Value('failed-operation'),
+                checkoutTendersJson: const Value(
+                  '[{"method":"card","amountMinor":11200,"reference":"APPROVED-REFERENCE"}]',
+                ),
+                externalPaymentApproved: const Value(true),
+                checkoutAttemptedAt: Value(now),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
         await database.customStatement('''
 CREATE TRIGGER force_sale_failure BEFORE INSERT ON sales
 BEGIN SELECT RAISE(ABORT, 'forced sale failure'); END
 ''');
 
+        final base = _checkoutDraft(operationId: 'failed-operation');
         final result = await repository.checkout(
           context: _context,
-          draft: _checkoutDraft(operationId: 'failed-operation'),
+          draft: CheckoutDraft(
+            operationId: base.operationId,
+            deviceId: base.deviceId,
+            cart: base.cart,
+            tenders: const [
+              PaymentTender(
+                method: SalePaymentMethod.card,
+                tenderedAmountMinor: 11200,
+                reference: 'APPROVED-REFERENCE',
+              ),
+            ],
+          ),
         );
 
         expect(result.isFailure, isTrue);
@@ -370,6 +403,10 @@ BEGIN SELECT RAISE(ABORT, 'forced sale failure'); END
           await database.select(database.syncOutboxEntries).get(),
           isEmpty,
         );
+        final recovery = await database.select(database.posCarts).getSingle();
+        expect(recovery.checkoutOperationId, 'failed-operation');
+        expect(recovery.externalPaymentApproved, isTrue);
+        expect(recovery.checkoutTendersJson, contains('APPROVED-REFERENCE'));
       },
     );
 

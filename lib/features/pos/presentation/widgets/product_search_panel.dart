@@ -14,6 +14,7 @@ class ProductSearchPanel extends ConsumerStatefulWidget {
     required this.products,
     required this.onSearchChanged,
     required this.onSubmitted,
+    this.onRetry,
     this.focusNode,
     this.fillHeight = false,
     this.categoryId,
@@ -23,6 +24,7 @@ class ProductSearchPanel extends ConsumerStatefulWidget {
   final AsyncValue<List<SaleProduct>> products;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onSubmitted;
+  final VoidCallback? onRetry;
   final FocusNode? focusNode;
   final bool fillHeight;
   final String? categoryId;
@@ -41,12 +43,43 @@ class _ProductSearchPanelState extends ConsumerState<ProductSearchPanel> {
         ? null
         : ref.watch(productCategoriesProvider).value;
     final results = widget.products.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => const Center(
-        child: Text('Products could not be loaded. Try the search again.'),
+      loading: () => Center(
+        key: const Key('pos-products-loading'),
+        child: Semantics(
+          liveRegion: true,
+          label: 'Loading products',
+          child: const CircularProgressIndicator(),
+        ),
+      ),
+      error: (error, _) => Center(
+        key: const Key('pos-products-error'),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off_outlined),
+              const SizedBox(height: AppSpacing.sm),
+              const Text(
+                'Products could not be loaded. Your saved cart is still available.',
+                textAlign: TextAlign.center,
+              ),
+              if (widget.onRetry != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                OutlinedButton.icon(
+                  key: const Key('retry-products-button'),
+                  onPressed: widget.onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Try again'),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
       data: (items) => items.isEmpty
           ? const Center(
+              key: Key('pos-products-empty'),
               child: Padding(
                 padding: EdgeInsets.all(AppSpacing.lg),
                 child: Text(
@@ -110,6 +143,7 @@ class _ProductSearchPanelState extends ConsumerState<ProductSearchPanel> {
                 labelText: 'Scan barcode or search',
                 hintText: 'Product name, SKU, or barcode · F2',
                 prefixIcon: Icon(Icons.search),
+                helperText: 'Search remains ready for barcode scanner input.',
               ),
             ),
             if (categories != null) ...[

@@ -1,16 +1,17 @@
-# Staging acceptance checkpoint — 2026-09-08
+# Staging acceptance checkpoint — 2026-09-09
 
 Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 `jce-pos-instance`, database `jce-pos-database`. Production was not touched.
 
-## Result: staging backend deployed; full acceptance remains open
+## Result: staging backend and Android client deployed; full acceptance remains open
 
 The 2026-09-08 backend deployment includes invitation binding hardening,
 stock-location lifecycle commands, `getStockLocationsSnapshot`, and migration
-`0013_stock_location_lifecycle.sql`. Staff filters, offline-approval contracts,
-payment-save reconciliation and the Drift schema-16 client remain in the locally
-built Windows bundle pending pilot installation. Backend query-double tests do
-not replace signed-in PostgreSQL/Firebase workflow acceptance.
+`0013_stock_location_lifecycle.sql`. The 2026-09-09 schema-17 client release adds
+durable payment-save reconciliation and the completed Phase 6 terminal UI. Its
+Windows bundle remains pending pilot installation; its Android APK is in staging
+App Distribution. Offline supervisor approvals remain gated. Backend query-double
+tests do not replace signed-in PostgreSQL/Firebase workflow acceptance.
 
 - Migrations through `0013_stock_location_lifecycle.sql` are applied. All 13
   checksums match; all 60 public tables remain owned by `jce_pos_migrator`.
@@ -61,10 +62,15 @@ not replace signed-in PostgreSQL/Firebase workflow acceptance.
   finalizeProductImage, generateStaffInviteLink, acceptStaffInvitation and
   getAdministrationSnapshot, plus getStockLocationsSnapshot. Functions source
   hash: `d8872c8ea9511fe87163e5b937787a0de4c35665`.
-- Windows staging release built with demo authentication disabled:
+- Schema-17 Windows staging release built with demo authentication disabled:
   `build/windows/x64/runner/Release/jce_pos.exe`.
+  SHA-256:
+  `A44B899DAD045900BC0FC92402EF7E659AD3FA207F891ABDA01598B8ADC6359B`.
   Copy/install the entire Release directory, including DLLs and data.
   Native launch and physical acceptance were not verified in this continuation.
+- Android staging release `0d3joe7dkcmo8`, version `1.0.0 (1)`, uploaded to
+  Firebase App Distribution without a tester group. APK SHA-256:
+  `F93810AADE7EFBE37CFC4CDE7D7898908AB2B1942FC22A82554889B9A5D195A3`.
 - No production, billing, storage-rule or pilot feature-flag changes.
   Committing/pushing source does not install the client; CI verifies code only.
 
@@ -102,8 +108,8 @@ QA accounts used random in-memory passwords and example.invalid addresses;
 no invitation email was sent.
 
 Local verification: 48 backend tests, TypeScript build and lint passed.
-Flutter verification: 262 tests and analyze passed. The Windows staging Release
-bundle was rebuilt with demo authentication disabled.
+Flutter verification: 278 tests, formatting and analyze passed. The Windows and
+Android staging releases were built with demo authentication disabled.
 
 ## Backups and recovery boundaries
 

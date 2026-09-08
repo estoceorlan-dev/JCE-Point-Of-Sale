@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/core/error/failure.dart';
 import 'package:jce_pos/core/error/failures.dart';
 import 'package:jce_pos/core/error/result.dart';
 import 'package:jce_pos/features/pos/domain/entities/payment.dart';
+import 'package:jce_pos/features/pos/domain/entities/checkout_attempt.dart';
 import 'package:jce_pos/features/pos/domain/entities/sale.dart';
 import 'package:jce_pos/features/pos/domain/value_objects/cart_pricing.dart';
 import 'package:jce_pos/features/pos/presentation/controllers/checkout_controller.dart';
@@ -32,14 +34,12 @@ void main() {
       expect(_isConfirmed(tester, 'card'), isTrue);
       await tester.pump(const Duration(seconds: 30));
       expect(checkout.calls, hasLength(1));
-      // Editing an amount cannot erase the reconciliation warning.
-      await _enter(tester, 'card', '111');
+      expect(tester.widget<TextField>(_amount('card')).enabled, isFalse);
+      expect(tester.widget<TextField>(_reference('card')).enabled, isFalse);
       expect(
         find.byKey(const Key('external-payment-save-failure')),
         findsOneWidget,
       );
-      await _enter(tester, 'card', '112');
-      await _confirm(tester, 'card');
       checkout.pending = Completer<Result<CheckoutResult, Failure>>();
       await tester.tap(find.byKey(const Key('complete-sale-button')));
       await tester.pump();
@@ -74,6 +74,45 @@ void main() {
     expect(checkout.calls, hasLength(1));
   });
 
+  testWidgets(
+    'restart recovery restores approved external tender without submitting',
+    (tester) async {
+      final checkout = await _open(
+        tester,
+        requireReference: true,
+        initialAttempt: CheckoutAttempt(
+          operationId: 'stable-checkout',
+          tenders: const [
+            PaymentTender(
+              method: SalePaymentMethod.card,
+              tenderedAmountMinor: 11200,
+              reference: 'RECOVERED-REFERENCE',
+            ),
+          ],
+          externalPaymentApproved: true,
+          attemptedAt: DateTime.utc(2026, 9, 8),
+        ),
+      );
+
+      expect(
+        tester.widget<TextField>(_amount('card')).controller!.text,
+        '112.00',
+      );
+      expect(
+        tester.widget<TextField>(_reference('card')).controller!.text,
+        'RECOVERED-REFERENCE',
+      );
+      expect(_isConfirmed(tester, 'card'), isTrue);
+      expect(tester.widget<TextField>(_amount('card')).enabled, isFalse);
+      expect(tester.widget<TextField>(_reference('card')).enabled, isFalse);
+      expect(
+        find.byKey(const Key('external-payment-save-failure')),
+        findsOneWidget,
+      );
+      expect(checkout.calls, isEmpty);
+    },
+  );
+
   testWidgets('cash is not assumed received; short cash cannot complete', (
     tester,
   ) async {
@@ -92,6 +131,56 @@ void main() {
     expect(find.text('Change / excess PHP 8.00'), findsOneWidget);
     await _submit(tester);
     expect(checkout.calls.single.single.tenderedAmountMinor, 12000);
+  });
+
+  testWidgets('touch keypad enters, edits, clears, and fills exact cash', (
+    tester,
+  ) async {
+    await _open(tester, size: const Size(360, 640));
+    await tester.tap(find.byTooltip('Open Cash received keypad'));
+    await tester.pumpAndSettle();
+
+    for (final value in ['1', '2', '.', '5']) {
+      await tester.tap(find.byKey(Key('number-pad-$value')));
+      await tester.pump();
+    }
+    expect(find.text('PHP 12.5'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('number-pad-backspace')));
+    await tester.tap(find.byKey(const Key('number-pad-5')));
+    await tester.tap(find.byKey(const Key('number-pad-0')));
+    await tester.pump();
+    expect(find.text('PHP 12.50'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('number-pad-clear')));
+    await tester.tap(find.byKey(const Key('number-pad-exact')));
+    await tester.pump();
+    expect(
+      tester.widget<Text>(find.byKey(const Key('number-pad-value'))).data,
+      'PHP 112.00',
+    );
+    await tester.tap(find.byKey(const Key('number-pad-done')));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(_amount('cash')).controller!.text,
+      '112.00',
+    );
+  });
+
+  testWidgets('cash receives focus and F9 submits while Escape cancels', (
+    tester,
+  ) async {
+    final checkout = await _open(tester);
+    expect(
+      tester.widget<TextField>(_amount('cash')).focusNode!.hasFocus,
+      isTrue,
+    );
+    await _enter(tester, 'cash', '112');
+    await tester.sendKeyEvent(LogicalKeyboardKey.f9);
+    await tester.pumpAndSettle();
+    expect(checkout.calls, hasLength(1));
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(PaymentDialog), findsNothing);
   });
 
   testWidgets(
@@ -218,6 +307,14 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets('manual payment fits compact layout at 150 percent text', (
+    tester,
+  ) async {
+    await _open(tester, size: const Size(360, 640), textScale: 1.5);
+    await _enter(tester, 'card', '30');
+    expect(tester.takeException(), isNull);
+  });
 }
 
 Finder _amount(String method) => find
@@ -268,6 +365,8 @@ Future<_Checkout> _open(
   WidgetTester tester, {
   bool requireReference = false,
   Size size = const Size(1280, 1000),
+  CheckoutAttempt? initialAttempt,
+  double textScale = 1,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -278,6 +377,12 @@ Future<_Checkout> _open(
     ProviderScope(
       overrides: [checkoutControllerProvider.overrideWith(() => checkout)],
       child: MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
         home: Builder(
           builder: (context) => Scaffold(
             body: TextButton(
@@ -295,6 +400,7 @@ Future<_Checkout> _open(
                   requiresDiscountApproval: false,
                   canApproveDiscount: false,
                   requireNonCashReference: requireReference,
+                  initialAttempt: initialAttempt,
                 ),
               ),
               child: const Text('Pay'),
@@ -317,6 +423,7 @@ class _Checkout extends CheckoutController {
   Future<Result<CheckoutResult, Failure>> checkout({
     required List<PaymentTender> tenders,
     required bool approveDiscountAsManager,
+    required bool externalPaymentsConfirmed,
   }) async {
     calls.add(tenders);
     return pending != null

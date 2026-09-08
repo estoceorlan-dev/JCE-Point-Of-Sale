@@ -41,4 +41,35 @@ void main() {
       }
     },
   );
+
+  test('schema 16 migrates carts to empty schema 17 recovery fields', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(16);
+    const stamp = '2026-09-08T00:00:00.000Z';
+    schema.rawDatabase.execute(
+      "INSERT INTO organizations (id, code, name, created_at, updated_at) VALUES ('o', 'ORG', 'Org', '$stamp', '$stamp')",
+    );
+    schema.rawDatabase.execute(
+      "INSERT INTO branches (id, organization_id, code, name, created_at, updated_at) VALUES ('b', 'o', 'MAIN', 'Main', '$stamp', '$stamp')",
+    );
+    schema.rawDatabase.execute(
+      "INSERT INTO pos_carts (id, organization_id, branch_id, device_id, status, active_scope, created_at, updated_at) VALUES ('cart', 'o', 'b', 'device', 'active', 'o|b|device', '$stamp', '$stamp')",
+    );
+    final database = AppDatabase.forTesting(schema.newConnection());
+    try {
+      await verifier.migrateAndValidate(
+        database,
+        AppDatabase.currentSchemaVersion,
+      );
+      final cart = await database.select(database.posCarts).getSingle();
+      expect(cart.id, 'cart');
+      expect(cart.checkoutOperationId, isNull);
+      expect(cart.checkoutTendersJson, isNull);
+      expect(cart.externalPaymentApproved, isFalse);
+      expect(cart.checkoutAttemptedAt, isNull);
+    } finally {
+      await database.close();
+      schema.close();
+    }
+  });
 }

@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import '../../../../core/constants/app_breakpoints.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/sync/sync_controller.dart';
-import '../../../../shared/models/sync_state.dart';
 import '../../../../shared/models/permission.dart';
 import '../../../../shared/utils/formatters.dart';
 import '../../../shifts/presentation/providers/shift_providers.dart';
@@ -25,6 +24,7 @@ import '../widgets/payment_dialog.dart';
 import '../widgets/product_search_panel.dart';
 import '../widgets/receipt_dialog.dart';
 import '../widgets/held_carts_dialog.dart';
+import '../widgets/terminal_status_strip.dart';
 import '../widgets/terminal_workspace.dart';
 
 class CheckoutPage extends ConsumerStatefulWidget {
@@ -63,9 +63,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(activePosSessionProvider);
-    final products = ref.watch(
-      saleProductBrowserProvider((search: _search, categoryId: _categoryId)),
-    );
+    final productQuery = (search: _search, categoryId: _categoryId);
+    final products = ref.watch(saleProductBrowserProvider(productQuery));
     final shift = ref.watch(activeShiftProvider).value;
     final shiftPolicy = ref.watch(shiftPolicyProvider).value;
     final checkoutAllowed =
@@ -97,6 +96,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             products: products,
             onSearchChanged: _onSearchChanged,
             onSubmitted: _onSubmitted,
+            onRetry: () =>
+                ref.invalidate(saleProductBrowserProvider(productQuery)),
             fillHeight: fullHeight,
             categoryId: _categoryId,
             onCategoryChanged: (value) => setState(() => _categoryId = value),
@@ -114,7 +115,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             final pricing = ref.watch(cartPricingProvider);
             return TerminalWorkspace(
               compact: compact,
-              status: _TerminalStatusStrip(
+              status: TerminalStatusStrip(
                 branchName: session?.activeBranch.branch.name ?? 'No branch',
                 registerName: shift?.registerName ?? 'No open register',
                 cashierName: session?.user.displayName ?? 'No cashier',
@@ -148,7 +149,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                       ),
                     if (canViewCustomers)
                       TextButton.icon(
-                        onPressed: _chooseCustomer,
+                        onPressed:
+                            cart.checkoutAttempt?.externalPaymentApproved ==
+                                true
+                            ? null
+                            : _chooseCustomer,
                         icon: const Icon(Icons.person_outline),
                         label: Text(
                           cart.customerId == null
@@ -159,17 +164,24 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                     if (cart.customerId != null)
                       IconButton(
                         tooltip: 'Remove customer',
-                        onPressed: () {
-                          ref
-                              .read(cartControllerProvider.notifier)
-                              .setCustomer(null);
-                          ref
-                                  .read(
-                                    selectedCheckoutCustomerProvider.notifier,
-                                  )
-                                  .state =
-                              null;
-                        },
+                        onPressed:
+                            cart.checkoutAttempt?.externalPaymentApproved ==
+                                true
+                            ? null
+                            : () {
+                                final result = ref
+                                    .read(cartControllerProvider.notifier)
+                                    .setCustomer(null);
+                                if (result.isSuccess) {
+                                  ref
+                                          .read(
+                                            selectedCheckoutCustomerProvider
+                                                .notifier,
+                                          )
+                                          .state =
+                                      null;
+                                }
+                              },
                         icon: const Icon(Icons.person_remove_outlined),
                       ),
                     TextButton.icon(
@@ -233,7 +245,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _TerminalStatusStrip(
+                    TerminalStatusStrip(
                       branchName:
                           session?.activeBranch.branch.name ?? 'No branch',
                       registerName: shift?.registerName ?? 'No open register',
@@ -351,6 +363,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     BarcodeScannerType? scannerType,
   ) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    final cart = ref.read(cartControllerProvider);
+    final recoveryLocked =
+        cart.checkoutAttempt?.externalPaymentApproved == true;
     if (event.logicalKey == LogicalKeyboardKey.f2) {
       _searchFocusNode.requestFocus();
       _searchController.selection = TextSelection(
@@ -360,7 +375,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.f4) {
-      if (ref.read(cartControllerProvider).isEmpty) {
+      if (recoveryLocked) {
+        _showRecoveryLockMessage();
+      } else if (cart.isEmpty) {
         unawaited(_resumeCart());
       } else {
         unawaited(_holdCart());
@@ -368,7 +385,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.f8) {
-      unawaited(_chooseCustomer());
+      if (recoveryLocked) {
+        _showRecoveryLockMessage();
+      } else {
+        unawaited(_chooseCustomer());
+      }
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.f9) {
@@ -376,7 +397,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.escape) {
-      unawaited(_confirmClear());
+      if (recoveryLocked) {
+        _showRecoveryLockMessage();
+      } else {
+        unawaited(_confirmClear());
+      }
       return KeyEventResult.handled;
     }
     if (scannerType == BarcodeScannerType.disabled ||
@@ -384,6 +409,19 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return KeyEventResult.ignored;
     }
     return _handleScannerKey(node, event);
+  }
+
+  void _showRecoveryLockMessage() {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Complete the saved payment recovery before changing this sale.',
+          ),
+        ),
+      );
   }
 
   Future<void> _checkout() async {
@@ -441,6 +479,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         requiresDiscountApproval: requiresApproval,
         canApproveDiscount:
             session?.can(AppPermission.approveSaleDiscounts) ?? false,
+        initialAttempt: ref.read(cartControllerProvider).checkoutAttempt,
       ),
     );
     if (result == null || !mounted) return;
@@ -502,9 +541,20 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return;
     }
     final customer = await showCustomerLookupDialog(context, ref);
-    if (customer == null) return;
-    ref.read(selectedCheckoutCustomerProvider.notifier).state = customer;
-    ref.read(cartControllerProvider.notifier).setCustomer(customer.id);
+    if (customer == null || !mounted) return;
+    final result = ref
+        .read(cartControllerProvider.notifier)
+        .setCustomer(customer.id);
+    result.fold(
+      onSuccess: (_) {
+        ref.read(selectedCheckoutCustomerProvider.notifier).state = customer;
+      },
+      onFailure: (failure) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+      },
+    );
   }
 
   Future<void> _showCartSheet(bool checkoutAllowed) async {
@@ -556,9 +606,18 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         ],
       ),
     );
-    if (confirmed == true) {
-      ref.read(cartControllerProvider.notifier).clear();
-      ref.read(selectedCheckoutCustomerProvider.notifier).state = null;
+    if (confirmed == true && mounted) {
+      final result = ref.read(cartControllerProvider.notifier).clear();
+      result.fold(
+        onSuccess: (_) {
+          ref.read(selectedCheckoutCustomerProvider.notifier).state = null;
+        },
+        onFailure: (failure) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(failure.message)));
+        },
+      );
     }
   }
 
@@ -572,90 +631,6 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     );
     if (saved == true) ref.invalidate(discountPolicyProvider);
   }
-}
-
-class _TerminalStatusStrip extends StatelessWidget {
-  const _TerminalStatusStrip({
-    required this.branchName,
-    required this.registerName,
-    required this.cashierName,
-    required this.shiftOpen,
-    required this.syncState,
-    required this.scannerType,
-    required this.printerType,
-  });
-
-  final String branchName;
-  final String registerName;
-  final String cashierName;
-  final bool shiftOpen;
-  final SyncState? syncState;
-  final BarcodeScannerType? scannerType;
-  final ReceiptPrinterType? printerType;
-
-  @override
-  Widget build(BuildContext context) {
-    final online = syncState?.status != SyncStatus.offline;
-    return Card(
-      margin: EdgeInsets.zero,
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.sm,
-        ),
-        child: Wrap(
-          spacing: AppSpacing.lg,
-          runSpacing: AppSpacing.sm,
-          children: [
-            _StatusItem(icon: Icons.storefront_outlined, label: branchName),
-            _StatusItem(
-              icon: Icons.point_of_sale_outlined,
-              label: registerName,
-            ),
-            _StatusItem(icon: Icons.badge_outlined, label: cashierName),
-            _StatusItem(
-              icon: shiftOpen ? Icons.lock_open_outlined : Icons.lock_outline,
-              label: shiftOpen ? 'Shift open' : 'Shift closed',
-            ),
-            _StatusItem(
-              icon: online
-                  ? Icons.cloud_done_outlined
-                  : Icons.cloud_off_outlined,
-              label: online
-                  ? '${syncState?.pendingChanges ?? 0} pending'
-                  : 'Offline',
-            ),
-            _StatusItem(
-              icon: Icons.qr_code_scanner_outlined,
-              label: scannerType?.label ?? 'Scanner unavailable',
-            ),
-            _StatusItem(
-              icon: Icons.print_outlined,
-              label: printerType?.label ?? 'Printer unavailable',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusItem extends StatelessWidget {
-  const _StatusItem({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Icon(icon, size: 17),
-      const SizedBox(width: AppSpacing.xs),
-      Text(label, style: Theme.of(context).textTheme.labelMedium),
-    ],
-  );
 }
 
 class _CheckoutHeader extends StatelessWidget {

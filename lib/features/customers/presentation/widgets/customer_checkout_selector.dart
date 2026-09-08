@@ -17,6 +17,11 @@ class CustomerCheckoutSelector extends ConsumerWidget {
     final persistedCustomerId = ref.watch(
       cartControllerProvider.select((cart) => cart.customerId),
     );
+    final paymentRecovery = ref.watch(
+      cartControllerProvider.select(
+        (cart) => cart.checkoutAttempt?.externalPaymentApproved == true,
+      ),
+    );
     final restored = persistedCustomerId == null
         ? null
         : ref
@@ -45,12 +50,12 @@ class CustomerCheckoutSelector extends ConsumerWidget {
             if (customer != null)
               IconButton(
                 tooltip: 'Remove customer',
-                onPressed: () => _clearCustomer(ref),
+                onPressed: paymentRecovery ? null : () => _clearCustomer(ref),
                 icon: const Icon(Icons.close),
               ),
             TextButton.icon(
               key: const Key('choose-checkout-customer'),
-              onPressed: () => _choose(context, ref),
+              onPressed: paymentRecovery ? null : () => _choose(context, ref),
               icon: const Icon(Icons.search),
               label: Text(customer == null ? 'Choose customer' : 'Change'),
             ),
@@ -62,10 +67,20 @@ class CustomerCheckoutSelector extends ConsumerWidget {
 
   Future<void> _choose(BuildContext context, WidgetRef ref) async {
     final customer = await showCustomerLookupDialog(context, ref);
-    if (customer != null) {
-      ref.read(selectedCheckoutCustomerProvider.notifier).state = customer;
-      ref.read(cartControllerProvider.notifier).setCustomer(customer.id);
-    }
+    if (customer == null || !context.mounted) return;
+    final result = ref
+        .read(cartControllerProvider.notifier)
+        .setCustomer(customer.id);
+    result.fold(
+      onSuccess: (_) {
+        ref.read(selectedCheckoutCustomerProvider.notifier).state = customer;
+      },
+      onFailure: (failure) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+      },
+    );
   }
 
   void _clearCustomer(WidgetRef ref) {

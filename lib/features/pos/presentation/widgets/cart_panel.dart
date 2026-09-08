@@ -23,7 +23,7 @@ class CartPanel extends ConsumerWidget {
 
   final bool checkoutAllowed;
   final VoidCallback onCheckout;
-  final VoidCallback onHold;
+  final VoidCallback? onHold;
   final VoidCallback onResume;
   final VoidCallback? onClear;
   final bool fillHeight;
@@ -32,6 +32,8 @@ class CartPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartControllerProvider);
     final pricing = ref.watch(cartPricingProvider);
+    final paymentRecovery =
+        cart.checkoutAttempt?.externalPaymentApproved == true;
     final lines = ListView.separated(
       shrinkWrap: !fillHeight,
       itemCount: cart.lines.length,
@@ -39,13 +41,17 @@ class CartPanel extends ConsumerWidget {
       itemBuilder: (context, index) => _CartLineTile(
         line: cart.lines[index],
         pricedLine: pricing?.lines[index],
+        editingEnabled: !paymentRecovery,
         onQuantity: () => _quantity(context, ref, cart.lines[index]),
         onDecrease: () => _decrease(context, ref, cart.lines[index]),
         onIncrease: () => _increase(context, ref, cart.lines[index]),
         onDiscount: () => _itemDiscount(context, ref, cart.lines[index]),
-        onRemove: () => ref
-            .read(cartControllerProvider.notifier)
-            .removeProduct(cart.lines[index].product.id),
+        onRemove: () => _showFailure(
+          context,
+          ref
+              .read(cartControllerProvider.notifier)
+              .removeProduct(cart.lines[index].product.id),
+        ),
       ),
     );
     return Card(
@@ -66,7 +72,7 @@ class CartPanel extends ConsumerWidget {
                 if (!cart.isEmpty)
                   IconButton(
                     tooltip: 'Hold sale (F4)',
-                    onPressed: onHold,
+                    onPressed: paymentRecovery ? null : onHold,
                     icon: const Icon(Icons.pause_circle_outline),
                   ),
                 IconButton(
@@ -76,13 +82,19 @@ class CartPanel extends ConsumerWidget {
                 ),
                 if (!cart.isEmpty)
                   TextButton.icon(
-                    onPressed: onClear ?? () => _confirmClear(context, ref),
+                    onPressed: paymentRecovery
+                        ? null
+                        : onClear ?? () => _confirmClear(context, ref),
                     icon: const Icon(Icons.delete_sweep_outlined),
                     label: const Text('Clear'),
                   ),
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
+            if (paymentRecovery) ...[
+              const _ExternalPaymentRecoveryNotice(),
+              const SizedBox(height: AppSpacing.md),
+            ],
             if (cart.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: AppSpacing.xxl),
@@ -107,7 +119,9 @@ class CartPanel extends ConsumerWidget {
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
                   key: const Key('sale-discount-button'),
-                  onPressed: () => _saleDiscount(context, ref, cart),
+                  onPressed: paymentRecovery
+                      ? null
+                      : () => _saleDiscount(context, ref, cart),
                   icon: const Icon(Icons.percent_outlined),
                   label: Text(
                     cart.saleDiscountMinor == 0
@@ -185,12 +199,19 @@ class CartPanel extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed == true) ref.read(cartControllerProvider.notifier).clear();
+    if (confirmed == true && context.mounted) {
+      _showFailure(context, ref.read(cartControllerProvider.notifier).clear());
+    }
   }
 
   void _decrease(BuildContext context, WidgetRef ref, CartLine line) {
     if (line.quantityMilli <= 1000) {
-      ref.read(cartControllerProvider.notifier).removeProduct(line.product.id);
+      _showFailure(
+        context,
+        ref
+            .read(cartControllerProvider.notifier)
+            .removeProduct(line.product.id),
+      );
       return;
     }
     _showFailure(
@@ -271,6 +292,40 @@ class CartPanel extends ConsumerWidget {
   }
 }
 
+class _ExternalPaymentRecoveryNotice extends StatelessWidget {
+  const _ExternalPaymentRecoveryNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      key: const Key('external-payment-recovery-banner'),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.warning_amber_rounded, color: colors.onErrorContainer),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'An external payment was approved, but this sale was not saved. '
+              'Open Take payment and retry the saved checkout. Do not charge '
+              'the customer again. Cart edits, hold, and clear are locked.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colors.onErrorContainer),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CartLineTile extends StatelessWidget {
   const _CartLineTile({
     required this.line,
@@ -280,6 +335,7 @@ class _CartLineTile extends StatelessWidget {
     required this.onIncrease,
     required this.onDiscount,
     required this.onRemove,
+    required this.editingEnabled,
   });
 
   final CartLine line;
@@ -289,6 +345,7 @@ class _CartLineTile extends StatelessWidget {
   final VoidCallback onIncrease;
   final VoidCallback onDiscount;
   final VoidCallback onRemove;
+  final bool editingEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +381,7 @@ class _CartLineTile extends StatelessWidget {
               ),
               IconButton(
                 tooltip: 'Remove item',
-                onPressed: onRemove,
+                onPressed: editingEnabled ? onRemove : null,
                 icon: const Icon(Icons.close),
               ),
             ],
@@ -336,22 +393,22 @@ class _CartLineTile extends StatelessWidget {
             children: [
               IconButton.filledTonal(
                 tooltip: 'Decrease quantity',
-                onPressed: onDecrease,
+                onPressed: editingEnabled ? onDecrease : null,
                 icon: const Icon(Icons.remove),
               ),
               TextButton(
-                onPressed: onQuantity,
+                onPressed: editingEnabled ? onQuantity : null,
                 child: Text(
                   '${Formatters.quantityMilli(line.quantityMilli)} ${line.product.unitName}',
                 ),
               ),
               IconButton.filledTonal(
                 tooltip: 'Increase quantity',
-                onPressed: onIncrease,
+                onPressed: editingEnabled ? onIncrease : null,
                 icon: const Icon(Icons.add),
               ),
               TextButton.icon(
-                onPressed: onDiscount,
+                onPressed: editingEnabled ? onDiscount : null,
                 icon: const Icon(Icons.percent_outlined, size: 18),
                 label: Text(
                   line.itemDiscountMinor == 0
