@@ -4,5 +4,15 @@
     "development": "jce-pos",
     "staging": "jce-pos-staging-259528",
     "production": "jce-pos-production-259528"
-  }
+  },
+  "targets": {
+    "jce-pos-staging-259528": {
+      "hosting": {
+        "staging-web": [
+          "jce-pos-staging-259528"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

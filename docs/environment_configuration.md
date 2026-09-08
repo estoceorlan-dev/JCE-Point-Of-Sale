@@ -80,3 +80,17 @@ flutter build apk \
 flutter build windows \
   --dart-define=JCE_ENV=production
 ```
+
+Staging web deployment uses the dedicated Hosting target so it cannot resolve
+against the development or production project accidentally:
+
+```sh
+flutter build web \
+  --release \
+  --dart-define=JCE_ENV=staging \
+  --dart-define=JCE_ENABLE_DEMO_AUTH=false
+
+firebase deploy \
+  --only hosting:staging-web \
+  --project jce-pos-staging-259528
+```

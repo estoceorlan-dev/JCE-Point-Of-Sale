@@ -2,8 +2,8 @@
 
 Updated 2026-09-09. This tracks the requested **Phases 0–7**, separately from the
 repository's historical Phase 15 hardware work. **The full delivery plan is not
-complete. The staging backend and Android client are deployed; the Windows
-client is built, and full pilot acceptance is pending.**
+complete. The staging backend plus Android and web clients are deployed; the
+Windows client is built, and full pilot acceptance is pending.**
 Existing hardware/receipt work is preserved.
 
 ## Working implementation
@@ -164,6 +164,11 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
   through Firebase App Distribution. APK SHA-256:
   `F93810AADE7EFBE37CFC4CDE7D7898908AB2B1942FC22A82554889B9A5D195A3`.
   No tester group was assigned automatically.
+- The staging web administration client is deployed at
+  `https://jce-pos-staging-259528.web.app` on Hosting version
+  `4154aabde93c0a2f`. Live checks returned the Flutter shell for `/` and `/auth`
+  and the correct JavaScript/WASM content types for the main bundle, Drift worker
+  and SQLite runtime. Interactive browser acceptance remains pending.
 - New local coverage: combined staff filters, reactive organization-scoped
   outbox counts, role-only read isolation, 360x640 layouts at 100%/150% text,
   durable external-payment save failure/restart and explicit stable retry,
@@ -187,7 +192,7 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
   normalized legacy code collisions, receipt numbering, snapshot scope upgrades,
   replay protection and failed/atomic remote-conflict recovery.
 
-## Deployment order — staging backend and Android client deployed; pilot acceptance pending
+## Deployment order — staging backend, Android and web clients deployed; pilot acceptance pending
 
 1. Back up and validate staging PostgreSQL; apply historical migrations through
    `0010_phase15_pos_hardware.sql`, then `0011_admin_operations.sql`,
@@ -202,9 +207,10 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
    `getAdministrationSnapshot`, `generateStaffInviteLink`,
    `acceptStaffInvitation`. Client function names remain configurable.
 3. **Completed for staging artifacts:** the schema-17 Windows Release was rebuilt
-   with demo auth disabled, and the matching Android APK was uploaded to Firebase
-   App Distribution. Install the complete Windows Release directory on the pilot
-   terminal before acceptance. Pilot flags are unchanged.
+   with demo auth disabled, the matching Android APK was uploaded to Firebase App
+   Distribution, and the web administration fallback was deployed to staging
+   Hosting. Install the complete Windows Release directory on the pilot terminal
+   before acceptance. Pilot flags are unchanged.
 4. Finish the outstanding security/lifecycle tests and approval implementation
    before enabling the requested protected offline workflows.
 5. Enable only for the pilot branch after migration, sales/stock/shift
@@ -212,7 +218,7 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
 
 No production environment or pilot settings were changed. Firebase staging
 schema/connector, PostgreSQL migration 0013, Functions and the Android staging
-client deployment are complete.
+and web client deployments are complete.
 
 See [Phase 0–2 staging handoff](phase_0_2_validation.md) for the implemented
 boundaries, normalized-code preflight, and outstanding external acceptance.

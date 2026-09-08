@@ -3,15 +3,16 @@
 Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 `jce-pos-instance`, database `jce-pos-database`. Production was not touched.
 
-## Result: staging backend and Android client deployed; full acceptance remains open
+## Result: staging backend, Android and web clients deployed; full acceptance remains open
 
 The 2026-09-08 backend deployment includes invitation binding hardening,
 stock-location lifecycle commands, `getStockLocationsSnapshot`, and migration
 `0013_stock_location_lifecycle.sql`. The 2026-09-09 schema-17 client release adds
 durable payment-save reconciliation and the completed Phase 6 terminal UI. Its
 Windows bundle remains pending pilot installation; its Android APK is in staging
-App Distribution. Offline supervisor approvals remain gated. Backend query-double
-tests do not replace signed-in PostgreSQL/Firebase workflow acceptance.
+App Distribution, and its web administration fallback is on staging Hosting.
+Offline supervisor approvals remain gated. Backend query-double tests do not
+replace signed-in PostgreSQL/Firebase workflow acceptance.
 
 - Migrations through `0013_stock_location_lifecycle.sql` are applied. All 13
   checksums match; all 60 public tables remain owned by `jce_pos_migrator`.
@@ -71,6 +72,12 @@ tests do not replace signed-in PostgreSQL/Firebase workflow acceptance.
 - Android staging release `0d3joe7dkcmo8`, version `1.0.0 (1)`, uploaded to
   Firebase App Distribution without a tester group. APK SHA-256:
   `F93810AADE7EFBE37CFC4CDE7D7898908AB2B1942FC22A82554889B9A5D195A3`.
+- Web staging release deployed to `https://jce-pos-staging-259528.web.app` as
+  Hosting version `4154aabde93c0a2f`. The local release-artifact SHA-256 of
+  `main.dart.js` is
+  `723F17AE138B0263B7CD04ABDC3CD17776A36C940F66CDC7451F60A6A667A18B`.
+  Live HTTP checks passed for the root shell, `/auth` SPA fallback, main bundle,
+  Drift worker and SQLite WASM MIME type. Visual browser acceptance is pending.
 - No production, billing, storage-rule or pilot feature-flag changes.
   Committing/pushing source does not install the client; CI verifies code only.
 
