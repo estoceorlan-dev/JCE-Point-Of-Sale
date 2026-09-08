@@ -16,18 +16,21 @@ class InventoryLocalDataSource {
   Stream<List<domain.StockLocation>> watchStockLocations({
     required String organizationId,
     required String branchId,
+    bool includeArchived = false,
   }) {
     final query = _database.select(_database.stockLocations)
       ..where(
         (row) =>
             row.organizationId.equals(organizationId) &
-            row.branchId.equals(branchId) &
-            row.deletedAt.isNull(),
+            row.branchId.equals(branchId),
       )
       ..orderBy([
         (row) => OrderingTerm.desc(row.isDefault),
         (row) => OrderingTerm.asc(row.name),
       ]);
+    if (!includeArchived) {
+      query.where((row) => row.isActive.equals(true) & row.deletedAt.isNull());
+    }
     return query.watch().map(
       (rows) => rows
           .map(
@@ -40,6 +43,7 @@ class InventoryLocalDataSource {
               type: domain.StockLocationType.fromDatabase(row.locationType),
               isDefault: row.isDefault,
               isActive: row.isActive,
+              version: row.version,
             ),
           )
           .toList(growable: false),

@@ -1,16 +1,47 @@
 # Admin operations and cashier POS — implementation checkpoint
 
-Updated 2026-09-06. This tracks the requested **Phases 0–7**, separately from the
+Updated 2026-09-08. This tracks the requested **Phases 0–7**, separately from the
 repository's historical Phase 15 hardware work. **The full delivery plan is not
 complete. The staging backend is deployed; full pilot acceptance is pending.**
 Existing hardware/receipt work is preserved.
 
 ## Working implementation
 
+- Phase 3 continuation: staff search/status/branch/role filters combine, include
+  organization-wide assignments in branch results, and can be cleared after a
+  branch deep link. Branch and role must match the same assignment. Pending-sync
+  counts react to local outbox changes and include failures/conflicts until
+  resolved. Desktop and compact directory layouts support long labels and 150%
+  text. Role-only administrators do not subscribe to staff/branch directories.
+- Invitation binding now rechecks administration permission inside the existing
+  organization access lock and matches the email at the write boundary. Inactive
+  organizations cannot generate invitation bindings or pass acceptance replay.
+  These backend fixes were deployed to staging on 2026-09-08.
+- Shared ApprovalChallenge/ApprovalGrant/SupervisorApprovalService contracts and
+  a rejecting default provider are present. **Secure enrollment and offline
+  approvals remain unavailable.** See [credential design and gates](offline_supervisor_approvals.md).
+- Manual cashier payment entry: cash starts empty, card/QR amounts require
+  explicit external-payment confirmation, edits clear confirmation, and split
+  Exact cash fills only the balance. Inputs lock during checkout. Automatic
+  terminal integration is deferred until hardware/provider selection; see
+  [manual payment workflow](manual_payment_workflow.md). This client change has
+  not been deployed to staging and does not change remote hardware settings.
+  A failed save after external confirmation retains the reference and shows a
+  persistent do-not-charge-again reconciliation message; only an explicit action
+  retries the local save. Restart recovery of payment-form fields remains open.
+- Phase 4 stock locations: managers can create, edit, archive and restore
+  branch-scoped locations locally. Every mutation writes the location, audit
+  record and outbox command in one SQLite transaction. Locations have optimistic
+  versions; default changes advance each affected location version. Archive
+  requires a non-default, non-last-active location with no on-hand/reserved
+  stock, in-progress count or active transfer. Ledger history remains readable.
+  The backend command, change-feed projection, guarded snapshot callable and
+  `0013_stock_location_lifecycle.sql` were deployed to staging on 2026-09-08.
 - Grouped navigation, `branches.manage` / `roles.manage`, Branches, and
   Staff & Access at `/staff`, with a compatibility redirect from `/users`.
-- Drift schema 15: branch operational profiles and administration versions,
-  staff invitation dates, normalized device-local active and held carts.
+- Drift schema 16: branch operational profiles and administration versions,
+  staff invitation dates, normalized device-local active and held carts, and
+  versioned stock locations seeded from known remote versions during upgrade.
 - Offline branch create/edit/archive/restore, unique codes, pending-operation
   indicators, staff/register counts, and operational archival guards.
 - Cached staff/role directories, profile and assignment edits, invites,
@@ -55,10 +86,10 @@ Existing hardware/receipt work is preserved.
 | Phase | Remaining exit requirements |
 | --- | --- |
 | 0 | Local navigation and hardware regression implementation is verified; native Windows/Android/web and physical-device acceptance remain. Startup tests own and close isolated databases without suppressing production Drift warnings. |
-| 1 | Staging migrations through 0012 and backend deployment are complete. Broader live limited-permission/concurrency tests, connector query validation, and incremental-feed read-visibility review remain. Snapshot scopes, navigation, replay and atomic remote-conflict recovery now have regression coverage. Failed creations with no remote record remain explicit recovery cases. |
+| 1 | Staging migrations through 0013 and backend deployment are complete. Broader live limited-permission/concurrency tests, connector query validation, and incremental-feed read-visibility review remain. Snapshot scopes, navigation, replay and atomic remote-conflict recovery now have regression coverage. Failed creations with no remote record remain explicit recovery cases. |
 | 2 | Live two-device pending-branch selection/access-refresh acceptance and concurrent archival tests. Validate archived-history/reporting navigation without switching operational context into an archived branch. Directory/details and matching-branch receipt-profile rendering have desktop/compact and unit coverage. |
-| 3 | Invite setup/acceptance/replay and disablement/token revocation passed live staging probes; negative identity lifecycle cases remain. **Offline supervisor approvals are not implemented.** Deliver secure six-digit PIN enrollment, device-bound encrypted/signed credentials, expiry/revocation, lockout, ApprovalGrant contracts and all protected-workflow integrations. Complete branch/role filters and staff pending-sync indicators. Validate invite acceptance/reactivation/email-identity lifecycle against Firebase Auth. |
-| 4 | Finish stock-location edit/archive/restore and remaining administration UX; measure 10,000-product/import/outbox performance; add broader tax/register/import widget and remote convergence tests. |
+| 3 | Staff directory filters and pending indicators are implemented and locally tested. Approval contracts/design exist; **secure enrollment, encrypted/signed credentials, expiry/revocation, persistent lockout and workflow integrations are not implemented**. Invitation binding hardening is deployed; complete live mismatch/expiry/reactivation/regeneration and Firebase Auth identity tests. |
+| 4 | Stock-location edit/archive/restore, Drift schema 16 version migration, backend lifecycle commands, archive guards and snapshot/change-feed convergence are implemented and covered locally. Migration 0013 and the ninth callable are deployed. Perform signed-in lifecycle, full command concurrency and two-device recovery tests. Measure 10,000-product/import/outbox performance; add broader tax/register/import widget coverage. |
 | 5 | Integrate the shared supervisor approval contract into discounts, corrections, stock operations, transfers, purchases, and shift discrepancies; expand failure/crash-recovery scenarios. |
 | 6 | Complete numeric/touch payment entry, focus/shortcut and loading/error/offline golden coverage, long-label/large-text layouts, and physical scanner/printer pilot tests. |
 | 7 | PostgreSQL migration/concurrency integration tests, invite/credential negative tests, complete offline end-to-end scenarios, pilot performance measurements, admin/approval rollout flags, client rollout, reconciliation and user acceptance. Staging backend deployment is complete. |
@@ -97,9 +128,30 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
 ## Verification at this checkpoint
 
 - `flutter analyze`: no issues.
-- `flutter test`: **233 tests passed**.
-- Functions TypeScript build and `npm test`: **36 tests passed** (latest staging continuation).
+- `flutter test`: **262 tests passed** (2026-09-08), including location
+  lifecycle, change-feed and schema-15-to-16 migration coverage.
+- Functions TypeScript build, `npm test`: **48 tests passed**, including
+  location lifecycle and snapshot authorization coverage.
 - `npm run lint`: passed, including the client-admin-provisioning security check.
+- PostgreSQL 18 isolated rehearsal: migrations `0001`–`0013` applied in order;
+  normalized-code and active-default duplicates were rejected, lifecycle lock
+  queries executed, and an operation share lock blocked a concurrent archive
+  update.
+- Staging PostgreSQL: all 13 migration checksums match, all 60 public tables
+  retain the migration owner, normalized-code duplicate groups are zero, and
+  rollback-only shared/exclusive plus advisory lock checks passed without
+  business writes.
+- Staging Functions: all nine Node.js 22 callables are ACTIVE on source hash
+  `d8872c8ea9511fe87163e5b937787a0de4c35665`; 18 unauthenticated probes
+  returned HTTP 401 / UNAUTHENTICATED.
+- Windows staging Release rebuilt successfully with `JCE_ENV=staging` and
+  `JCE_ENABLE_DEMO_AUTH=false`. This bundle contains the current continuation
+  changes; it has not been installed on another device or physically accepted.
+- New local coverage: combined staff filters, reactive organization-scoped
+  outbox counts, role-only read isolation, 360x640 layouts at 100%/150% text,
+  external-payment save failure and explicit retry, approval binding/expiry and
+  rejecting enrollment/approval defaults. Invitation tests cover lock-before-
+  authorization, changed identity data and inactive-organization replay denial.
 - Startup cleanup tests: **2 passed**, with the multiple-instance warning removed.
 - Terminal widget coverage: 1280×720, 1024×600, 800×700, 360×640; clear confirmation,
   search focus and repeated payment shortcuts.
@@ -119,16 +171,18 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
 ## Deployment order — staging backend complete; client/pilot acceptance pending
 
 1. Back up and validate staging PostgreSQL; apply historical migrations through
-   `0010_phase15_pos_hardware.sql`, then `0011_admin_operations.sql` and
-   `0012_change_feed_tombstones.sql`.
-   **Completed on staging:** all 12 migrations applied,
+   `0010_phase15_pos_hardware.sql`, then `0011_admin_operations.sql`,
+   `0012_change_feed_tombstones.sql`, and only after the new normalized-code and
+   active-default preflight passes, `0013_stock_location_lifecycle.sql`.
+   **Completed on staging:** all 13 migrations applied,
    checksums verified, and all 60 public tables retain the migration owner.
-2. **Completed on staging:** schema/connector and all eight Functions deployed.
+2. **Completed on staging:** schema/connector and all nine Functions deployed,
+   including `getStockLocationsSnapshot` and the lifecycle command source.
    Explicit Auth and application-role permissions provisioned with approval.
    New callables:
    `getAdministrationSnapshot`, `generateStaffInviteLink`,
    `acceptStaffInvitation`. Client function names remain configurable.
-3. Windows schema-15 staging release is built with demo auth disabled; install
+3. Windows schema-16 staging release is built with demo auth disabled; install
    the complete Release bundle on the pilot terminal. Pilot flags are unchanged.
 4. Finish the outstanding security/lifecycle tests and approval implementation
    before enabling the requested protected offline workflows.
@@ -136,19 +190,22 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
    reconciliation, device tests, performance measurement and acceptance.
 
 No production environment or pilot settings were changed. Firebase staging
-schema/connector and Functions deployment is complete.
+schema/connector, PostgreSQL migration 0013 and Functions deployment are complete.
 
 See [Phase 0–2 staging handoff](phase_0_2_validation.md) for the implemented
 boundaries, normalized-code preflight, and outstanding external acceptance.
-The local Docker Linux engine was unavailable, so live PostgreSQL tests were not
-substituted with query-double test results.
+The local Docker Linux engine was unavailable for the earlier checkpoint.
+Phase 4 was instead rehearsed against an isolated native PostgreSQL 18 cluster
+and then deployed after a fresh staging backup/restore rehearsal. Query-double
+coverage still does not substitute for signed-in lifecycle and full command
+concurrency tests.
 
 Subsequent direct staging checks verified IAM connectivity, existing migration
 checksums, rollback-only locking primitives and unauthenticated Firebase rejection.
 The staging public-schema logical backup restored all 39 tables into an isolated
 local PostgreSQL cluster, and pending migrations `0005`-`0011` passed there.
 The operator then granted migration-owner access and live staging migrations
-through corrected `0011` and new `0012` completed. Approved application-admin
+through corrected `0011`, `0012` and `0013` completed. Approved application-admin
 and Functions Auth grants are configured; staging backend deployment and a
 signed-in branch/invite concurrency subset passed. Client installation, wider
 live security/concurrency coverage and physical acceptance remain.

@@ -16,6 +16,34 @@ class InventoryMutationController extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
 
+  Future<Result<void, Failure>> updateLocation(
+    StockLocation location,
+    StockLocationDraft draft,
+  ) async {
+    state = const AsyncLoading();
+    final result = await ref.read(updateStockLocationUseCaseProvider)(
+      session: ref.read(activeInventorySessionProvider),
+      location: location,
+      draft: draft,
+    );
+    _finish(result);
+    return result;
+  }
+
+  Future<Result<void, Failure>> setLocationArchived(
+    StockLocation location,
+    bool archived,
+  ) async {
+    state = const AsyncLoading();
+    final result = await ref.read(setStockLocationArchivedUseCaseProvider)(
+      session: ref.read(activeInventorySessionProvider),
+      location: location,
+      archived: archived,
+    );
+    _finish(result);
+    return result;
+  }
+
   Future<Result<String, Failure>> createLocation(
     StockLocationDraft draft,
   ) async {

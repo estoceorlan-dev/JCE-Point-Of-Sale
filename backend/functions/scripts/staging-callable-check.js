@@ -8,7 +8,8 @@ async function main() {
   }
   const functions = ["getMyAccessProfile", "applyRemoteCommand", "registerDevice",
     "updateBranchName", "finalizeProductImage", "generateStaffInviteLink",
-    "acceptStaffInvitation", "getAdministrationSnapshot"];
+    "acceptStaffInvitation", "getAdministrationSnapshot",
+    "getStockLocationsSnapshot"];
   const results = await Promise.all(Array.from({length: functions.length * 2}, async (_, index) => {
     const name = functions[index % functions.length];
     const response = await fetch(`https://${region}-${project}.cloudfunctions.net/${name}`, {

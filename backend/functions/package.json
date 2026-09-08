@@ -12,7 +12,7 @@
     "db:migrate:iam": "node scripts/apply-schema-iam.js",
     "lint": "npm run security:check && tsc --noEmit",
     "security:check": "node scripts/check-no-client-bootstrap.js",
-    "test": "npm run build && node --test lib/remote_commands/*.test.js",
+    "test": "npm run build && node --test lib/*.test.js lib/remote_commands/*.test.js",
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"
   },

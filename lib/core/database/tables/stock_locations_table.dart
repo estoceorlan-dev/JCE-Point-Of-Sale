@@ -21,6 +21,7 @@ class StockLocations extends Table {
       boolean().withDefault(const Constant<bool>(false))();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant<bool>(true))();
+  IntColumn get version => integer().withDefault(const Constant<int>(0))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();

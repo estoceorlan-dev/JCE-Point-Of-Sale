@@ -6,7 +6,8 @@ import '../../domain/entities/stock_location.dart';
 import '../controllers/inventory_mutation_controller.dart';
 
 class StockLocationDialog extends ConsumerStatefulWidget {
-  const StockLocationDialog({super.key});
+  const StockLocationDialog({super.key, this.location});
+  final StockLocation? location;
 
   @override
   ConsumerState<StockLocationDialog> createState() =>
@@ -22,6 +23,18 @@ class _StockLocationDialogState extends ConsumerState<StockLocationDialog> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    final location = widget.location;
+    if (location != null) {
+      _codeController.text = location.code;
+      _nameController.text = location.name;
+      _type = location.type;
+      _isDefault = location.isDefault;
+    }
+  }
+
+  @override
   void dispose() {
     _codeController.dispose();
     _nameController.dispose();
@@ -31,94 +44,110 @@ class _StockLocationDialogState extends ConsumerState<StockLocationDialog> {
   @override
   Widget build(BuildContext context) {
     final saving = ref.watch(inventoryMutationControllerProvider).isLoading;
-    return AlertDialog(
-      title: const Text('New stock location'),
-      content: SizedBox(
-        width: 440,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _codeController,
-                decoration: const InputDecoration(
-                  labelText: 'Location code',
-                  hintText: 'WAREHOUSE',
+    return PopScope(
+      canPop: !saving,
+      child: AlertDialog(
+        scrollable: true,
+        title: Text(
+          widget.location == null
+              ? 'New stock location'
+              : 'Edit stock location',
+        ),
+        content: SizedBox(
+          width: 440,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  enabled: !saving,
+                  controller: _codeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Location code',
+                    hintText: 'WAREHOUSE',
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                  validator: (value) => (value?.trim().length ?? 0) < 2
+                      ? 'Enter at least two characters.'
+                      : null,
                 ),
-                textCapitalization: TextCapitalization.characters,
-                validator: (value) => (value?.trim().length ?? 0) < 2
-                    ? 'Enter at least two characters.'
-                    : null,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Location name'),
-                validator: (value) => (value?.trim().length ?? 0) < 2
-                    ? 'Enter a location name.'
-                    : null,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              DropdownButtonFormField<StockLocationType>(
-                initialValue: _type,
-                decoration: const InputDecoration(labelText: 'Location type'),
-                items: [
-                  for (final type in StockLocationType.values)
-                    DropdownMenuItem(value: type, child: Text(type.label)),
-                ],
-                onChanged: saving
-                    ? null
-                    : (value) => setState(() => _type = value ?? _type),
-              ),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Default inventory location'),
-                value: _isDefault,
-                onChanged: saving
-                    ? null
-                    : (value) => setState(() => _isDefault = value),
-              ),
-              if (_error != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    _error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                const SizedBox(height: AppSpacing.lg),
+                TextFormField(
+                  enabled: !saving,
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'Location name'),
+                  validator: (value) => (value?.trim().length ?? 0) < 2
+                      ? 'Enter a location name.'
+                      : null,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                DropdownButtonFormField<StockLocationType>(
+                  initialValue: _type,
+                  decoration: const InputDecoration(labelText: 'Location type'),
+                  items: [
+                    for (final type in StockLocationType.values)
+                      DropdownMenuItem(value: type, child: Text(type.label)),
+                  ],
+                  onChanged: saving
+                      ? null
+                      : (value) => setState(() => _type = value ?? _type),
+                ),
+                SwitchListTile.adaptive(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Default inventory location'),
+                  value: _isDefault,
+                  onChanged: saving
+                      ? null
+                      : (value) => setState(() => _isDefault = value),
+                ),
+                if (_error != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _error!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: saving ? null : () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: saving ? null : _save,
+            child: Text(
+              saving
+                  ? 'Saving…'
+                  : widget.location == null
+                  ? 'Create location'
+                  : 'Save location',
+            ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: saving ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: saving ? null : _save,
-          child: Text(saving ? 'Saving…' : 'Create location'),
-        ),
-      ],
     );
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _error = null);
-    final result = await ref
-        .read(inventoryMutationControllerProvider.notifier)
-        .createLocation(
-          StockLocationDraft(
-            code: _codeController.text,
-            name: _nameController.text,
-            type: _type,
-            isDefault: _isDefault,
-          ),
-        );
+    final draft = StockLocationDraft(
+      code: _codeController.text,
+      name: _nameController.text,
+      type: _type,
+      isDefault: _isDefault,
+    );
+    final controller = ref.read(inventoryMutationControllerProvider.notifier);
+    final result = widget.location == null
+        ? await controller.createLocation(draft)
+        : await controller.updateLocation(widget.location!, draft);
     if (!mounted) return;
     result.fold(
       onSuccess: (_) => Navigator.pop(context, true),

@@ -1,5 +1,6 @@
 import {randomUUID} from "node:crypto";
 import {PoolClient} from "pg";
+import {applyStockLocationCommand} from "./stock_location_commands";
 
 import {
   AuthorizedCommand,
@@ -31,7 +32,10 @@ export async function applyInventoryCommand(
     case "inventory.transaction.reverse":
       return reverseInventoryTransaction(client, command);
     case "stock_location.create":
-      return createStockLocation(client, command);
+    case "stock_location.update":
+    case "stock_location.archive":
+    case "stock_location.restore":
+      return applyStockLocationCommand(client, command);
     case "inventory.reorder_point.set":
       return setReorderPoint(client, command);
     case "inventory.policy.configure":
@@ -188,7 +192,8 @@ async function applyInventoryLine(
       FROM stock_locations sl
       INNER JOIN products p
         ON p.id = $4 AND p.organization_id = sl.organization_id
-      WHERE sl.id = $3 AND sl.organization_id = $1 AND sl.branch_id = $2 AND sl.deleted_at IS NULL
+      WHERE sl.id = $3 AND sl.organization_id = $1 AND sl.branch_id = $2
+        AND sl.is_active = true AND sl.deleted_at IS NULL FOR SHARE OF sl
     `,
     [command.organizationId, command.branchId, line.stockLocationId, line.productId],
   );
@@ -318,34 +323,6 @@ async function reverseInventoryTransaction(
   return {...result, reversedTransactionId: originalId};
 }
 
-async function createStockLocation(
-  client: PoolClient,
-  command: AuthorizedCommand,
-): Promise<CommandResult> {
-  const payload = command.payload;
-  const id = requiredString(payload, "id");
-  if (id !== command.aggregateId) throw new RemoteCommandError("invalid-argument", "Location IDs do not match.");
-  const isDefault = requiredBoolean(payload, "isDefault");
-  if (isDefault) {
-    await client.query(
-      `UPDATE stock_locations SET is_default = false, version = version + 1, updated_at = now()
-       WHERE organization_id = $1 AND branch_id = $2 AND is_default = true`,
-      [command.organizationId, command.branchId],
-    );
-  }
-  const result = await client.query(
-    `
-      INSERT INTO stock_locations (
-        id, organization_id, branch_id, code, name, location_type,
-        is_default, is_active, version, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, true, 0, now(), now())
-      RETURNING id, code, name, location_type, is_default, version
-    `,
-    [id, command.organizationId, command.branchId, requiredString(payload, "code"), requiredString(payload, "name"), requiredString(payload, "locationType"), isDefault],
-  );
-  return {stockLocation: result.rows[0]};
-}
-
 async function setReorderPoint(
   client: PoolClient,
   command: AuthorizedCommand,
@@ -366,7 +343,7 @@ async function setReorderPoint(
      INNER JOIN products p ON p.id = $4 AND p.organization_id = sl.organization_id
        AND p.is_active = true AND p.deleted_at IS NULL
      WHERE sl.id = $3 AND sl.organization_id = $1 AND sl.branch_id = $2
-       AND sl.is_active = true AND sl.deleted_at IS NULL`,
+       AND sl.is_active = true AND sl.deleted_at IS NULL FOR SHARE OF sl`,
     [command.organizationId, command.branchId, stockLocationId, productId],
   );
   if (scope.rowCount !== 1) {

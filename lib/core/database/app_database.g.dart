@@ -12942,6 +12942,18 @@ class $StockLocationsTable extends StockLocations
     ),
     defaultValue: const Constant<bool>(true),
   );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -12985,6 +12997,7 @@ class $StockLocationsTable extends StockLocations
     locationType,
     isDefault,
     isActive,
+    version,
     createdAt,
     updatedAt,
     deletedAt,
@@ -13062,6 +13075,12 @@ class $StockLocationsTable extends StockLocations
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -13130,6 +13149,10 @@ class $StockLocationsTable extends StockLocations
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -13160,6 +13183,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
   final String locationType;
   final bool isDefault;
   final bool isActive;
+  final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -13172,6 +13196,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
     required this.locationType,
     required this.isDefault,
     required this.isActive,
+    required this.version,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -13187,6 +13212,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
     map['location_type'] = Variable<String>(locationType);
     map['is_default'] = Variable<bool>(isDefault);
     map['is_active'] = Variable<bool>(isActive);
+    map['version'] = Variable<int>(version);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -13205,6 +13231,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
       locationType: Value(locationType),
       isDefault: Value(isDefault),
       isActive: Value(isActive),
+      version: Value(version),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -13227,6 +13254,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
       locationType: serializer.fromJson<String>(json['locationType']),
       isDefault: serializer.fromJson<bool>(json['isDefault']),
       isActive: serializer.fromJson<bool>(json['isActive']),
+      version: serializer.fromJson<int>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -13244,6 +13272,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
       'locationType': serializer.toJson<String>(locationType),
       'isDefault': serializer.toJson<bool>(isDefault),
       'isActive': serializer.toJson<bool>(isActive),
+      'version': serializer.toJson<int>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -13259,6 +13288,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
     String? locationType,
     bool? isDefault,
     bool? isActive,
+    int? version,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -13271,6 +13301,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
     locationType: locationType ?? this.locationType,
     isDefault: isDefault ?? this.isDefault,
     isActive: isActive ?? this.isActive,
+    version: version ?? this.version,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -13289,6 +13320,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
           : this.locationType,
       isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      version: data.version.present ? data.version.value : this.version,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -13306,6 +13338,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
           ..write('locationType: $locationType, ')
           ..write('isDefault: $isDefault, ')
           ..write('isActive: $isActive, ')
+          ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -13323,6 +13356,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
     locationType,
     isDefault,
     isActive,
+    version,
     createdAt,
     updatedAt,
     deletedAt,
@@ -13339,6 +13373,7 @@ class StockLocation extends DataClass implements Insertable<StockLocation> {
           other.locationType == this.locationType &&
           other.isDefault == this.isDefault &&
           other.isActive == this.isActive &&
+          other.version == this.version &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -13353,6 +13388,7 @@ class StockLocationsCompanion extends UpdateCompanion<StockLocation> {
   final Value<String> locationType;
   final Value<bool> isDefault;
   final Value<bool> isActive;
+  final Value<int> version;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -13366,6 +13402,7 @@ class StockLocationsCompanion extends UpdateCompanion<StockLocation> {
     this.locationType = const Value.absent(),
     this.isDefault = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -13380,6 +13417,7 @@ class StockLocationsCompanion extends UpdateCompanion<StockLocation> {
     this.locationType = const Value.absent(),
     this.isDefault = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.version = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
@@ -13400,6 +13438,7 @@ class StockLocationsCompanion extends UpdateCompanion<StockLocation> {
     Expression<String>? locationType,
     Expression<bool>? isDefault,
     Expression<bool>? isActive,
+    Expression<int>? version,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -13414,6 +13453,7 @@ class StockLocationsCompanion extends UpdateCompanion<StockLocation> {
       if (locationType != null) 'location_type': locationType,
       if (isDefault != null) 'is_default': isDefault,
       if (isActive != null) 'is_active': isActive,
+      if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -13430,6 +13470,7 @@ class StockLocationsCompanion extends UpdateCompanion<StockLocation> {
     Value<String>? locationType,
     Value<bool>? isDefault,
     Value<bool>? isActive,
+    Value<int>? version,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -13444,6 +13485,7 @@ class StockLocationsCompanion extends UpdateCompanion<StockLocation> {
       locationType: locationType ?? this.locationType,
       isDefault: isDefault ?? this.isDefault,
       isActive: isActive ?? this.isActive,
+      version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -13478,6 +13520,9 @@ class StockLocationsCompanion extends UpdateCompanion<StockLocation> {
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -13504,6 +13549,7 @@ class StockLocationsCompanion extends UpdateCompanion<StockLocation> {
           ..write('locationType: $locationType, ')
           ..write('isDefault: $isDefault, ')
           ..write('isActive: $isActive, ')
+          ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -69344,6 +69390,7 @@ typedef $$StockLocationsTableCreateCompanionBuilder =
       Value<String> locationType,
       Value<bool> isDefault,
       Value<bool> isActive,
+      Value<int> version,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<DateTime?> deletedAt,
@@ -69359,6 +69406,7 @@ typedef $$StockLocationsTableUpdateCompanionBuilder =
       Value<String> locationType,
       Value<bool> isDefault,
       Value<bool> isActive,
+      Value<int> version,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -69596,6 +69644,11 @@ class $$StockLocationsTableFilterComposer
 
   ColumnFilters<bool> get isActive => $composableBuilder(
     column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -69851,6 +69904,11 @@ class $$StockLocationsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -69941,6 +69999,9 @@ class $$StockLocationsTableAnnotationComposer
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -70197,6 +70258,7 @@ class $$StockLocationsTableTableManager
                 Value<String> locationType = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -70210,6 +70272,7 @@ class $$StockLocationsTableTableManager
                 locationType: locationType,
                 isDefault: isDefault,
                 isActive: isActive,
+                version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -70225,6 +70288,7 @@ class $$StockLocationsTableTableManager
                 Value<String> locationType = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<int> version = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -70238,6 +70302,7 @@ class $$StockLocationsTableTableManager
                 locationType: locationType,
                 isDefault: isDefault,
                 isActive: isActive,
+                version: version,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

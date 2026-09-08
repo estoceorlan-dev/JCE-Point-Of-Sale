@@ -35,6 +35,7 @@ class StaffAccount {
     this.firebaseUid,
     this.invitedAt,
     this.activatedAt,
+    this.pendingOperations = 0,
   });
 
   final String id;
@@ -49,6 +50,7 @@ class StaffAccount {
   final DateTime updatedAt;
   final DateTime? invitedAt;
   final DateTime? activatedAt;
+  final int pendingOperations;
 }
 
 class StaffDraft {

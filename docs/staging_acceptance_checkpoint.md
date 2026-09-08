@@ -1,11 +1,18 @@
-# Staging acceptance checkpoint — 2026-09-06
+# Staging acceptance checkpoint — 2026-09-08
 
 Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 `jce-pos-instance`, database `jce-pos-database`. Production was not touched.
 
 ## Result: staging backend deployed; full acceptance remains open
 
-- Migrations through `0012_change_feed_tombstones.sql` are applied. All 12
+The 2026-09-08 backend deployment includes invitation binding hardening,
+stock-location lifecycle commands, `getStockLocationsSnapshot`, and migration
+`0013_stock_location_lifecycle.sql`. Staff filters, offline-approval contracts,
+payment-save reconciliation and the Drift schema-16 client remain in the locally
+built Windows bundle pending pilot installation. Backend query-double tests do
+not replace signed-in PostgreSQL/Firebase workflow acceptance.
+
+- Migrations through `0013_stock_location_lifecycle.sql` are applied. All 13
   checksums match; all 60 public tables remain owned by `jce_pos_migrator`.
   Normalized branch-code duplicate groups remain zero.
 - The operator's temporary human IAM membership in `jce_pos_migrator` remains
@@ -49,11 +56,11 @@ Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
   Existing remote SQL validation NONE was preserved. Generated SQL proposing
   recreation of migration-owned tables was NOT applied. Contract deployment
   does not establish compatibility of every connector query.
-- All eight Node.js 22 Functions deployed using the intended runtime identity:
+- All nine Node.js 22 Functions deployed using the intended runtime identity:
   getMyAccessProfile, registerDevice, updateBranchName, applyRemoteCommand,
   finalizeProductImage, generateStaffInviteLink, acceptStaffInvitation and
-  getAdministrationSnapshot. Functions source hash:
-  `54aa9329672daa4f762fa636461aba7ee01ae61b`.
+  getAdministrationSnapshot, plus getStockLocationsSnapshot. Functions source
+  hash: `d8872c8ea9511fe87163e5b937787a0de4c35665`.
 - Windows staging release built with demo authentication disabled:
   `build/windows/x64/runner/Release/jce_pos.exe`.
   Copy/install the entire Release directory, including DLLs and data.
@@ -81,8 +88,10 @@ Real Firebase sessions and deployed callables passed:
 - Staff disablement revokes assignments and refresh tokens; the old session
   cannot load access. QA roles/branches were archived and staff disabled, with
   audit/history retained. Firebase Auth identities were not physically deleted.
-- Sixteen concurrent unauthenticated requests (two per deployed callable) all
+- Eighteen unauthenticated requests (two per deployed callable) all
   returned HTTP 401 / UNAUTHENTICATED.
+- All 13 staging migration checksums match. Rollback-only branch shared/exclusive
+  locking and transaction advisory-lock checks passed without business writes.
 
 Successful run fixtures: branch `e68da74a-8f85-48d9-969a-d9d7e37264c4`,
 staff `67cb530d-a8ed-4a62-8e5a-1d241aef14cb`,
@@ -92,9 +101,9 @@ Saved Cashier credentials did not authenticate in staging and were unchanged.
 QA accounts used random in-memory passwords and example.invalid addresses;
 no invitation email was sent.
 
-Local verification: 36 backend tests, TypeScript build and lint passed.
-Earlier Flutter checkpoint: 233 tests, analyze and formatting passed.
-No Flutter code changed in this continuation.
+Local verification: 48 backend tests, TypeScript build and lint passed.
+Flutter verification: 262 tests and analyze passed. The Windows staging Release
+bundle was rebuilt with demo authentication disabled.
 
 ## Backups and recovery boundaries
 
@@ -105,6 +114,11 @@ No Flutter code changed in this continuation.
   328,398 bytes, SHA-256
   `a87fb675eeda935544a0177ac6be63d136957dd10a75f70b071d810abc1e1332`;
   all 60 tables restored and migration/permission regression rehearsal passed.
+- Before 0013: `C:/JCE/.backups/staging-nAimoT/public.dump`,
+  331,962 bytes, SHA-256
+  `a94c0e83e066c179433dd64eda9232e260d90f023220c4369a5a65cfaa8b5b70`;
+  all 60 tables restored, migration 0013 rehearsed, and administration grant
+  preservation checks passed before the live migration.
 - Previous SQL Connect schema:
   `C:/JCE/.backups/schema-release-zd5tyE/previous-schema.json`.
 - Backups are access-restricted and outside Git; scratch servers were stopped.
@@ -138,7 +152,7 @@ and existing application credentials; never print secret values.
 - `staging-database-check.js`: checksums, duplicates, ownership;
   `--check-locks` optionally checks rollback-only locking primitives.
 - `staging-logical-backup.js`: public-schema backup and local restore/rehearsal.
-- `staging-callable-check.js`: unauthenticated probes for all eight callables.
+- `staging-callable-check.js`: unauthenticated probes for all nine callables.
 - `staging-auth-permissions.js`: preview; `--apply` configures the exact Auth
   role/binding. Requires JCE_FUNCTIONS_SERVICE_ACCOUNT and JCE_AUTH_ROLE_ID.
 - `staging-admin-permissions.js`: preview; `--apply` provisions approved IDs

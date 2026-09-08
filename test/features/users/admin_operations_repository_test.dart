@@ -141,6 +141,69 @@ void main() {
   tearDown(() => database.close());
 
   test(
+    'staff sync counts track outbox transitions in organization scope',
+    () async {
+      await staff('cashier-user', role: 'cashier', branch: 'main');
+      final updates = <List<StaffAccount>>[];
+      final subscription = users
+          .watchUsers(context: context)
+          .listen(updates.add);
+      addTearDown(subscription.cancel);
+      final result = await users.updateUser(
+        context: context,
+        userId: 'cashier-user',
+        displayName: 'Cashier updated',
+        email: 'cashier-user@example.test',
+        expectedVersion: 0,
+      );
+      expect(result.isSuccess, isTrue);
+      Future<int> pending() async =>
+          (await users.watchUsers(context: context).first)
+              .singleWhere((user) => user.id == 'cashier-user')
+              .pendingOperations;
+      expect(await pending(), 1);
+      final entry =
+          (await database.select(database.syncOutboxEntries).get()).single;
+      for (final status in [
+        'in_progress',
+        'failed',
+        'conflict',
+        'succeeded',
+        'discarded',
+      ]) {
+        await (database.update(database.syncOutboxEntries)
+              ..where((row) => row.operationId.equals(entry.operationId)))
+            .write(SyncOutboxEntriesCompanion(status: Value(status)));
+        expect(
+          await pending(),
+          ['succeeded', 'discarded'].contains(status) ? 0 : 1,
+        );
+      }
+      await (database.update(
+        database.syncOutboxEntries,
+      )..where((row) => row.operationId.equals(entry.operationId))).write(
+        const SyncOutboxEntriesCompanion(
+          status: Value('pending'),
+          organizationId: Value('foreign'),
+        ),
+      );
+      expect(await pending(), 0);
+      // A new watcher is not necessary to observe outbox-only changes.
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        updates.any((rows) => rows.any((user) => user.pendingOperations > 0)),
+        isTrue,
+      );
+      expect(
+        updates.last
+            .singleWhere((user) => user.id == 'cashier-user')
+            .pendingOperations,
+        0,
+      );
+    },
+  );
+
+  test(
     'legacy mixed-case and padded branch codes still block duplicates',
     () async {
       await (database.update(database.branches)

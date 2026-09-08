@@ -808,7 +808,7 @@ async function validateLineScope(
       AND destination.branch_id = $6 AND destination.is_active = true
       AND destination.deleted_at IS NULL
      WHERE p.id = $1 AND p.organization_id = $2
-       AND p.is_active = true AND p.deleted_at IS NULL`,
+       AND p.is_active = true AND p.deleted_at IS NULL FOR SHARE OF source, destination`,
     [
       line.productId,
       command.organizationId,
@@ -835,7 +835,7 @@ async function validateDestinationLocation(
   const result = await client.query<{location_type: string}>(
     `SELECT location_type FROM stock_locations
      WHERE id = $1 AND organization_id = $2 AND branch_id = $3
-       AND is_active = true AND deleted_at IS NULL`,
+       AND is_active = true AND deleted_at IS NULL FOR SHARE`,
     [locationId, command.organizationId, command.branchId],
   );
   if (result.rowCount !== 1 || damaged && result.rows[0].location_type !== "damaged") {

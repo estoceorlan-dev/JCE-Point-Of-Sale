@@ -186,6 +186,21 @@ void main() {
       },
     );
 
+    test('manual cash handling does not pulse a disabled drawer', () async {
+      await (database.update(database.registers)
+            ..where((row) => row.id.equals('register')))
+          .write(const RegistersCompanion(cashDrawerEnabled: Value(false)));
+      final drawer = _RecordingCashDrawer();
+      final result = await OpenSaleCashDrawerUseCase(
+        repository: repository,
+        cashDrawer: drawer,
+        requirePermission: const RequirePermissionUseCase(),
+      )(session: _session({AppPermission.processSales}), sale: _sale());
+      expect(result.isSuccess, isTrue);
+      expect(result.valueOrNull, isFalse);
+      expect(drawer.openCount, 0);
+    });
+
     test(
       'cash drawer opens only for an authorized completed cash sale',
       () async {

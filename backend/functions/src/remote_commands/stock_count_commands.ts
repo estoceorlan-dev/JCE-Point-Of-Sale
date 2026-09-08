@@ -88,7 +88,7 @@ async function startStockCount(
        ON ib.organization_id = p.organization_id AND ib.branch_id = $2
        AND ib.stock_location_id = sl.id AND ib.product_id = p.id
      WHERE p.organization_id = $1 AND p.id = ANY($4::text[])
-       AND p.is_active = true AND p.deleted_at IS NULL`,
+       AND p.is_active = true AND p.deleted_at IS NULL FOR SHARE OF sl`,
     [command.organizationId, command.branchId, stockLocationId, productIds],
   );
   if (products.rowCount !== productIds.length) {

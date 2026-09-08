@@ -157,7 +157,7 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 15;
+  static const int currentSchemaVersion = 16;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -529,6 +529,17 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(posCarts);
         await migrator.createTable(posCartItems);
         await migrator.createIndex(posCartsDeviceStatusIdx);
+      case 16:
+        if (!await _tableHasColumn('stock_locations', 'version')) {
+          await migrator.addColumn(stockLocations, stockLocations.version);
+        }
+        await customUpdate(
+          'UPDATE stock_locations SET version = coalesce('
+          '(SELECT remote_version FROM sync_entity_versions v WHERE '
+          'v.organization_id = stock_locations.organization_id AND '
+          "v.entity_type = 'stock_location' AND v.entity_id = stock_locations.id), 0)",
+          updates: {stockLocations},
+        );
       default:
         throw StateError('Missing migration for schema version $version.');
     }

@@ -29,6 +29,7 @@ import {
   StaffInviteError,
 } from "./staff_invites";
 import {loadAdministrationSnapshot} from "./administration_snapshot";
+import {loadStockLocationsSnapshot} from "./stock_locations_snapshot";
 
 initializeApp();
 
@@ -252,6 +253,7 @@ export const generateStaffInviteLink = onCall(
           organizationId,
           userId,
           targetFirebaseUid: identity.uid,
+          targetEmail: invited.email,
         }),
       );
       const inviteUrl = await getAuth().generatePasswordResetLink(invited.email);
@@ -289,6 +291,24 @@ export const acceptStaffInvitation = onCall(
       }
       logger.error("Staff invitation acceptance failed.", error);
       throw new HttpsError("internal", "The invitation could not be accepted.");
+    }
+  },
+);
+
+export const getStockLocationsSnapshot = onCall(
+  {region: functionsRegion, serviceAccount: runtimeServiceAccount},
+  async (request) => {
+    const firebaseUid = request.auth?.uid;
+    if (!firebaseUid) throw new HttpsError("unauthenticated", "Authentication is required.");
+    const organizationId = requiredString(request.data, "organizationId");
+    const branchId = requiredString(request.data, "branchId");
+    try {
+      return await withDatabase(databaseConfig(), (client) =>
+        loadStockLocationsSnapshot(client, {firebaseUid, organizationId, branchId}));
+    } catch (error) {
+      if (error instanceof RemoteCommandError) throw new HttpsError(error.code, error.message);
+      logger.error("Stock location snapshot failed.", {code: (error as {code?: string}).code ?? "unknown"});
+      throw new HttpsError("internal", "Stock locations could not be refreshed.");
     }
   },
 );

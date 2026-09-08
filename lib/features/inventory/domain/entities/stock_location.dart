@@ -27,6 +27,7 @@ class StockLocation {
     required this.type,
     required this.isDefault,
     required this.isActive,
+    this.version = 0,
   });
 
   final String id;
@@ -37,6 +38,7 @@ class StockLocation {
   final StockLocationType type;
   final bool isDefault;
   final bool isActive;
+  final int version;
 }
 
 class StockLocationDraft {

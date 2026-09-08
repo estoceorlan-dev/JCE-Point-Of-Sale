@@ -21,6 +21,7 @@ import '../../domain/repositories/inventory_repository.dart';
 import '../data_sources/inventory_local_data_source.dart';
 import '../services/inventory_ledger_writer.dart';
 import 'drift_stock_count_store.dart';
+import 'drift_stock_location_store.dart';
 
 class DriftInventoryRepository implements InventoryRepository {
   const DriftInventoryRepository({
@@ -54,109 +55,53 @@ class DriftInventoryRepository implements InventoryRepository {
   @override
   Stream<List<StockLocation>> watchStockLocations({
     required BusinessContext context,
+    bool includeArchived = false,
   }) {
     return _localDataSource.watchStockLocations(
+      includeArchived: includeArchived,
       organizationId: context.organizationId,
       branchId: context.branchId,
     );
   }
 
+  DriftStockLocationStore get _locations => DriftStockLocationStore(
+    database: _database,
+    mutation: _localMutationTransaction,
+    ids: _idGenerator,
+    clock: _clock,
+  );
+
   @override
   Future<Result<String, Failure>> createStockLocation({
     required BusinessContext context,
     required StockLocationDraft draft,
-  }) async {
-    final code = _normalizeCode(draft.code);
-    final name = draft.name.trim();
-    if (code.length < 2 || code.length > 20 || name.length < 2) {
-      return const Result.failure(
-        ValidationFailure(
-          'Location code must be 2–20 characters and the name is required.',
-        ),
-      );
-    }
-    final duplicate =
-        await (_database.select(_database.stockLocations)..where(
-              (row) =>
-                  row.organizationId.equals(context.organizationId) &
-                  row.branchId.equals(context.branchId) &
-                  row.code.equals(code),
-            ))
-            .getSingleOrNull();
-    if (duplicate != null) {
-      return const Result.failure(
-        ConflictFailure('A stock location with this code already exists.'),
-      );
-    }
-    final id = _idGenerator.newId();
-    final operationId = _idGenerator.newId();
-    final now = _clock.nowUtc();
-    return _localMutationTransaction.execute(
-      businessWrite: (database) async {
-        final branch =
-            await (database.select(database.branches)..where(
-                  (row) =>
-                      row.id.equals(context.branchId) &
-                      row.organizationId.equals(context.organizationId) &
-                      row.deletedAt.isNull(),
-                ))
-                .getSingleOrNull();
-        if (branch == null) {
-          throw const AuthorizationFailure(
-            'The active branch is unavailable locally.',
-          );
-        }
-        if (draft.isDefault) {
-          await (database.update(database.stockLocations)..where(
-                (row) =>
-                    row.organizationId.equals(context.organizationId) &
-                    row.branchId.equals(context.branchId),
-              ))
-              .write(const StockLocationsCompanion(isDefault: Value(false)));
-        }
-        await database
-            .into(database.stockLocations)
-            .insert(
-              StockLocationsCompanion.insert(
-                id: id,
-                organizationId: context.organizationId,
-                branchId: context.branchId,
-                code: code,
-                name: name,
-                locationType: Value(draft.type.databaseValue),
-                isDefault: Value(draft.isDefault),
-                createdAt: now,
-                updatedAt: now,
-              ),
-            );
-        return id;
-      },
-      auditEntry: _audit(
-        context: context,
-        operationId: operationId,
-        action: AuditActionType.create,
-        entityName: 'stock_location',
-        entityId: id,
-        metadata: {'code': code, 'name': name},
-        now: now,
-      ),
-      outboxCommand: _outbox(
-        context: context,
-        operationId: operationId,
-        commandType: 'stock_location.create',
-        aggregateType: 'stock_location',
-        aggregateId: id,
-        payload: {
-          'id': id,
-          'code': code,
-          'name': name,
-          'locationType': draft.type.databaseValue,
-          'isDefault': draft.isDefault,
-        },
-        now: now,
-      ),
-    );
-  }
+  }) => _locations.save(context: context, draft: draft);
+
+  @override
+  Future<Result<void, Failure>> updateStockLocation({
+    required BusinessContext context,
+    required String locationId,
+    required StockLocationDraft draft,
+    required int expectedVersion,
+  }) async => (await _locations.save(
+    context: context,
+    draft: draft,
+    locationId: locationId,
+    expectedVersion: expectedVersion,
+  )).map((_) {});
+
+  @override
+  Future<Result<void, Failure>> setStockLocationArchived({
+    required BusinessContext context,
+    required String locationId,
+    required bool archived,
+    required int expectedVersion,
+  }) => _locations.setArchived(
+    context: context,
+    locationId: locationId,
+    archived: archived,
+    expectedVersion: expectedVersion,
+  );
 
   @override
   Stream<List<InventoryBalance>> watchBalances({
@@ -759,8 +704,4 @@ class DriftInventoryRepository implements InventoryRepository {
           .toList(growable: false),
     };
   }
-}
-
-String _normalizeCode(String value) {
-  return value.trim().toUpperCase().replaceAll(RegExp(r'[^A-Z0-9_-]'), '_');
 }

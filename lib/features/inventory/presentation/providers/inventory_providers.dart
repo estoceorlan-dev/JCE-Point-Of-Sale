@@ -20,6 +20,7 @@ import '../../domain/use_cases/complete_stock_count_use_case.dart';
 import '../../domain/use_cases/configure_inventory_policy_use_case.dart';
 import '../../domain/use_cases/create_inventory_adjustment_use_case.dart';
 import '../../domain/use_cases/create_stock_location_use_case.dart';
+import '../../domain/use_cases/manage_stock_location_use_cases.dart';
 import '../../domain/use_cases/record_stock_count_item_use_case.dart';
 import '../../domain/use_cases/reverse_inventory_movement_use_case.dart';
 import '../../domain/use_cases/set_reorder_point_use_case.dart';
@@ -48,6 +49,32 @@ final stockLocationsProvider = StreamProvider<List<StockLocation>>((ref) {
       .watch(inventoryRepositoryProvider)
       .watchStockLocations(context: context);
 });
+
+final stockLocationDirectoryProvider =
+    StreamProvider.family<List<StockLocation>, bool>((ref, includeArchived) {
+      final context = ref.watch(businessContextProvider);
+      if (context == null) return Stream.value(const []);
+      return ref
+          .watch(inventoryRepositoryProvider)
+          .watchStockLocations(
+            context: context,
+            includeArchived: includeArchived,
+          );
+    });
+
+final updateStockLocationUseCaseProvider = Provider<UpdateStockLocationUseCase>(
+  (ref) => UpdateStockLocationUseCase(
+    repository: ref.watch(inventoryRepositoryProvider),
+    requirePermission: ref.watch(requirePermissionUseCaseProvider),
+  ),
+);
+final setStockLocationArchivedUseCaseProvider =
+    Provider<SetStockLocationArchivedUseCase>(
+      (ref) => SetStockLocationArchivedUseCase(
+        repository: ref.watch(inventoryRepositoryProvider),
+        requirePermission: ref.watch(requirePermissionUseCaseProvider),
+      ),
+    );
 
 final inventoryBalancesProvider =
     StreamProvider.family<List<InventoryBalance>, InventoryBalanceQuery>((

@@ -42,21 +42,32 @@ SELECT au.id AS user_id, au.organization_id, au.firebase_uid, au.email,
        au.version AS user_version, au.created_at, au.updated_at,
        ura.id AS assignment_id, ura.branch_id, ura.role_id,
        ura.version AS assignment_version, r.name AS role_name,
-       b.name AS branch_name
+       b.name AS branch_name,
+       coalesce(pending.operation_count, 0) AS pending_operations
 FROM app_users au
 LEFT JOIN user_role_assignments ura
   ON ura.user_id = au.id AND ura.revoked_at IS NULL
 LEFT JOIN roles r ON r.id = ura.role_id
 LEFT JOIN branches b ON b.id = ura.branch_id
+LEFT JOIN (
+  SELECT aggregate_id, count(*) AS operation_count FROM sync_outbox
+  WHERE organization_id = ? AND aggregate_type = 'app_user'
+    AND status NOT IN ('succeeded', 'discarded')
+  GROUP BY aggregate_id
+) pending ON pending.aggregate_id = au.id
 WHERE au.organization_id = ? AND au.deleted_at IS NULL
 ORDER BY lower(au.display_name), au.id, ura.branch_id, r.name
 ''',
-          variables: [Variable<String>(context.organizationId)],
+          variables: [
+            Variable<String>(context.organizationId),
+            Variable<String>(context.organizationId),
+          ],
           readsFrom: {
             _database.appUsers,
             _database.userRoleAssignments,
             _database.roles,
             _database.branches,
+            _database.syncOutboxEntries,
           },
         )
         .watch()
@@ -98,6 +109,7 @@ ORDER BY lower(au.display_name), au.id, ura.branch_id, r.name
           updatedAt: entry.value.first.read<DateTime>('updated_at'),
           invitedAt: entry.value.first.readNullable<DateTime>('invited_at'),
           activatedAt: entry.value.first.readNullable<DateTime>('activated_at'),
+          pendingOperations: entry.value.first.read<int>('pending_operations'),
         ),
     ];
   }

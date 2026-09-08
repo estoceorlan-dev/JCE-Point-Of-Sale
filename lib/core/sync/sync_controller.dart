@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../shared/models/business_context.dart';
+import '../../shared/models/permission.dart';
 import '../../shared/models/sync_state.dart';
 import '../config/app_config.dart';
 import '../database/app_database.dart';
@@ -14,6 +15,7 @@ import '../error/failure.dart';
 import '../error/failure_mapper.dart';
 import '../services/backend_sync_service.dart';
 import '../services/administration_snapshot_service.dart';
+import '../services/stock_location_snapshot_service.dart';
 import 'connectivity_monitor.dart';
 import 'background_sync.dart';
 
@@ -33,6 +35,7 @@ final syncStateProvider =
         automatic: !ref.watch(appConfigProvider).enableDemoAuth,
         hydrateAdministration:
             session?.administrationPermissions.isNotEmpty ?? false,
+        hydrateLocations: session?.can(AppPermission.manageInventory) ?? false,
       );
     });
 
@@ -55,7 +58,9 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
     this._context, {
     required bool automatic,
     required bool hydrateAdministration,
+    bool hydrateLocations = false,
   }) : _hydrateAdministration = hydrateAdministration,
+       _hydrateLocations = hydrateLocations,
        super(const AsyncData(SyncState(status: SyncStatus.idle))) {
     if (_context == null) {
       _legacyPendingSubscription = _ref
@@ -116,6 +121,7 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
   final Ref _ref;
   final BusinessContext? _context;
   final bool _hydrateAdministration;
+  final bool _hydrateLocations;
   StreamSubscription<SyncDiagnostics>? _diagnosticsSubscription;
   StreamSubscription<int>? _legacyPendingSubscription;
   StreamSubscription<List<SyncConflict>>? _conflictSubscription;
@@ -155,6 +161,9 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
           .read(backendSyncServiceProvider)
           .synchronize(context: context, trigger: trigger);
       final latest = state.asData?.value ?? current;
+      if (_hydrateLocations && !result.offline) {
+        await _ref.read(stockLocationSnapshotServiceProvider).refresh(context);
+      }
       state = AsyncData(
         latest.copyWith(
           status: result.offline ? SyncStatus.offline : SyncStatus.idle,
@@ -201,6 +210,17 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
   }
 
   Future<void> _acceptRemote(SyncConflict conflict) async {
+    if (conflict.entityType == 'stock_location') {
+      final context = _context;
+      if (context == null || !_hydrateLocations) {
+        throw StateError('Inventory management access is required.');
+      }
+      await _ref
+          .read(stockLocationSnapshotServiceProvider)
+          .acceptRemote(context, conflict);
+      await synchronize(SyncTrigger.manual);
+      return;
+    }
     if (const {
       'branch',
       'app_user',

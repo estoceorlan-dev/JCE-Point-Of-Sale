@@ -350,7 +350,7 @@ async function receivePurchaseOrder(
   const location = await client.query(
     `SELECT 1 FROM stock_locations WHERE id = $1 AND organization_id = $2
        AND branch_id = $3 AND is_active = true AND deleted_at IS NULL
-       AND location_type <> 'damaged'`,
+       AND location_type <> 'damaged' FOR SHARE`,
     [stockLocationId, command.organizationId, command.branchId],
   );
   if (location.rowCount !== 1) {

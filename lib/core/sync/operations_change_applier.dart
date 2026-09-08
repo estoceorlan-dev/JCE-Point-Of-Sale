@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import '../database/app_database.dart';
 import '../remote/remote_sync_data_source.dart';
 import 'remote_change_envelope.dart';
+import 'stock_location_change_applier.dart';
 
 class OperationsChangeApplier {
   const OperationsChangeApplier(this.database);
@@ -19,7 +20,7 @@ class OperationsChangeApplier {
       await _user(envelope);
     } else if (type.startsWith('role.')) {
       await _role(envelope);
-    } else if (type == 'stock_location.create') {
+    } else if (type.startsWith('stock_location.')) {
       await _stockLocation(envelope);
     } else if (type.startsWith('inventory.')) {
       await _inventory(envelope);
@@ -565,43 +566,8 @@ class OperationsChangeApplier {
     }
   }
 
-  Future<void> _stockLocation(RemoteChangeEnvelope envelope) async {
-    final row = _requiredMap(envelope.result['stockLocation'], 'stockLocation');
-    final payload = envelope.commandPayload;
-    final id = envelope.change.aggregateId;
-    final existing = await (database.select(
-      database.stockLocations,
-    )..where((value) => value.id.equals(id))).getSingleOrNull();
-    if (row['is_default'] == true || payload['isDefault'] == true) {
-      await (database.update(database.stockLocations)..where(
-            (value) =>
-                value.organizationId.equals(envelope.change.organizationId) &
-                value.branchId.equals(envelope.change.branchId ?? ''),
-          ))
-          .write(const StockLocationsCompanion(isDefault: Value(false)));
-    }
-    final now = envelope.change.occurredAt;
-    await database
-        .into(database.stockLocations)
-        .insertOnConflictUpdate(
-          StockLocationsCompanion.insert(
-            id: id,
-            organizationId: envelope.change.organizationId,
-            branchId: _branchId(envelope),
-            code: _string(row['code']) ?? _requiredString(payload, 'code'),
-            name: _string(row['name']) ?? _requiredString(payload, 'name'),
-            locationType: Value(
-              _string(row['location_type']) ??
-                  _requiredString(payload, 'locationType'),
-            ),
-            isDefault: Value(
-              row['is_default'] == true || payload['isDefault'] == true,
-            ),
-            createdAt: existing?.createdAt ?? now,
-            updatedAt: now,
-          ),
-        );
-  }
+  Future<void> _stockLocation(RemoteChangeEnvelope envelope) =>
+      StockLocationChangeApplier(database).apply(envelope);
 
   Future<void> _inventory(RemoteChangeEnvelope envelope) async {
     if (envelope.commandType == 'inventory.policy.configure') {

@@ -10,6 +10,21 @@ import '../entities/stock_location.dart';
 abstract interface class InventoryRepository {
   Stream<List<StockLocation>> watchStockLocations({
     required BusinessContext context,
+    bool includeArchived = false,
+  });
+
+  Future<Result<void, Failure>> updateStockLocation({
+    required BusinessContext context,
+    required String locationId,
+    required StockLocationDraft draft,
+    required int expectedVersion,
+  });
+
+  Future<Result<void, Failure>> setStockLocationArchived({
+    required BusinessContext context,
+    required String locationId,
+    required bool archived,
+    required int expectedVersion,
   });
 
   Future<Result<String, Failure>> createStockLocation({

@@ -403,7 +403,7 @@ async function validateCorrectionLines(
       const location = await client.query<{location_type: string}>(
         `SELECT location_type FROM stock_locations
          WHERE id = $1 AND organization_id = $2 AND branch_id = $3
-           AND is_active = true AND deleted_at IS NULL`,
+           AND is_active = true AND deleted_at IS NULL FOR SHARE`,
         [destination, command.organizationId, command.branchId],
       );
       const locationType = location.rows[0]?.location_type;

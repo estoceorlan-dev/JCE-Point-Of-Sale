@@ -7,6 +7,12 @@ separate best-effort operations.
 
 ## Supported hardware
 
+Printer/scanner selection is deferred as of 2026-09-07. The
+[manual payment workflow](manual_payment_workflow.md) uses cashier-entered
+cash/card/QR tenders, manual cash handling and screen/PDF receipts until a
+printer is configured. No automatic payment-terminal integration is present.
+The transports below are implemented capabilities, not physical acceptance.
+
 - Keyboard-wedge barcode scanners that terminate scans with Enter, numpad
   Enter, or Tab.
 - Network thermal printers that accept ESC/POS bytes over TCP (normally port

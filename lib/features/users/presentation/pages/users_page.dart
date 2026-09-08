@@ -6,11 +6,14 @@ import '../../../../core/error/failure.dart';
 import '../../../../core/error/result.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/sync/sync_controller.dart';
+import '../../../../core/widgets/app_filter_dropdown.dart';
+import '../../../../core/widgets/app_page_header.dart';
 import '../../../../shared/models/user_account_status.dart';
 import '../../../../shared/models/permission.dart';
 import '../../../branches/domain/entities/branch_profile.dart';
 import '../../../branches/presentation/providers/branches_providers.dart';
 import '../../domain/entities/staff_account.dart';
+import '../../domain/entities/staff_directory_filter.dart';
 import '../providers/users_providers.dart';
 import '../widgets/role_form_dialog.dart';
 import '../widgets/staff_form_dialog.dart';
@@ -28,12 +31,16 @@ class _UsersPageState extends ConsumerState<UsersPage>
   late final TabController _tabs;
   final _searchController = TextEditingController();
   UserAccountStatus? _status;
+  String? _branchId;
+  String? _roleId;
+  var _pendingOnly = false;
   var _includeArchivedRoles = false;
   var _busy = false;
 
   @override
   void initState() {
     super.initState();
+    _branchId = widget.branchId;
     final session = ref.read(activeUserAdminSessionProvider);
     _tabs = TabController(
       length: 2,
@@ -43,6 +50,12 @@ class _UsersPageState extends ConsumerState<UsersPage>
           : 1,
       vsync: this,
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant UsersPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.branchId != widget.branchId) _branchId = widget.branchId;
   }
 
   @override
@@ -72,40 +85,24 @@ class _UsersPageState extends ConsumerState<UsersPage>
             AppSpacing.xxl,
             0,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Staff & Access',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Invite staff, control account status, branch assignments, roles, and permissions.',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
+          child: AppPageHeader(
+            title: 'Staff & Access',
+            description:
+                'Invite staff, control account status, branch assignments, roles, and permissions.',
+            action: ListenableBuilder(
+              listenable: _tabs,
+              builder: (context, _) => FilledButton.icon(
+                onPressed:
+                    _busy ||
+                        (_tabs.index == 0 ? !canManageStaff : !canManageRoles)
+                    ? null
+                    : _tabs.index == 0
+                    ? () => _openStaffDialog()
+                    : () => _openRoleDialog(),
+                icon: const Icon(Icons.add),
+                label: Text(_tabs.index == 0 ? 'Invite staff' : 'New role'),
               ),
-              ListenableBuilder(
-                listenable: _tabs,
-                builder: (context, _) => FilledButton.icon(
-                  onPressed:
-                      _busy ||
-                          (_tabs.index == 0 ? !canManageStaff : !canManageRoles)
-                      ? null
-                      : _tabs.index == 0
-                      ? () => _openStaffDialog()
-                      : () => _openRoleDialog(),
-                  icon: const Icon(Icons.add),
-                  label: Text(_tabs.index == 0 ? 'Invite staff' : 'New role'),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -139,10 +136,34 @@ class _UsersPageState extends ConsumerState<UsersPage>
   }
 
   Widget _staffTab(AsyncValue<List<StaffAccount>> value) {
+    final branches = ref.watch(
+      branchDirectoryProvider(const BranchQuery(includeArchived: true)),
+    );
+    final roles = ref.watch(roleDirectoryProvider(true));
+    final branchOptions = {
+      for (final branch in branches.asData?.value ?? <BranchProfile>[])
+        branch.id: '${branch.name}${branch.isActive ? '' : ' (archived)'}',
+    };
+    final roleOptions = {
+      for (final role in roles.asData?.value ?? <RoleDefinition>[])
+        role.id: '${role.name}${role.isActive ? '' : ' (archived)'}',
+    };
+    // Keep selected/assigned records usable while their directory is loading,
+    // unavailable, or has removed a historical option.
+    for (final account in value.asData?.value ?? <StaffAccount>[]) {
+      for (final assignment in account.assignments) {
+        if (assignment.branchId case final id?) {
+          branchOptions.putIfAbsent(id, () => assignment.branchName ?? id);
+        }
+        roleOptions.putIfAbsent(assignment.roleId, () => assignment.roleName);
+      }
+    }
+    if (_branchId case final id?) branchOptions.putIfAbsent(id, () => id);
+    if (_roleId case final id?) roleOptions.putIfAbsent(id, () => id);
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.xxl),
       children: [
-        if (widget.branchId != null)
+        if (_branchId != null)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.md),
             child: Text(
@@ -166,22 +187,54 @@ class _UsersPageState extends ConsumerState<UsersPage>
             ),
             SizedBox(
               width: 190,
-              child: DropdownButtonFormField<UserAccountStatus?>(
-                initialValue: _status,
-                decoration: const InputDecoration(labelText: 'Status'),
-                items: [
-                  const DropdownMenuItem(
-                    value: null,
-                    child: Text('All statuses'),
-                  ),
+              child: AppFilterDropdown<UserAccountStatus>(
+                key: const Key('staff-status-filter'),
+                value: _status,
+                label: 'Status',
+                allLabel: 'All statuses',
+                options: {
                   for (final status in UserAccountStatus.values)
-                    DropdownMenuItem(
-                      value: status,
-                      child: Text(_label(status.name)),
-                    ),
-                ],
+                    status: _label(status.name),
+                },
                 onChanged: (value) => setState(() => _status = value),
               ),
+            ),
+            SizedBox(
+              width: 240,
+              child: AppFilterDropdown<String>(
+                key: const Key('staff-branch-filter'),
+                label: 'Branch',
+                allLabel: 'All branches',
+                value: _branchId,
+                options: branchOptions,
+                onChanged: (value) => setState(() => _branchId = value),
+              ),
+            ),
+            SizedBox(
+              width: 240,
+              child: AppFilterDropdown<String>(
+                key: const Key('staff-role-filter'),
+                label: 'Role',
+                allLabel: 'All roles',
+                value: _roleId,
+                options: roleOptions,
+                onChanged: (value) => setState(() => _roleId = value),
+              ),
+            ),
+            FilterChip(
+              label: const Text('Pending sync'),
+              selected: _pendingOnly,
+              onSelected: (value) => setState(() => _pendingOnly = value),
+            ),
+            TextButton(
+              onPressed: () => setState(() {
+                _searchController.clear();
+                _status = null;
+                _branchId = null;
+                _roleId = null;
+                _pendingOnly = false;
+              }),
+              child: const Text('Clear filters'),
             ),
           ],
         ),
@@ -190,23 +243,14 @@ class _UsersPageState extends ConsumerState<UsersPage>
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => _ErrorCard(message: '$error'),
           data: (allStaff) {
-            final needle = _searchController.text.trim().toLowerCase();
-            final staff = allStaff.where((item) {
-              final matchesText =
-                  needle.isEmpty ||
-                  item.displayName.toLowerCase().contains(needle) ||
-                  item.email.toLowerCase().contains(needle);
-              final matchesBranch =
-                  widget.branchId == null ||
-                  item.assignments.any(
-                    (assignment) =>
-                        assignment.branchId == null ||
-                        assignment.branchId == widget.branchId,
-                  );
-              return matchesText &&
-                  matchesBranch &&
-                  (_status == null || item.status == _status);
-            }).toList();
+            final filter = StaffDirectoryFilter(
+              search: _searchController.text,
+              status: _status,
+              branchId: _branchId,
+              roleId: _roleId,
+              pendingOnly: _pendingOnly,
+            );
+            final staff = allStaff.where(filter.matches).toList();
             if (staff.isEmpty) {
               return const _EmptyCard(
                 icon: Icons.badge_outlined,
@@ -245,14 +289,33 @@ class _UsersPageState extends ConsumerState<UsersPage>
       ),
       leading: CircleAvatar(child: Text(_initials(account.displayName))),
       title: Text(account.displayName),
-      subtitle: Text(
-        [account.email, if (assignments.isNotEmpty) assignments].join('\n'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(account.email),
+          if (assignments.isNotEmpty) Text(assignments),
+          Wrap(
+            spacing: AppSpacing.sm,
+            children: [
+              _StatusChip(status: account.status),
+              if (account.pendingOperations > 0)
+                Tooltip(
+                  message:
+                      'Local changes awaiting server acceptance. '
+                      'Failed or conflicted changes remain pending until resolved.',
+                  child: Chip(
+                    avatar: const Icon(Icons.sync, size: 16),
+                    label: Text('${account.pendingOperations} pending sync'),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
       isThreeLine: assignments.isNotEmpty,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _StatusChip(status: account.status),
           PopupMenuButton<String>(
             enabled: !_busy,
             onSelected: (value) {

@@ -12,6 +12,7 @@ import '../widgets/inventory_policy_dialog.dart';
 import '../widgets/start_stock_count_dialog.dart';
 import '../widgets/stock_count_panel.dart';
 import '../widgets/stock_location_dialog.dart';
+import '../widgets/stock_location_panel.dart';
 import '../../../imports/domain/entities/csv_import.dart';
 import '../../../imports/presentation/widgets/csv_import_dialog.dart';
 
@@ -24,8 +25,10 @@ class InventoryPage extends ConsumerWidget {
     final locations = ref.watch(stockLocationsProvider).value ?? const [];
     final canManageSettings =
         session?.can(AppPermission.manageSettings) ?? false;
+    final canManageInventory =
+        session?.can(AppPermission.manageInventory) ?? false;
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final padding = constraints.maxWidth < AppBreakpoints.compact
@@ -43,6 +46,7 @@ class InventoryPage extends ConsumerWidget {
                   child: _InventoryHeader(
                     hasLocations: locations.isNotEmpty,
                     canManageSettings: canManageSettings,
+                    canManageInventory: canManageInventory,
                     onCreateLocation: () => _openLocation(context),
                     onAdjust: () => _openAdjustment(context),
                     onStartCount: () => _openCount(context),
@@ -72,6 +76,10 @@ class InventoryPage extends ConsumerWidget {
                       icon: Icon(Icons.fact_check_outlined),
                       text: 'Stock counts',
                     ),
+                    Tab(
+                      icon: Icon(Icons.warehouse_outlined),
+                      text: 'Locations',
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -81,6 +89,7 @@ class InventoryPage extends ConsumerWidget {
                       _ScrollablePanel(child: InventoryBalancePanel()),
                       _ScrollablePanel(child: InventoryMovementPanel()),
                       _ScrollablePanel(child: StockCountPanel()),
+                      _ScrollablePanel(child: StockLocationPanel()),
                     ],
                   ),
                 ),
@@ -170,6 +179,7 @@ class _InventoryHeader extends StatelessWidget {
   const _InventoryHeader({
     required this.hasLocations,
     required this.canManageSettings,
+    required this.canManageInventory,
     required this.onCreateLocation,
     required this.onAdjust,
     required this.onStartCount,
@@ -178,6 +188,7 @@ class _InventoryHeader extends StatelessWidget {
 
   final bool hasLocations;
   final bool canManageSettings;
+  final bool canManageInventory;
   final VoidCallback onCreateLocation;
   final VoidCallback onAdjust;
   final VoidCallback onStartCount;
@@ -207,7 +218,7 @@ class _InventoryHeader extends StatelessWidget {
           ),
         ),
         OutlinedButton.icon(
-          onPressed: onCreateLocation,
+          onPressed: canManageInventory ? onCreateLocation : null,
           icon: const Icon(Icons.warehouse_outlined),
           label: const Text('New location'),
         ),
@@ -218,12 +229,12 @@ class _InventoryHeader extends StatelessWidget {
             label: const Text('Policy'),
           ),
         OutlinedButton.icon(
-          onPressed: hasLocations ? onStartCount : null,
+          onPressed: canManageInventory && hasLocations ? onStartCount : null,
           icon: const Icon(Icons.fact_check_outlined),
           label: const Text('Start count'),
         ),
         FilledButton.icon(
-          onPressed: hasLocations ? onAdjust : null,
+          onPressed: canManageInventory && hasLocations ? onAdjust : null,
           icon: const Icon(Icons.tune),
           label: const Text('Adjust stock'),
         ),

@@ -17,23 +17,26 @@ export async function bindStaffIdentity(
     organizationId: string;
     userId: string;
     targetFirebaseUid: string;
+    targetEmail: string;
   },
 ): Promise<{email: string; displayName: string}> {
-  await requireOrganizationPermission(
-    client,
-    input.actorFirebaseUid,
-    input.organizationId,
-    "users.manage",
-  );
   await client.query("BEGIN");
   try {
+  // Share the lock used by user/role commands, then read current authorization.
+  // Permission may have changed while Firebase identity lookup was in flight.
+  await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
+    [`access-administration:${input.organizationId}`]);
+  await requireOrganizationPermission(
+    client, input.actorFirebaseUid, input.organizationId, "users.manage",
+  );
   const result = await client.query(
     `UPDATE app_users SET firebase_uid = $3, updated_at = now(),
        version = version + 1
      WHERE id = $1 AND organization_id = $2 AND status = 'invited'
        AND deleted_at IS NULL AND (firebase_uid IS NULL OR firebase_uid = $3)
+       AND lower(email) = lower($4)
      RETURNING *`,
-    [input.userId, input.organizationId, input.targetFirebaseUid],
+    [input.userId, input.organizationId, input.targetFirebaseUid, input.targetEmail],
   );
   if (result.rowCount !== 1) {
     throw new StaffInviteError(
@@ -112,8 +115,11 @@ export async function acceptStaffInvite(
   );
   if (input.organizationId !== undefined && result.rowCount === 0) {
     const active = await client.query(
-      `SELECT 1 FROM app_users WHERE organization_id = $1 AND firebase_uid = $2
-       AND lower(email) = lower($3) AND status = 'active' AND deleted_at IS NULL`,
+      `SELECT 1 FROM app_users au
+       JOIN organizations o ON o.id = au.organization_id
+         AND o.is_active = true AND o.deleted_at IS NULL
+       WHERE au.organization_id = $1 AND au.firebase_uid = $2
+       AND lower(au.email) = lower($3) AND au.status = 'active' AND au.deleted_at IS NULL`,
       [input.organizationId, input.firebaseUid, input.email],
     );
     if (active.rowCount !== 1) {
@@ -169,6 +175,8 @@ async function requireOrganizationPermission(
 ): Promise<void> {
   const access = await client.query(
     `SELECT 1 FROM app_users au
+     JOIN organizations o ON o.id = au.organization_id
+       AND o.is_active = true AND o.deleted_at IS NULL
      JOIN user_role_assignments ura ON ura.user_id = au.id
        AND ura.organization_id = au.organization_id
        AND ura.branch_id IS NULL AND ura.revoked_at IS NULL
