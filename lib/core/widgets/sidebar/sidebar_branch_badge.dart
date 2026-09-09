@@ -14,11 +14,13 @@ class SidebarBranchBadge extends StatelessWidget {
     required this.session,
     required this.onSelected,
     this.compact = false,
+    this.iconOnly = false,
   });
 
   final AuthSession session;
   final BranchSelectionCallback onSelected;
   final bool compact;
+  final bool iconOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -60,18 +62,23 @@ class SidebarBranchBadge extends StatelessWidget {
         ),
         child: Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: compact ? AppSpacing.sm : AppSpacing.md,
+            horizontal: compact || iconOnly ? AppSpacing.sm : AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
           child: Row(
-            mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
+            mainAxisSize: compact || iconOnly
+                ? MainAxisSize.min
+                : MainAxisSize.max,
+            mainAxisAlignment: iconOnly
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.start,
             children: [
               Icon(
                 Icons.storefront_outlined,
                 color: theme.colorScheme.primary,
                 size: 20,
               ),
-              if (!compact) ...[
+              if (!compact && !iconOnly) ...[
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
@@ -92,8 +99,10 @@ class SidebarBranchBadge extends StatelessWidget {
                   ),
                 ),
               ],
-              const SizedBox(width: AppSpacing.xs),
-              const Icon(Icons.unfold_more, size: 18),
+              if (!iconOnly) ...[
+                const SizedBox(width: AppSpacing.xs),
+                const Icon(Icons.unfold_more, size: 18),
+              ],
             ],
           ),
         ),

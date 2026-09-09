@@ -11,6 +11,7 @@ class SidebarAction extends StatelessWidget {
     required this.onTap,
     this.selected = false,
     this.destructive = false,
+    this.compact = false,
   });
 
   final String label;
@@ -18,6 +19,7 @@ class SidebarAction extends StatelessWidget {
   final VoidCallback onTap;
   final bool selected;
   final bool destructive;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -26,39 +28,51 @@ class SidebarAction extends StatelessWidget {
     final actionColor = destructive ? colorScheme.error : colorScheme.onSurface;
     final foregroundColor = selected ? colorScheme.primary : actionColor;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.md),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.md,
-          ),
-          decoration: BoxDecoration(
-            color: selected
-                ? colorScheme.primary.withValues(alpha: 0.1)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppRadii.md),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: foregroundColor, size: 21),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Text(
-                  label,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: foregroundColor,
+    final action = Semantics(
+      button: true,
+      selected: selected,
+      label: compact ? label : null,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: selected
+                  ? colorScheme.primary.withValues(alpha: 0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppRadii.md),
+            ),
+            child: compact
+                ? Center(child: Icon(icon, color: foregroundColor, size: 24))
+                : Row(
+                    children: [
+                      Icon(icon, color: foregroundColor, size: 24),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: foregroundColor,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-            ],
           ),
         ),
       ),
     );
+    return compact
+        ? Tooltip(message: label, excludeFromSemantics: true, child: action)
+        : action;
   }
 }

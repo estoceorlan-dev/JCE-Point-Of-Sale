@@ -32,11 +32,12 @@ class AppNavigationShell extends ConsumerWidget {
     final syncState = ref.watch(syncStateProvider).asData?.value;
 
     return AppSidebarLayout(
-      sidebarBuilder: (context, close, isDesktop) => DesktopSidebar(
+      sidebarBuilder: (context, close, isDesktop, collapsed) => DesktopSidebar(
         items: navigationItems,
         selectedRoute: selectedRoute,
         session: session,
-        onClose: close,
+        onClose: isDesktop ? null : close,
+        collapsed: collapsed,
         onDestinationSelected: (item) {
           if (!isDesktop) close();
           _goToItem(item);

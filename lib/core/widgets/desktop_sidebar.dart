@@ -22,7 +22,8 @@ class DesktopSidebar extends StatelessWidget {
     required this.onSettingsSelected,
     required this.onBranchSelected,
     required this.onLogout,
-    required this.onClose,
+    this.onClose,
+    this.collapsed = false,
   });
 
   static const _logoAsset = 'assets/images/jce_logo.jpg';
@@ -34,7 +35,8 @@ class DesktopSidebar extends StatelessWidget {
   final VoidCallback onSettingsSelected;
   final BranchSelectionCallback onBranchSelected;
   final VoidCallback onLogout;
-  final VoidCallback onClose;
+  final VoidCallback? onClose;
+  final bool collapsed;
 
   @override
   Widget build(BuildContext context) {
@@ -59,97 +61,122 @@ class DesktopSidebar extends StatelessWidget {
       ),
       child: SafeArea(
         child: LayoutBuilder(
-          builder: (context, constraints) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SidebarLogo(
-                asset: _logoAsset,
-                title: AppConstants.appName,
-                subtitle: 'Dry Goods Trading',
-                trailing: SidebarToggle(expanded: true, onPressed: onClose),
-              ),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                  ),
-                  children: [
-                    for (final section in AppNavigationSection.values)
-                      if (mainItems.any((item) => item.section == section)) ...[
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(
-                            AppSpacing.sm,
-                            AppSpacing.md,
-                            AppSpacing.sm,
-                            AppSpacing.xs,
-                          ),
-                          child: Text(
-                            section.label.toUpperCase(),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ),
-                        for (final item in mainItems.where(
+          builder: (context, constraints) {
+            final compact =
+                collapsed ||
+                constraints.maxWidth < AppSpacing.sidebarWidth - AppSpacing.xxl;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SidebarLogo(
+                  asset: _logoAsset,
+                  title: AppConstants.appName,
+                  subtitle: 'Dry Goods Trading',
+                  compact: compact,
+                  trailing: onClose == null
+                      ? null
+                      : SidebarToggle(expanded: true, onPressed: onClose!),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
+                    children: [
+                      for (final section in AppNavigationSection.values)
+                        if (mainItems.any(
                           (item) => item.section == section,
                         )) ...[
-                          SidebarAction(
-                            label: item.label,
-                            icon: item.route == selectedRoute
-                                ? item.selectedIcon
-                                : item.icon,
-                            selected: item.route == selectedRoute,
-                            onTap: () => onDestinationSelected(item),
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
+                          if (compact)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: AppSpacing.sm,
+                              ),
+                              child: Divider(),
+                            )
+                          else
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.sm,
+                                AppSpacing.md,
+                                AppSpacing.sm,
+                                AppSpacing.xs,
+                              ),
+                              child: Text(
+                                section.label.toUpperCase(),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ),
+                          for (final item in mainItems.where(
+                            (item) => item.section == section,
+                          )) ...[
+                            SidebarAction(
+                              compact: compact,
+                              label: item.label,
+                              icon: item.route == selectedRoute
+                                  ? item.selectedIcon
+                                  : item.icon,
+                              selected: item.route == selectedRoute,
+                              onTap: () => onDestinationSelected(item),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                          ],
                         ],
-                      ],
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: constraints.maxHeight * 0.5,
-                ),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SidebarUserPanel(session: session),
-                        const SizedBox(height: AppSpacing.md),
-                        if (canOpenSettings) ...[
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: constraints.maxHeight * 0.5,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.all(
+                        compact ? AppSpacing.md : AppSpacing.lg,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SidebarUserPanel(session: session, compact: compact),
+                          const SizedBox(height: AppSpacing.md),
+                          if (canOpenSettings) ...[
+                            SidebarAction(
+                              compact: compact,
+                              label: 'Settings',
+                              icon: selectedRoute == AppRoute.settings
+                                  ? Icons.settings
+                                  : Icons.settings_outlined,
+                              selected: selectedRoute == AppRoute.settings,
+                              onTap: onSettingsSelected,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                          ],
                           SidebarAction(
-                            label: 'Settings',
-                            icon: selectedRoute == AppRoute.settings
-                                ? Icons.settings
-                                : Icons.settings_outlined,
-                            selected: selectedRoute == AppRoute.settings,
-                            onTap: onSettingsSelected,
+                            compact: compact,
+                            label: 'Logout',
+                            icon: Icons.logout,
+                            onTap: onLogout,
+                            destructive: true,
                           ),
-                          const SizedBox(height: AppSpacing.xs),
+                          const SizedBox(height: AppSpacing.lg),
+                          SidebarBranchBadge(
+                            session: session,
+                            onSelected: onBranchSelected,
+                            compact: compact,
+                            iconOnly: compact,
+                          ),
                         ],
-                        SidebarAction(
-                          label: 'Logout',
-                          icon: Icons.logout,
-                          onTap: onLogout,
-                          destructive: true,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        SidebarBranchBadge(
-                          session: session,
-                          onSelected: onBranchSelected,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );

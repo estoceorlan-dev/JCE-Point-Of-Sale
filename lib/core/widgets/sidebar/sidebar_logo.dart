@@ -9,25 +9,30 @@ class SidebarLogo extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.trailing,
+    this.compact = false,
   });
 
   final String asset;
   final String title;
   final String subtitle;
   final Widget? trailing;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
+      padding: EdgeInsets.fromLTRB(
+        compact ? AppSpacing.md : AppSpacing.lg,
         AppSpacing.xl,
-        AppSpacing.lg,
+        compact ? AppSpacing.md : AppSpacing.lg,
         AppSpacing.lg,
       ),
       child: Row(
+        mainAxisAlignment: compact
+            ? MainAxisAlignment.center
+            : MainAxisAlignment.start,
         children: [
           Container(
             width: 42,
@@ -40,27 +45,29 @@ class SidebarLogo extends StatelessWidget {
             ),
             child: ClipOval(child: Image.asset(asset, fit: BoxFit.cover)),
           ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium,
-                ),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelMedium,
-                ),
-              ],
+          if (!compact) ...[
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelMedium,
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (trailing != null) trailing!,
+            if (trailing != null) trailing!,
+          ],
         ],
       ),
     );

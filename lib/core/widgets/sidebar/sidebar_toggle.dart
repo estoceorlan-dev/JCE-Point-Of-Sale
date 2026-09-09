@@ -7,15 +7,19 @@ class SidebarToggle extends StatelessWidget {
     super.key,
     required this.expanded,
     required this.onPressed,
+    this.collapseToRail = false,
   });
 
   final bool expanded;
   final VoidCallback onPressed;
+  final bool collapseToRail;
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      tooltip: expanded ? 'Close sidebar' : 'Open sidebar',
+      tooltip: collapseToRail
+          ? (expanded ? 'Collapse sidebar' : 'Expand sidebar')
+          : (expanded ? 'Close sidebar' : 'Open sidebar'),
       onPressed: onPressed,
       style: IconButton.styleFrom(
         shape: RoundedRectangleBorder(

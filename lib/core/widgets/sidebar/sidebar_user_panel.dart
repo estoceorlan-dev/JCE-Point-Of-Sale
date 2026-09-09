@@ -4,9 +4,14 @@ import '../../../features/auth/domain/entities/auth_session.dart';
 import '../../theme/app_spacing.dart';
 
 class SidebarUserPanel extends StatelessWidget {
-  const SidebarUserPanel({super.key, required this.session});
+  const SidebarUserPanel({
+    super.key,
+    required this.session,
+    this.compact = false,
+  });
 
   final AuthSession session;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -19,17 +24,24 @@ class SidebarUserPanel extends StatelessWidget {
         ? 'No role'
         : session.roles.map((role) => role.name).join(', ');
 
+    final avatar = CircleAvatar(
+      radius: 17,
+      backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
+      foregroundColor: colorScheme.primary,
+      child: Text(
+        initialSource.substring(0, 1).toUpperCase(),
+        style: const TextStyle(fontWeight: FontWeight.w800),
+      ),
+    );
+    if (compact) {
+      return Tooltip(
+        message: '$initialSource\n$roleLabel',
+        child: Center(child: avatar),
+      );
+    }
     return Row(
       children: [
-        CircleAvatar(
-          radius: 17,
-          backgroundColor: colorScheme.primary.withValues(alpha: 0.12),
-          foregroundColor: colorScheme.primary,
-          child: Text(
-            initialSource.substring(0, 1).toUpperCase(),
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-        ),
+        avatar,
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(

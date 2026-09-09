@@ -7,6 +7,7 @@ abstract final class AppSpacing {
   static const double xxl = 32;
 
   static const double sidebarWidth = 264;
+  static const double collapsedSidebarWidth = 72;
   static const double mobileNavHeight = 78;
   static const double contentMaxWidth = 1180;
 }

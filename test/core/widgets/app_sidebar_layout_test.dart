@@ -8,6 +8,7 @@ import 'package:jce_pos/core/theme/app_theme.dart';
 import 'package:jce_pos/core/widgets/app_sidebar_layout.dart';
 import 'package:jce_pos/core/widgets/desktop_sidebar.dart';
 import 'package:jce_pos/core/widgets/shell_top_bar.dart';
+import 'package:jce_pos/core/widgets/sidebar/sidebar_toggle.dart';
 import 'package:jce_pos/features/auth/data/repositories/hardcoded_auth_repository.dart';
 import 'package:jce_pos/features/auth/domain/entities/auth_session.dart';
 
@@ -29,6 +30,9 @@ void main() {
     Size size = const Size(1280, 800),
     bool reduceMotion = false,
     bool dark = false,
+    ValueChanged<AppNavigationItem>? onDestinationSelected,
+    VoidCallback? onSettingsSelected,
+    VoidCallback? onLogout,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
@@ -45,18 +49,21 @@ void main() {
             child: child!,
           ),
           home: AppSidebarLayout(
-            sidebarBuilder: (context, close, isDesktop) => DesktopSidebar(
-              items: navigationItemsForSession(session),
-              selectedRoute: AppRoute.dashboard,
-              session: session,
-              onClose: close,
-              onDestinationSelected: (_) {
-                if (!isDesktop) close();
-              },
-              onSettingsSelected: close,
-              onBranchSelected: (_, _) {},
-              onLogout: close,
-            ),
+            sidebarBuilder: (context, close, isDesktop, collapsed) =>
+                DesktopSidebar(
+                  items: navigationItemsForSession(session),
+                  selectedRoute: AppRoute.dashboard,
+                  session: session,
+                  onClose: isDesktop ? null : close,
+                  collapsed: collapsed,
+                  onDestinationSelected: (item) {
+                    onDestinationSelected?.call(item);
+                    if (!isDesktop) close();
+                  },
+                  onSettingsSelected: onSettingsSelected ?? close,
+                  onBranchSelected: (_, _) {},
+                  onLogout: onLogout ?? close,
+                ),
             headerBuilder: (context, toggle, isDesktop) => ShellTopBar(
               title: 'Registers & Hardware',
               session: session,
@@ -95,23 +102,70 @@ void main() {
     await mount(tester);
     await tester.pumpAndSettle();
     expect(bodyLeft(tester), AppSpacing.sidebarWidth);
+    expect(find.byType(SidebarToggle), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'Unsaved sale');
 
-    await tester.tap(find.byTooltip('Close sidebar').first);
+    await tester.tap(find.byTooltip('Collapse sidebar').first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 150));
-    expect(bodyLeft(tester), greaterThan(0));
+    expect(bodyLeft(tester), greaterThan(AppSpacing.collapsedSidebarWidth));
     expect(bodyLeft(tester), lessThan(AppSpacing.sidebarWidth));
     expect(tester.takeException(), isNull);
     await tester.pumpAndSettle();
-    expect(bodyLeft(tester), 0);
+    expect(bodyLeft(tester), AppSpacing.collapsedSidebarWidth);
     expect(find.text('Unsaved sale'), findsOneWidget);
     expect(find.text('Logout').hitTestable(), findsNothing);
+    expect(find.byType(SidebarToggle), findsOneWidget);
+    expect(find.byTooltip('POS').hitTestable(), findsOneWidget);
+    expect(find.byTooltip('Settings').hitTestable(), findsOneWidget);
+    expect(find.byTooltip('Logout').hitTestable(), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Open sidebar'));
+    await tester.tap(find.byTooltip('Expand sidebar'));
     await tester.pumpAndSettle();
     expect(bodyLeft(tester), AppSpacing.sidebarWidth);
     expect(find.text('Unsaved sale'), findsOneWidget);
+    await unmount(tester);
+  });
+
+  testWidgets('collapsed icons navigate and retain account actions', (
+    tester,
+  ) async {
+    AppRoute? destination;
+    var settingsTapped = false;
+    var logoutTapped = false;
+    await mount(
+      tester,
+      onDestinationSelected: (item) => destination = item.route,
+      onSettingsSelected: () => settingsTapped = true,
+      onLogout: () => logoutTapped = true,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Collapse sidebar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('POS'));
+    expect(destination, AppRoute.pos);
+    expect(bodyLeft(tester), AppSpacing.collapsedSidebarWidth);
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.tap(find.byTooltip('Logout'));
+    expect(settingsTapped, isTrue);
+    expect(logoutTapped, isTrue);
+    expect(
+      find.image(const AssetImage('assets/images/jce_logo.jpg')),
+      findsOneWidget,
+    );
+    expect(find.byType(CircleAvatar), findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(DesktopSidebar),
+        matching: find.byTooltip('Switch branch'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byWidgetPredicate((widget) => widget is PopupMenuItem),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
     await unmount(tester);
   });
 
@@ -122,34 +176,34 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump(const Duration(milliseconds: 9699));
     expect(bodyLeft(tester), AppSpacing.sidebarWidth);
-    expect(find.byTooltip('Open sidebar'), findsNothing);
+    expect(find.byTooltip('Expand sidebar'), findsNothing);
     await tester.pump(const Duration(milliseconds: 1));
-    expect(find.byTooltip('Open sidebar'), findsOneWidget);
+    expect(find.byTooltip('Expand sidebar'), findsOneWidget);
     await tester.pumpAndSettle();
-    expect(bodyLeft(tester), 0);
+    expect(bodyLeft(tester), AppSpacing.collapsedSidebarWidth);
 
-    await tester.tap(find.byTooltip('Open sidebar'));
+    await tester.tap(find.byTooltip('Expand sidebar'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 9));
     expect(bodyLeft(tester), AppSpacing.sidebarWidth);
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
-    expect(bodyLeft(tester), 0);
+    expect(bodyLeft(tester), AppSpacing.collapsedSidebarWidth);
     await unmount(tester);
   });
 
   testWidgets('manual close cancels the old countdown', (tester) async {
     await mount(tester);
     await tester.pump(const Duration(seconds: 6));
-    await tester.tap(find.byTooltip('Close sidebar').first);
+    await tester.tap(find.byTooltip('Collapse sidebar').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Open sidebar'));
+    await tester.tap(find.byTooltip('Expand sidebar'));
     await tester.pump();
     await tester.pump(const Duration(seconds: 5));
     expect(bodyLeft(tester), AppSpacing.sidebarWidth);
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();
-    expect(bodyLeft(tester), 0);
+    expect(bodyLeft(tester), AppSpacing.collapsedSidebarWidth);
     await unmount(tester);
   });
 
@@ -269,10 +323,10 @@ void main() {
     (tester) async {
       await mount(tester, reduceMotion: true);
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Close sidebar').first);
+      await tester.tap(find.byTooltip('Collapse sidebar').first);
       await tester.pump();
-      expect(bodyLeft(tester), 0);
-      await tester.tap(find.byTooltip('Open sidebar'));
+      expect(bodyLeft(tester), AppSpacing.collapsedSidebarWidth);
+      await tester.tap(find.byTooltip('Expand sidebar'));
       await tester.pump();
       expect(bodyLeft(tester), AppSpacing.sidebarWidth);
       await unmount(tester);

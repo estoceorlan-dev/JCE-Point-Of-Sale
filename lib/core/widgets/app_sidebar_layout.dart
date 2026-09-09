@@ -8,7 +8,7 @@ import '../theme/app_spacing.dart';
 import 'sidebar/sidebar_controller.dart';
 import 'sidebar/sidebar_toggle.dart';
 
-/// Slides navigation beside wide content and uses a modal drawer on compact
+/// Resizes navigation to an icon rail and uses a modal drawer on compact
 /// screens. The body stays in the same tree position when the window resizes.
 class AppSidebarLayout extends ConsumerStatefulWidget {
   const AppSidebarLayout({
@@ -23,6 +23,7 @@ class AppSidebarLayout extends ConsumerStatefulWidget {
     BuildContext context,
     VoidCallback close,
     bool isDesktop,
+    bool collapsed,
   )
   sidebarBuilder;
   final Widget Function(BuildContext context, Widget toggle, bool isDesktop)
@@ -91,7 +92,7 @@ class _AppSidebarLayoutState extends ConsumerState<AppSidebarLayout> {
                     constraints.maxWidth - AppSpacing.xxl - AppSpacing.lg,
                   ),
                 ),
-                child: widget.sidebarBuilder(context, close, isDesktop),
+                child: widget.sidebarBuilder(context, close, isDesktop, false),
               ),
               onDrawerChanged: isDesktop ? null : controller.setExpanded,
               body: Row(
@@ -100,7 +101,12 @@ class _AppSidebarLayoutState extends ConsumerState<AppSidebarLayout> {
                     expanded: isDesktop && expanded,
                     animate: isDesktop,
                     child: isDesktop
-                        ? widget.sidebarBuilder(context, close, isDesktop)
+                        ? widget.sidebarBuilder(
+                            context,
+                            close,
+                            isDesktop,
+                            !expanded,
+                          )
                         : const SizedBox.shrink(),
                   ),
                   Expanded(
@@ -113,6 +119,7 @@ class _AppSidebarLayoutState extends ConsumerState<AppSidebarLayout> {
                             SidebarToggle(
                               expanded: expanded,
                               onPressed: toggle,
+                              collapseToRail: isDesktop,
                             ),
                             isDesktop,
                           ),
@@ -147,31 +154,27 @@ class _AnimatedSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0, end: expanded ? 1 : 0),
+    return AnimatedContainer(
+      width: !animate
+          ? 0
+          : expanded
+          ? AppSpacing.sidebarWidth
+          : AppSpacing.collapsedSidebarWidth,
       duration: !animate || MediaQuery.disableAnimationsOf(context)
           ? Duration.zero
           : const Duration(milliseconds: 300),
       curve: Curves.easeInOutCubic,
-      child: ExcludeFocus(
-        excluding: !expanded,
-        child: ExcludeSemantics(
-          excluding: !expanded,
-          child: IgnorePointer(
-            ignoring: !expanded,
-            child: TickerMode(enabled: expanded, child: child),
+      clipBehavior: Clip.hardEdge,
+      decoration: const BoxDecoration(),
+      child: LayoutBuilder(
+        builder: (context, constraints) => OverflowBox(
+          alignment: Alignment.centerLeft,
+          minWidth: AppSpacing.collapsedSidebarWidth,
+          maxWidth: math.max(
+            AppSpacing.collapsedSidebarWidth,
+            constraints.maxWidth,
           ),
-        ),
-      ),
-      builder: (context, value, child) => SizedBox(
-        width: AppSpacing.sidebarWidth * value,
-        child: ClipRect(
-          child: OverflowBox(
-            alignment: Alignment.centerRight,
-            minWidth: AppSpacing.sidebarWidth,
-            maxWidth: AppSpacing.sidebarWidth,
-            child: Opacity(opacity: value, child: child),
-          ),
+          child: child,
         ),
       ),
     );
