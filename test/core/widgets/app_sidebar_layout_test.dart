@@ -49,20 +49,21 @@ void main() {
             child: child!,
           ),
           home: AppSidebarLayout(
-            sidebarBuilder: (context, close, isDesktop, collapsed) =>
+            sidebarBuilder: (context, toggle, isDesktop, collapsed) =>
                 DesktopSidebar(
                   items: navigationItemsForSession(session),
                   selectedRoute: AppRoute.dashboard,
                   session: session,
-                  onClose: isDesktop ? null : close,
+                  onToggle: toggle,
+                  collapseToRail: isDesktop,
                   collapsed: collapsed,
                   onDestinationSelected: (item) {
                     onDestinationSelected?.call(item);
-                    if (!isDesktop) close();
+                    if (!isDesktop) toggle();
                   },
-                  onSettingsSelected: onSettingsSelected ?? close,
+                  onSettingsSelected: onSettingsSelected ?? toggle,
                   onBranchSelected: (_, _) {},
-                  onLogout: onLogout ?? close,
+                  onLogout: onLogout ?? toggle,
                 ),
             headerBuilder: (context, toggle, isDesktop) => ShellTopBar(
               title: 'Registers & Hardware',
@@ -103,6 +104,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(bodyLeft(tester), AppSpacing.sidebarWidth);
     expect(find.byType(SidebarToggle), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(DesktopSidebar),
+        matching: find.byType(SidebarToggle),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(ShellTopBar),
+        matching: find.byType(SidebarToggle),
+      ),
+      findsNothing,
+    );
     await tester.enterText(find.byType(TextField), 'Unsaved sale');
 
     await tester.tap(find.byTooltip('Collapse sidebar').first);
@@ -169,24 +184,18 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('auto-collapses at 10 seconds and starts a fresh timer on open', (
+  testWidgets('auto-collapses 10 seconds after the last sidebar interaction', (
     tester,
   ) async {
     await mount(tester);
     await tester.pump(const Duration(milliseconds: 300));
-    await tester.pump(const Duration(milliseconds: 9699));
-    expect(bodyLeft(tester), AppSpacing.sidebarWidth);
-    expect(find.byTooltip('Expand sidebar'), findsNothing);
-    await tester.pump(const Duration(milliseconds: 1));
-    expect(find.byTooltip('Expand sidebar'), findsOneWidget);
-    await tester.pumpAndSettle();
-    expect(bodyLeft(tester), AppSpacing.collapsedSidebarWidth);
-
-    await tester.tap(find.byTooltip('Expand sidebar'));
-    await tester.pump();
     await tester.pump(const Duration(seconds: 9));
     expect(bodyLeft(tester), AppSpacing.sidebarWidth);
-    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('POS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 9999));
+    expect(bodyLeft(tester), AppSpacing.sidebarWidth);
+    await tester.pump(const Duration(milliseconds: 1));
     await tester.pumpAndSettle();
     expect(bodyLeft(tester), AppSpacing.collapsedSidebarWidth);
     await unmount(tester);

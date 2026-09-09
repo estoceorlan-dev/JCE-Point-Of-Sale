@@ -21,12 +21,12 @@ class AppSidebarLayout extends ConsumerStatefulWidget {
 
   final Widget Function(
     BuildContext context,
-    VoidCallback close,
+    VoidCallback toggle,
     bool isDesktop,
     bool collapsed,
   )
   sidebarBuilder;
-  final Widget Function(BuildContext context, Widget toggle, bool isDesktop)
+  final Widget Function(BuildContext context, Widget? toggle, bool isDesktop)
   headerBuilder;
   final Widget body;
   final Widget? bottomNavigationBar;
@@ -67,17 +67,24 @@ class _AppSidebarLayoutState extends ConsumerState<AppSidebarLayout> {
               }
             });
 
-            void close() {
-              controller.close();
-              _scaffoldKey.currentState?.closeDrawer();
-            }
-
             void toggle() {
               controller.toggle();
               if (!isDesktop && ref.read(provider)) {
                 _scaffoldKey.currentState?.openDrawer();
               }
             }
+
+            Widget sidebar(bool collapsed) => Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (_) => controller.registerInteraction(),
+              onPointerSignal: (_) => controller.registerInteraction(),
+              child: widget.sidebarBuilder(
+                context,
+                toggle,
+                isDesktop,
+                collapsed,
+              ),
+            );
 
             return Scaffold(
               key: _scaffoldKey,
@@ -92,7 +99,7 @@ class _AppSidebarLayoutState extends ConsumerState<AppSidebarLayout> {
                     constraints.maxWidth - AppSpacing.xxl - AppSpacing.lg,
                   ),
                 ),
-                child: widget.sidebarBuilder(context, close, isDesktop, false),
+                child: sidebar(false),
               ),
               onDrawerChanged: isDesktop ? null : controller.setExpanded,
               body: Row(
@@ -101,12 +108,7 @@ class _AppSidebarLayoutState extends ConsumerState<AppSidebarLayout> {
                     expanded: isDesktop && expanded,
                     animate: isDesktop,
                     child: isDesktop
-                        ? widget.sidebarBuilder(
-                            context,
-                            close,
-                            isDesktop,
-                            !expanded,
-                          )
+                        ? sidebar(!expanded)
                         : const SizedBox.shrink(),
                   ),
                   Expanded(
@@ -116,11 +118,12 @@ class _AppSidebarLayoutState extends ConsumerState<AppSidebarLayout> {
                           bottom: false,
                           child: widget.headerBuilder(
                             context,
-                            SidebarToggle(
-                              expanded: expanded,
-                              onPressed: toggle,
-                              collapseToRail: isDesktop,
-                            ),
+                            isDesktop
+                                ? null
+                                : SidebarToggle(
+                                    expanded: expanded,
+                                    onPressed: toggle,
+                                  ),
                             isDesktop,
                           ),
                         ),

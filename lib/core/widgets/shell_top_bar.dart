@@ -22,7 +22,7 @@ class ShellTopBar extends StatelessWidget {
 
   final String title;
   final AuthSession session;
-  final Widget sidebarToggle;
+  final Widget? sidebarToggle;
   final bool isDesktop;
   final BranchSelectionCallback onBranchSelected;
   final VoidCallback onRefreshAccess;
@@ -49,8 +49,10 @@ class ShellTopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          sidebarToggle,
-          const SizedBox(width: AppSpacing.sm),
+          if (sidebarToggle != null) ...[
+            sidebarToggle!,
+            const SizedBox(width: AppSpacing.sm),
+          ],
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

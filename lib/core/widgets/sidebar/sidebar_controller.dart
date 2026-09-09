@@ -24,6 +24,13 @@ class SidebarController extends AutoDisposeFamilyNotifier<bool, bool> {
 
   void close() => setExpanded(false);
 
+  /// Restarts auto-collapse from the user's most recent sidebar interaction.
+  void registerInteraction() {
+    if (state) {
+      _startCountdown();
+    }
+  }
+
   void setExpanded(bool expanded) {
     if (state == expanded) return;
     _collapseTimer?.cancel();

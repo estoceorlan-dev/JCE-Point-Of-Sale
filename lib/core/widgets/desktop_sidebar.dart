@@ -22,7 +22,8 @@ class DesktopSidebar extends StatelessWidget {
     required this.onSettingsSelected,
     required this.onBranchSelected,
     required this.onLogout,
-    this.onClose,
+    required this.onToggle,
+    required this.collapseToRail,
     this.collapsed = false,
   });
 
@@ -35,7 +36,8 @@ class DesktopSidebar extends StatelessWidget {
   final VoidCallback onSettingsSelected;
   final BranchSelectionCallback onBranchSelected;
   final VoidCallback onLogout;
-  final VoidCallback? onClose;
+  final VoidCallback onToggle;
+  final bool collapseToRail;
   final bool collapsed;
 
   @override
@@ -73,9 +75,11 @@ class DesktopSidebar extends StatelessWidget {
                   title: AppConstants.appName,
                   subtitle: 'Dry Goods Trading',
                   compact: compact,
-                  trailing: onClose == null
-                      ? null
-                      : SidebarToggle(expanded: true, onPressed: onClose!),
+                  trailing: SidebarToggle(
+                    expanded: !compact,
+                    onPressed: onToggle,
+                    collapseToRail: collapseToRail,
+                  ),
                 ),
                 Expanded(
                   child: ListView(
