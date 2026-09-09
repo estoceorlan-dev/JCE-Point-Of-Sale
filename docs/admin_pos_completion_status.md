@@ -186,7 +186,7 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
   The application payload `data/app.so` SHA-256 is
   `1C1872BC756AB86F9C26173296023352E2294AA5EEB9A84A56D009DAB9913E55`.
   It has not been installed on another device or physically accepted.
-- Android staging release `2dul4b9b7umlo`, version `1.0.0 (1)`, is available
+- Android staging release `6bb3mf5vdh9k0`, version `1.0.0 (1)`, is available
   through Firebase App Distribution. APK SHA-256:
   `29538012C1B4AC1C39BC066411C6CF546C0A12D0B991EF05E40CED2C559CAF1F`.
   No tester group was assigned automatically.

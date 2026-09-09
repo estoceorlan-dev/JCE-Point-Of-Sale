@@ -58,7 +58,7 @@ or create pilot-hardware acceptance results.
 
 Commit `38b8b1b` was built with `JCE_ENV=staging` and
 `JCE_ENABLE_DEMO_AUTH=false` for Windows, Android and web. The schema-18 Android
-APK is available in Firebase App Distribution as release `2dul4b9b7umlo`
+APK is available in Firebase App Distribution as release `6bb3mf5vdh9k0`
 without an assigned tester group. Its SHA-256 is
 `29538012C1B4AC1C39BC066411C6CF546C0A12D0B991EF05E40CED2C559CAF1F`.
 
@@ -74,6 +74,14 @@ JavaScript and WASM content types were correct, and the live `main.dart.js`
 SHA-256 matched the local artifact:
 `FE781A0FFCAACB76D3B4AA187C61629BCE49D2CBE303F12923EBD42665345405`.
 No production environment or pilot flag was changed.
+
+Deployment audit: the first upload command selected the default-project Android
+app ID from `firebase.json` instead of the staging registration. It created an
+unassigned release in the default development project. The release was verified
+by ID and release notes and immediately removed with the App Distribution
+`batchDelete` API. A subsequent API list confirmed that the default app has no
+releases and the three documented staging releases are present. No tester or
+group was assigned to the removed release.
 
 The 2026-09-10 read-only staging database check reconfirmed that migrations
 0001–0013 match their committed checksums, all 60 public tables remain owned by

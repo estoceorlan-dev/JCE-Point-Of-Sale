@@ -74,7 +74,7 @@ replace signed-in PostgreSQL/Firebase workflow acceptance.
   `1C1872BC756AB86F9C26173296023352E2294AA5EEB9A84A56D009DAB9913E55`.
   Copy/install the entire Release directory, including DLLs and data.
   Native launch and physical acceptance were not verified in this continuation.
-- Android staging release `2dul4b9b7umlo`, version `1.0.0 (1)`, uploaded to
+- Android staging release `6bb3mf5vdh9k0`, version `1.0.0 (1)`, uploaded to
   Firebase App Distribution without a tester group. APK SHA-256:
   `29538012C1B4AC1C39BC066411C6CF546C0A12D0B991EF05E40CED2C559CAF1F`.
 - Web staging release deployed to `https://jce-pos-staging-259528.web.app` as
@@ -85,6 +85,11 @@ replace signed-in PostgreSQL/Firebase workflow acceptance.
   Drift worker and SQLite WASM MIME type. Visual browser acceptance is pending.
 - No production, billing, storage-rule or pilot feature-flag changes.
   Committing/pushing source does not install the client; CI verifies code only.
+- Deployment target audit confirmed releases `1gnl0ied29f70`, `0d3joe7dkcmo8`
+  and `6bb3mf5vdh9k0` on the staging Android app. An initial Phase 7 upload to the
+  default development app used its `firebase.json` registration accidentally;
+  it had no tester/group assignment and was removed immediately. The default
+  app release list was empty after cleanup.
 
 ## Verified acceptance subset
 
