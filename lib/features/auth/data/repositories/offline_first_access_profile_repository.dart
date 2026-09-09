@@ -27,6 +27,7 @@ class OfflineFirstAccessProfileRepository implements AccessProfileRepository {
   final Duration _maxOfflineAge;
   final StreamController<AccessProfileEvent> _events =
       StreamController<AccessProfileEvent>.broadcast();
+  final Map<String, StreamSubscription<AppUser?>> _localSubscriptions = {};
 
   @override
   Stream<AccessProfileEvent> get events => _events.stream;
@@ -37,6 +38,7 @@ class OfflineFirstAccessProfileRepository implements AccessProfileRepository {
     required String email,
     bool forceRefresh = false,
   }) async {
+    _watchLocalBranchProfiles(firebaseUid);
     final cached = await _local.findByFirebaseUid(firebaseUid);
     final cacheIsCurrent =
         cached != null && await _isOfflineAccessCurrent(firebaseUid);
@@ -87,7 +89,8 @@ class OfflineFirstAccessProfileRepository implements AccessProfileRepository {
       }
       await _local.replaceProfile(remote);
       await _local.recordVerifiedAt(firebaseUid, _clock.nowUtc());
-      final result = Result<AppUser?, Failure>.success(remote);
+      final merged = await _local.findByFirebaseUid(firebaseUid);
+      final result = Result<AppUser?, Failure>.success(merged ?? remote);
       if (publish) {
         _publish(firebaseUid, result);
       }
@@ -156,6 +159,37 @@ class OfflineFirstAccessProfileRepository implements AccessProfileRepository {
     }
   }
 
+  void _watchLocalBranchProfiles(String firebaseUid) {
+    if (_localSubscriptions.containsKey(firebaseUid)) {
+      return;
+    }
+    var initialSnapshot = true;
+    _localSubscriptions[firebaseUid] = _local
+        .watchBranchProfilesByFirebaseUid(firebaseUid)
+        .listen(
+          (profile) {
+            if (initialSnapshot) {
+              initialSnapshot = false;
+              return;
+            }
+            _publish(firebaseUid, Result<AppUser?, Failure>.success(profile));
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            _publish(
+              firebaseUid,
+              Result<AppUser?, Failure>.failure(
+                FailureMapper.fromException(error, stackTrace),
+              ),
+            );
+          },
+        );
+  }
+
   @override
-  Future<void> dispose() => _events.close();
+  Future<void> dispose() async {
+    for (final subscription in _localSubscriptions.values) {
+      await subscription.cancel();
+    }
+    await _events.close();
+  }
 }

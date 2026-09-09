@@ -121,6 +121,28 @@ void main() {
     },
   );
 
+  test('cached access observes local branch profile changes', () async {
+    await localDataSource.replaceProfile(_profile());
+    final updates = localDataSource.watchBranchProfilesByFirebaseUid(
+      'firebase-user',
+    );
+    final changed = updates.firstWhere(
+      (profile) =>
+          profile?.organizations.single.branchById('branch-a')?.branch.name ==
+          'Sweetland Branch',
+    );
+
+    await (database.update(database.branches)
+          ..where((row) => row.id.equals('branch-a')))
+        .write(const BranchesCompanion(name: Value('Sweetland Branch')));
+
+    final profile = await changed.timeout(const Duration(seconds: 2));
+    expect(
+      profile!.organizations.single.branchById('branch-a')!.branch.name,
+      'Sweetland Branch',
+    );
+  });
+
   test(
     'unaccepted branch creation remains unavailable even in a stale profile',
     () async {

@@ -100,13 +100,113 @@ void main() {
 
     expect(result.failureOrNull, isA<NetworkFailure>());
   });
+
+  test('local branch changes are published from the cached profile', () async {
+    final local = _FakeAccessLocalDataSource(
+      user: _profile(displayName: 'Cached User', branchName: 'Old Branch'),
+      verifiedAt: now.subtract(const Duration(minutes: 5)),
+    );
+    final remoteCompleter = Completer<AppUser?>();
+    final repository = OfflineFirstAccessProfileRepository(
+      local: local,
+      remote: _FakeAccessRemoteDataSource(() => remoteCompleter.future),
+      clock: FixedAppClock(now),
+      maxOfflineAge: const Duration(hours: 24),
+    );
+    addTearDown(repository.dispose);
+
+    await repository.loadProfile(
+      firebaseUid: 'firebase-user',
+      email: 'user@jce.test',
+    );
+    await Future<void>.delayed(Duration.zero);
+    final eventFuture = repository.events.firstWhere(
+      (event) =>
+          event
+              .result
+              .valueOrNull
+              ?.organizations
+              .single
+              .branches
+              .single
+              .branch
+              .name ==
+          'Sweetland Branch',
+    );
+
+    local.emitBranchProfile(
+      _profile(displayName: 'Cached User', branchName: 'Sweetland Branch'),
+    );
+
+    final event = await eventFuture.timeout(const Duration(seconds: 2));
+    expect(
+      event
+          .result
+          .valueOrNull!
+          .organizations
+          .single
+          .branches
+          .single
+          .branch
+          .name,
+      'Sweetland Branch',
+    );
+  });
+
+  test(
+    'refresh returns the local profile merged with pending branch edits',
+    () async {
+      final merged = _profile(
+        displayName: 'Verified User',
+        branchName: 'Sweetland Branch',
+      );
+      final local = _FakeAccessLocalDataSource(
+        user: _profile(
+          displayName: 'Cached User',
+          branchName: 'Sweetland Branch',
+        ),
+        verifiedAt: now.subtract(const Duration(minutes: 5)),
+        mergedAfterReplace: merged,
+      );
+      final repository = OfflineFirstAccessProfileRepository(
+        local: local,
+        remote: _FakeAccessRemoteDataSource(
+          () async => _profile(
+            displayName: 'Verified User',
+            branchName: 'Staging Main Branch',
+          ),
+        ),
+        clock: FixedAppClock(now),
+        maxOfflineAge: const Duration(hours: 24),
+      );
+      addTearDown(repository.dispose);
+
+      final result = await repository.loadProfile(
+        firebaseUid: 'firebase-user',
+        email: 'user@jce.test',
+        forceRefresh: true,
+      );
+
+      expect(
+        result.valueOrNull!.organizations.single.branches.single.branch.name,
+        'Sweetland Branch',
+      );
+    },
+  );
 }
 
 class _FakeAccessLocalDataSource implements AccessLocalDataSource {
-  _FakeAccessLocalDataSource({this.user, this.verifiedAt});
+  _FakeAccessLocalDataSource({
+    this.user,
+    this.verifiedAt,
+    this.mergedAfterReplace,
+  });
 
   AppUser? user;
   DateTime? verifiedAt;
+  final AppUser? mergedAfterReplace;
+  final StreamController<AppUser?> _branchProfiles =
+      StreamController<AppUser?>.broadcast();
 
   @override
   Future<void> clearProfile(String firebaseUid) async {
@@ -118,6 +218,12 @@ class _FakeAccessLocalDataSource implements AccessLocalDataSource {
   Future<AppUser?> findByFirebaseUid(String firebaseUid) async => user;
 
   @override
+  Stream<AppUser?> watchBranchProfilesByFirebaseUid(String firebaseUid) async* {
+    yield user;
+    yield* _branchProfiles.stream;
+  }
+
+  @override
   Future<DateTime?> lastVerifiedAt(String firebaseUid) async => verifiedAt;
 
   @override
@@ -127,7 +233,12 @@ class _FakeAccessLocalDataSource implements AccessLocalDataSource {
 
   @override
   Future<void> replaceProfile(AppUser user) async {
-    this.user = user;
+    this.user = mergedAfterReplace ?? user;
+  }
+
+  void emitBranchProfile(AppUser profile) {
+    user = profile;
+    _branchProfiles.add(profile);
   }
 }
 
@@ -145,7 +256,7 @@ class _FakeAccessRemoteDataSource implements AccessRemoteDataSource {
   }
 }
 
-AppUser _profile({required String displayName}) {
+AppUser _profile({required String displayName, String branchName = 'Main'}) {
   const role = AccessRole(
     id: 'role',
     code: 'dashboard',
@@ -156,27 +267,27 @@ AppUser _profile({required String displayName}) {
     firebaseUid: 'firebase-user',
     email: 'user@jce.test',
     displayName: displayName,
-    organizations: const [
+    organizations: [
       OrganizationAccess(
         appUserId: 'app-user',
-        organization: Organization(
+        organization: const Organization(
           id: 'org',
           code: 'ORG',
           name: 'Organization',
           timezone: 'Asia/Manila',
         ),
         status: UserAccountStatus.active,
-        organizationRoles: [],
+        organizationRoles: const [],
         branches: [
           BranchAccess(
             branch: Branch(
               id: 'branch',
               organizationId: 'org',
               code: 'MAIN',
-              name: 'Main',
+              name: branchName,
               timezone: 'Asia/Manila',
             ),
-            roles: [role],
+            roles: const [role],
           ),
         ],
       ),

@@ -14,6 +14,7 @@ import '../../../../shared/models/user_account_status.dart';
 
 abstract interface class AccessLocalDataSource {
   Future<model.AppUser?> findByFirebaseUid(String firebaseUid);
+  Stream<model.AppUser?> watchBranchProfilesByFirebaseUid(String firebaseUid);
   Future<void> replaceProfile(model.AppUser user);
   Future<DateTime?> lastVerifiedAt(String firebaseUid);
   Future<void> recordVerifiedAt(String firebaseUid, DateTime verifiedAt);
@@ -196,6 +197,19 @@ class DriftAccessLocalDataSource implements AccessLocalDataSource {
       displayName: firstUser.displayName,
       organizations: organizations,
     );
+  }
+
+  @override
+  Stream<model.AppUser?> watchBranchProfilesByFirebaseUid(String firebaseUid) {
+    final query = _database.select(_database.branches).join([
+      innerJoin(
+        _database.appUsers,
+        _database.appUsers.organizationId.equalsExp(
+          _database.branches.organizationId,
+        ),
+      ),
+    ])..where(_database.appUsers.firebaseUid.equals(firebaseUid));
+    return query.watch().asyncMap((_) => findByFirebaseUid(firebaseUid));
   }
 
   @override
