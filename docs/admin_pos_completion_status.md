@@ -1,6 +1,6 @@
 # Admin operations and cashier POS — implementation checkpoint
 
-Updated 2026-09-09. This tracks the requested **Phases 0–7**, separately from the
+Updated 2026-09-10. This tracks the requested **Phases 0–7**, separately from the
 repository's historical Phase 15 hardware work. **The full delivery plan is not
 complete. The staging backend plus Android and web clients are deployed; the
 Windows client is built, and full pilot acceptance is pending.**
@@ -90,6 +90,14 @@ Existing hardware/receipt work is preserved.
   F4/F8/Esc cart-changing shortcuts while preserving the exact saved F9 retry.
 - The new terminal is gated by the `pos.terminal` feature flag; absent that
   flag, it is enabled only in demo mode. The legacy POS tabs remain available.
+- Phase 7 local performance validation now uses a repeatable 10,000-product,
+  file-backed Windows benchmark. Its first run exposed multi-second catalog
+  searches; Drift schema 18 adds product-to-barcode and effective-price lookup
+  indexes. The repeated run passed the local barcode, text-search and checkout
+  targets. See [Phase 7 validation](phase_7_validation_rollout.md).
+- CI now runs the backend security/type lint before Functions tests. The staging
+  signed-in runner can require an approved existing foreign organization and
+  verify snapshot plus mutation denial without relying on an unknown ID.
 
 ## Remaining work by requested phase
 
@@ -102,7 +110,7 @@ Existing hardware/receipt work is preserved.
 | 4 | Stock-location edit/archive/restore, Drift schema 16 version migration, backend lifecycle commands, archive guards and snapshot/change-feed convergence are implemented and covered locally. Migration 0013 and the ninth callable are deployed. Perform signed-in lifecycle, full command concurrency and two-device recovery tests. Measure 10,000-product/import/outbox performance; add broader tax/register/import widget coverage. |
 | 5 | Persistent cart, held-cart, revalidation, atomic checkout, split-tender, and approved-external-payment restart recovery are implemented locally. Integrate the shared supervisor approval contract only after secure enrollment, signing, storage, replay claims, and server verification exist; expand fault-injection and end-to-end crash scenarios. |
 | 6 | Numeric/touch payment entry, focus/shortcuts, loading/empty/error/offline states, long labels, large text and compact layouts are implemented and covered locally. Physical scanner/printer pilot acceptance remains. |
-| 7 | PostgreSQL migration/concurrency integration tests, invite/credential negative tests, complete offline end-to-end scenarios, pilot performance measurements, admin/approval rollout flags, client rollout, reconciliation and user acceptance. Staging backend deployment is complete. |
+| 7 | A repeatable 10,000-product Windows benchmark is implemented; schema 18 fixes the measured search bottleneck and local targets pass on the development machine. Repeat on pilot hardware. PostgreSQL concurrency, live foreign-organization and invite/credential negative tests, complete offline end-to-end scenarios, admin/approval rollout flags, reconciliation and user acceptance remain. Staging backend deployment is complete. |
 
 Do not substitute a typed approver ID or locally stored plaintext PIN for the
 remaining approval implementation. Current protected actions still use the
@@ -137,8 +145,22 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
 
 ## Verification at this checkpoint
 
+- Phase 7 development-machine benchmark after schema 18: barcode lookup worst of
+  five 17.096 ms, text search worst of five 15.766 ms, local checkout commit
+  68.050 ms with 10,000 products. Catalog preview was 500.828 ms, atomic import
+  commit 36.974 seconds, pending-outbox count 22.843 ms and claim-25 265.066 ms.
+  This is not yet pilot-terminal acceptance.
+- Schema-17-to-18 migration validation preserves catalog data and verifies both
+  new lookup indexes. Existing released-schema migration coverage remains in
+  place; server migrations and checksums are unchanged.
+- A 2026-09-10 read-only staging database recheck confirmed all 13 migration
+  checksums, 60 migration-owned public tables, zero normalized branch-code
+  duplicate groups and rollback-only row/advisory locking. The temporary human
+  migration-role membership remains until wider concurrency work is complete.
+
 - `flutter analyze`: no issues.
-- `flutter test`: **278 tests passed** (2026-09-09), including location
+- `flutter test`: **292 tests passed and one opt-in performance test skipped**
+  (2026-09-10), including location
   lifecycle, change-feed, schema-15-to-17 migration, stable checkout retry,
   external-payment restart recovery, cart-lock, corrupt-tender coverage, touch
   payment entry, terminal status states and compact/large-text POS states.

@@ -157,7 +157,7 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 17;
+  static const int currentSchemaVersion = 18;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -553,6 +553,9 @@ class AppDatabase extends _$AppDatabase {
         if (!await _tableHasColumn('pos_carts', 'checkout_attempted_at')) {
           await migrator.addColumn(posCarts, posCarts.checkoutAttemptedAt);
         }
+      case 18:
+        await migrator.createIndex(productBarcodesProductLookupIdx);
+        await migrator.createIndex(productPricesLookupIdx);
       default:
         throw StateError('Missing migration for schema version $version.');
     }

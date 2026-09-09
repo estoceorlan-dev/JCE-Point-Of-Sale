@@ -49860,6 +49860,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'product_barcodes_search_idx',
     'CREATE INDEX product_barcodes_search_idx ON product_barcodes (organization_id, normalized_barcode)',
   );
+  late final Index productBarcodesProductLookupIdx = Index(
+    'product_barcodes_product_lookup_idx',
+    'CREATE INDEX product_barcodes_product_lookup_idx ON product_barcodes (product_id, deleted_at, normalized_barcode)',
+  );
+  late final Index productPricesLookupIdx = Index(
+    'product_prices_lookup_idx',
+    'CREATE INDEX product_prices_lookup_idx ON product_prices (product_id, branch_id, effective_from)',
+  );
   late final Index stockLocationsBranchIdx = Index(
     'stock_locations_branch_idx',
     'CREATE INDEX stock_locations_branch_idx ON stock_locations (organization_id, branch_id, is_active)',
@@ -50066,6 +50074,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     productsNameSearchIdx,
     productsSkuSearchIdx,
     productBarcodesSearchIdx,
+    productBarcodesProductLookupIdx,
+    productPricesLookupIdx,
     stockLocationsBranchIdx,
     inventoryTransactionsHistoryIdx,
     inventoryLedgerProductHistoryIdx,

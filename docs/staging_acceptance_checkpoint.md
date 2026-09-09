@@ -177,6 +177,9 @@ and existing application credentials; never print secret values.
 - `staging-signed-in-check.js --run`: creates QA fixtures through deployed
   callables, then archives/disables them. Requires JCE_TEST_CREDENTIALS_FILE
   with an Administrator section and JCE_ACCESS_ORGANIZATION_ID.
+  Add JCE_FOREIGN_ORGANIZATION_ID and `--require-foreign-organization` to verify
+  snapshot and mutation denial against an approved existing unassigned staging
+  organization. This required Phase 7 variant has not yet been executed.
   Review emitted fixture IDs and complete cleanup manually if interrupted.
 
 Common environment: GOOGLE_APPLICATION_CREDENTIALS, JCE_STAGING_PROJECT,

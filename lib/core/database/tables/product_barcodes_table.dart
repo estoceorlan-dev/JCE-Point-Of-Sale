@@ -7,6 +7,10 @@ import 'products_table.dart';
   name: 'product_barcodes_search_idx',
   columns: {#organizationId, #normalizedBarcode},
 )
+@TableIndex(
+  name: 'product_barcodes_product_lookup_idx',
+  columns: {#productId, #deletedAt, #normalizedBarcode},
+)
 class ProductBarcodes extends Table {
   TextColumn get id => text()();
   TextColumn get organizationId =>

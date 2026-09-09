@@ -4,6 +4,10 @@ import 'branches_table.dart';
 import 'organizations_table.dart';
 import 'products_table.dart';
 
+@TableIndex(
+  name: 'product_prices_lookup_idx',
+  columns: {#productId, #branchId, #effectiveFrom},
+)
 class ProductPrices extends Table {
   TextColumn get id => text()();
   TextColumn get organizationId =>

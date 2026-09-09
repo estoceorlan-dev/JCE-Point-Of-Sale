@@ -10,8 +10,12 @@ const {createStagingCashier} = require("./staging-cashier-fixture");
 async function main() {
   if (!process.argv.includes("--run")) throw new Error("--run explicitly enables staging fixture writes.");
   const organizationId = process.env.JCE_ACCESS_ORGANIZATION_ID;
+  const foreignOrganizationId = process.env.JCE_FOREIGN_ORGANIZATION_ID;
+  const requireForeignOrganization = process.argv.includes("--require-foreign-organization");
   const instance = process.env.JCE_DB_INSTANCE_CONNECTION_NAME;
   if (!organizationId || instance?.split(":")[0] !== process.env.JCE_STAGING_PROJECT) throw new Error("Explicit matching staging organization/database required.");
+  if (requireForeignOrganization && !foreignOrganizationId) throw new Error("JCE_FOREIGN_ORGANIZATION_ID is required for the Phase 7 foreign-organization check.");
+  if (foreignOrganizationId === organizationId) throw new Error("Foreign organization must differ from the administrator organization.");
   const [admin, peer] = await Promise.all([
     signInStaging("Administrator"), signInStaging("Administrator"),
   ]);
@@ -50,6 +54,21 @@ async function main() {
     client = new Client({...options, user: process.env.JCE_DB_USER, database: process.env.JCE_DB_NAME,
       connectionTimeoutMillis: 15000, statement_timeout: 15000});
     await client.connect();
+    if (foreignOrganizationId) {
+      assert.equal(profile.organizations.some((item) => item.organization.id === foreignOrganizationId), false,
+        "The foreign-organization fixture is assigned to the administrator.");
+      const foreignBranch = (await client.query(
+        "SELECT id FROM branches WHERE organization_id=$1 AND is_active=true AND deleted_at IS NULL ORDER BY created_at,id LIMIT 1",
+        [foreignOrganizationId],
+      )).rows[0];
+      assert.ok(foreignBranch, "The foreign organization has no active branch fixture.");
+      denied(await callStaging(admin, "getAdministrationSnapshot", {organizationId: foreignOrganizationId}));
+      const foreignAggregateId = randomUUID();
+      denied(await send(admin, command("branch.create", {...draft, id: foreignAggregateId, code: `F-${code.slice(-8)}`}, {
+        organizationId: foreignOrganizationId, branchId: foreignBranch.id, aggregateId: foreignAggregateId,
+      })));
+      pass("existing foreign-organization snapshot and mutation rejection");
+    }
     const create = command("branch.create", draft, {operationId: createOperationId});
     const creations = await Promise.all([admin, peer, admin, peer].map((session) => send(session, create)));
     const results = creations.map(okay);
@@ -81,7 +100,7 @@ async function main() {
     assert.equal(restored.result.branch.isActive, true);
     pass("current-branch archive guard, archive/edit rejection and restore");
     console.log(JSON.stringify({fixtureBranchId: fixtureId, fixtureCode: code,
-      scope: "branch concurrency, role isolation and invite happy path/replay; not shift/count/transfer races, invite negative cases or hardware acceptance"}));
+      scope: `branch concurrency, role isolation, invite happy path/replay${foreignOrganizationId ? ", existing foreign-organization denial" : ""}; not shift/count/transfer races, invite negative cases or hardware acceptance`}));
   } finally {
     const cleanupErrors = [];
     if (client) {
