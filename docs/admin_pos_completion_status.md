@@ -41,11 +41,12 @@ Existing hardware/receipt work is preserved.
   `0013_stock_location_lifecycle.sql` were deployed to staging on 2026-09-08.
 - Grouped navigation, `branches.manage` / `roles.manage`, Branches, and
   Staff & Access at `/staff`, with a compatibility redirect from `/users`.
-- Drift schema 17: branch operational profiles and administration versions,
+- Drift schemas through 18: branch operational profiles and administration versions,
   staff invitation dates, normalized device-local active and held carts, and
   versioned stock locations seeded from known remote versions during upgrade.
   Active carts also retain stable checkout identity and external-payment
-  recovery data locally.
+  recovery data locally. Product-leading barcode and effective-price indexes
+  keep 10,000-product catalog lookups within the measured targets.
 - Offline branch create/edit/archive/restore, unique codes, pending-operation
   indicators, staff/register counts, and operational archival guards.
 - Cached staff/role directories, profile and assignment edits, invites,
@@ -107,10 +108,10 @@ Existing hardware/receipt work is preserved.
 | 1 | Staging migrations through 0013 and backend deployment are complete. Broader live limited-permission/concurrency tests, connector query validation, and incremental-feed read-visibility review remain. Snapshot scopes, navigation, replay and atomic remote-conflict recovery now have regression coverage. Failed creations with no remote record remain explicit recovery cases. |
 | 2 | Live two-device pending-branch selection/access-refresh acceptance and concurrent archival tests. Validate archived-history/reporting navigation without switching operational context into an archived branch. Directory/details and matching-branch receipt-profile rendering have desktop/compact and unit coverage. |
 | 3 | Staff directory filters and pending indicators are implemented and locally tested. Approval contracts/design exist; **secure enrollment, encrypted/signed credentials, expiry/revocation, persistent lockout and workflow integrations are not implemented**. Invitation binding hardening is deployed; complete live mismatch/expiry/reactivation/regeneration and Firebase Auth identity tests. |
-| 4 | Stock-location edit/archive/restore, Drift schema 16 version migration, backend lifecycle commands, archive guards and snapshot/change-feed convergence are implemented and covered locally. Migration 0013 and the ninth callable are deployed. Perform signed-in lifecycle, full command concurrency and two-device recovery tests. Measure 10,000-product/import/outbox performance; add broader tax/register/import widget coverage. |
+| 4 | Stock-location edit/archive/restore, Drift schema 16 version migration, backend lifecycle commands, archive guards and snapshot/change-feed convergence are implemented and covered locally. Migration 0013 and the ninth callable are deployed. Perform signed-in lifecycle, full command concurrency and two-device recovery tests; add broader tax/register/import widget coverage. |
 | 5 | Persistent cart, held-cart, revalidation, atomic checkout, split-tender, and approved-external-payment restart recovery are implemented locally. Integrate the shared supervisor approval contract only after secure enrollment, signing, storage, replay claims, and server verification exist; expand fault-injection and end-to-end crash scenarios. |
 | 6 | Numeric/touch payment entry, focus/shortcuts, loading/empty/error/offline states, long labels, large text and compact layouts are implemented and covered locally. Physical scanner/printer pilot acceptance remains. |
-| 7 | A repeatable 10,000-product Windows benchmark is implemented; schema 18 fixes the measured search bottleneck and local targets pass on the development machine. Repeat on pilot hardware. PostgreSQL concurrency, live foreign-organization and invite/credential negative tests, complete offline end-to-end scenarios, admin/approval rollout flags, reconciliation and user acceptance remain. Staging backend deployment is complete. |
+| 7 | A repeatable 10,000-product Windows benchmark is implemented; schema 18 fixes the measured search bottleneck and local targets pass on the development machine. The schema-18 Windows, Android and web staging clients are built, with Android and web published. Repeat on pilot hardware. PostgreSQL concurrency, live foreign-organization and invite/credential negative tests, complete offline end-to-end scenarios, admin/approval rollout flags, reconciliation and user acceptance remain. |
 
 Do not substitute a typed approver ID or locally stored plaintext PIN for the
 remaining approval implementation. Current protected actions still use the
@@ -161,7 +162,7 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
 - `flutter analyze`: no issues.
 - `flutter test`: **292 tests passed and one opt-in performance test skipped**
   (2026-09-10), including location
-  lifecycle, change-feed, schema-15-to-17 migration, stable checkout retry,
+  lifecycle, change-feed, released-schema migration through schema 18, stable checkout retry,
   external-payment restart recovery, cart-lock, corrupt-tender coverage, touch
   payment entry, terminal status states and compact/large-text POS states.
 - Functions TypeScript build, `npm test`: **48 tests passed**, including
@@ -178,19 +179,23 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
 - Staging Functions: all nine Node.js 22 callables are ACTIVE on source hash
   `d8872c8ea9511fe87163e5b937787a0de4c35665`; 18 unauthenticated probes
   returned HTTP 401 / UNAUTHENTICATED.
-- The schema-17 Windows staging Release was rebuilt with `JCE_ENV=staging` and
+- The schema-18 Windows staging Release was rebuilt from commit `38b8b1b` with
+  `JCE_ENV=staging` and
   `JCE_ENABLE_DEMO_AUTH=false`. Executable SHA-256:
   `A44B899DAD045900BC0FC92402EF7E659AD3FA207F891ABDA01598B8ADC6359B`.
+  The application payload `data/app.so` SHA-256 is
+  `1C1872BC756AB86F9C26173296023352E2294AA5EEB9A84A56D009DAB9913E55`.
   It has not been installed on another device or physically accepted.
-- Android staging release `0d3joe7dkcmo8`, version `1.0.0 (1)`, is available
+- Android staging release `2dul4b9b7umlo`, version `1.0.0 (1)`, is available
   through Firebase App Distribution. APK SHA-256:
-  `F93810AADE7EFBE37CFC4CDE7D7898908AB2B1942FC22A82554889B9A5D195A3`.
+  `29538012C1B4AC1C39BC066411C6CF546C0A12D0B991EF05E40CED2C559CAF1F`.
   No tester group was assigned automatically.
 - The staging web administration client is deployed at
   `https://jce-pos-staging-259528.web.app` on Hosting version
-  `4154aabde93c0a2f`. Live checks returned the Flutter shell for `/` and `/auth`
-  and the correct JavaScript/WASM content types for the main bundle, Drift worker
-  and SQLite runtime. Interactive browser acceptance remains pending.
+  `815d116f50af2c5a`. Live checks returned the Flutter shell for `/` and
+  `/branches`, the correct JavaScript/WASM content types for the main bundle,
+  Drift worker and SQLite runtime, and an exact local/live `main.dart.js` hash
+  match. Interactive browser acceptance remains pending.
 - New local coverage: combined staff filters, reactive organization-scoped
   outbox counts, role-only read isolation, 360x640 layouts at 100%/150% text,
   durable external-payment save failure/restart and explicit stable retry,
@@ -228,7 +233,7 @@ balance overwrite. The exact same confirmed file is idempotent in its scope.
    New callables:
    `getAdministrationSnapshot`, `generateStaffInviteLink`,
    `acceptStaffInvitation`. Client function names remain configurable.
-3. **Completed for staging artifacts:** the schema-17 Windows Release was rebuilt
+3. **Completed for staging artifacts:** the schema-18 Windows Release was rebuilt
    with demo auth disabled, the matching Android APK was uploaded to Firebase App
    Distribution, and the web administration fallback was deployed to staging
    Hosting. Install the complete Windows Release directory on the pilot terminal

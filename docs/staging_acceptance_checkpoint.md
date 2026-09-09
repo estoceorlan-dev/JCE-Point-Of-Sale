@@ -1,4 +1,4 @@
-# Staging acceptance checkpoint — 2026-09-09
+# Staging acceptance checkpoint — 2026-09-10
 
 Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 `jce-pos-instance`, database `jce-pos-database`. Production was not touched.
@@ -7,10 +7,12 @@ Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 
 The 2026-09-08 backend deployment includes invitation binding hardening,
 stock-location lifecycle commands, `getStockLocationsSnapshot`, and migration
-`0013_stock_location_lifecycle.sql`. The 2026-09-09 schema-17 client release adds
-durable payment-save reconciliation and the completed Phase 6 terminal UI. Its
-Windows bundle remains pending pilot installation; its Android APK is in staging
-App Distribution, and its web administration fallback is on staging Hosting.
+`0013_stock_location_lifecycle.sql`. The 2026-09-10 schema-18 client release adds
+the catalog lookup indexes found necessary by Phase 7 performance validation; it
+also includes durable payment-save reconciliation and the completed Phase 6
+terminal UI. Its Windows bundle remains pending pilot installation; its Android
+APK is in staging App Distribution, and its web administration fallback is on
+staging Hosting.
 Offline supervisor approvals remain gated. Backend query-double tests do not
 replace signed-in PostgreSQL/Firebase workflow acceptance.
 
@@ -63,20 +65,23 @@ replace signed-in PostgreSQL/Firebase workflow acceptance.
   finalizeProductImage, generateStaffInviteLink, acceptStaffInvitation and
   getAdministrationSnapshot, plus getStockLocationsSnapshot. Functions source
   hash: `d8872c8ea9511fe87163e5b937787a0de4c35665`.
-- Schema-17 Windows staging release built with demo authentication disabled:
+- Schema-18 Windows staging release from commit `38b8b1b`, built with demo
+  authentication disabled:
   `build/windows/x64/runner/Release/jce_pos.exe`.
   SHA-256:
   `A44B899DAD045900BC0FC92402EF7E659AD3FA207F891ABDA01598B8ADC6359B`.
+  Application payload `data/app.so` SHA-256:
+  `1C1872BC756AB86F9C26173296023352E2294AA5EEB9A84A56D009DAB9913E55`.
   Copy/install the entire Release directory, including DLLs and data.
   Native launch and physical acceptance were not verified in this continuation.
-- Android staging release `0d3joe7dkcmo8`, version `1.0.0 (1)`, uploaded to
+- Android staging release `2dul4b9b7umlo`, version `1.0.0 (1)`, uploaded to
   Firebase App Distribution without a tester group. APK SHA-256:
-  `F93810AADE7EFBE37CFC4CDE7D7898908AB2B1942FC22A82554889B9A5D195A3`.
+  `29538012C1B4AC1C39BC066411C6CF546C0A12D0B991EF05E40CED2C559CAF1F`.
 - Web staging release deployed to `https://jce-pos-staging-259528.web.app` as
-  Hosting version `4154aabde93c0a2f`. The local release-artifact SHA-256 of
+  Hosting version `815d116f50af2c5a`. The local and live SHA-256 of
   `main.dart.js` is
-  `723F17AE138B0263B7CD04ABDC3CD17776A36C940F66CDC7451F60A6A667A18B`.
-  Live HTTP checks passed for the root shell, `/auth` SPA fallback, main bundle,
+  `FE781A0FFCAACB76D3B4AA187C61629BCE49D2CBE303F12923EBD42665345405`.
+  Live HTTP checks passed for the root shell, `/branches` SPA fallback, main bundle,
   Drift worker and SQLite WASM MIME type. Visual browser acceptance is pending.
 - No production, billing, storage-rule or pilot feature-flag changes.
   Committing/pushing source does not install the client; CI verifies code only.
@@ -115,8 +120,9 @@ QA accounts used random in-memory passwords and example.invalid addresses;
 no invitation email was sent.
 
 Local verification: 48 backend tests, TypeScript build and lint passed.
-Flutter verification: 278 tests, formatting and analyze passed. The Windows and
-Android staging releases were built with demo authentication disabled.
+Flutter verification: 292 tests passed, one opt-in performance test was skipped,
+and formatting and analyze passed. The Windows and Android staging releases were
+built with demo authentication disabled.
 
 ## Backups and recovery boundaries
 

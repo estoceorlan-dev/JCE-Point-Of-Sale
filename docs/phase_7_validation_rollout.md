@@ -54,6 +54,27 @@ CI now runs the backend security scan and TypeScript type check through
 The 10,000-row benchmark remains opt-in so shared CI runner variance cannot hide
 or create pilot-hardware acceptance results.
 
+## Controlled staging artifacts
+
+Commit `38b8b1b` was built with `JCE_ENV=staging` and
+`JCE_ENABLE_DEMO_AUTH=false` for Windows, Android and web. The schema-18 Android
+APK is available in Firebase App Distribution as release `2dul4b9b7umlo`
+without an assigned tester group. Its SHA-256 is
+`29538012C1B4AC1C39BC066411C6CF546C0A12D0B991EF05E40CED2C559CAF1F`.
+
+The Windows Release directory was built locally. The application payload at
+`data/app.so` has SHA-256
+`1C1872BC756AB86F9C26173296023352E2294AA5EEB9A84A56D009DAB9913E55`.
+Copy the complete Release directory for pilot installation; it has not been
+installed or accepted on the target terminal.
+
+The matching web build is deployed to staging Hosting version
+`815d116f50af2c5a`. Live `/` and `/branches` requests returned the Flutter shell,
+JavaScript and WASM content types were correct, and the live `main.dart.js`
+SHA-256 matched the local artifact:
+`FE781A0FFCAACB76D3B4AA187C61629BCE49D2CBE303F12923EBD42665345405`.
+No production environment or pilot flag was changed.
+
 The 2026-09-10 read-only staging database check reconfirmed that migrations
 0001–0013 match their committed checksums, all 60 public tables remain owned by
 `jce_pos_migrator`, normalized branch-code duplicate groups remain zero, and the
