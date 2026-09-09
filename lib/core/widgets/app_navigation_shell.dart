@@ -2,22 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/domain/entities/auth_session.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
-import '../../shared/models/sync_state.dart';
-import '../constants/app_breakpoints.dart';
-import '../constants/app_constants.dart';
 import '../config/app_config.dart';
 import '../database/database_provider.dart';
 import '../routing/app_navigation_item.dart';
 import '../routing/app_route.dart';
 import '../sync/sync_controller.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_spacing.dart';
 import 'app_confirmation_dialog.dart';
+import 'app_sidebar_layout.dart';
 import 'desktop_sidebar.dart';
 import 'mobile_bottom_navigation.dart';
-import 'sidebar/sidebar_branch_badge.dart';
+import 'shell_top_bar.dart';
 
 class AppNavigationShell extends ConsumerWidget {
   const AppNavigationShell({super.key, required this.navigationShell});
@@ -36,87 +31,44 @@ class AppNavigationShell extends ConsumerWidget {
         appNavigationItems[navigationShell.currentIndex].route;
     final syncState = ref.watch(syncStateProvider).asData?.value;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isDesktop =
-            constraints.maxWidth >= AppBreakpoints.desktopNavigation;
-
-        if (isDesktop) {
-          return Scaffold(
-            body: Row(
-              children: [
-                DesktopSidebar(
-                  items: navigationItems,
-                  selectedRoute: selectedRoute,
-                  session: session,
-                  onDestinationSelected: _goToItem,
-                  onSettingsSelected: () => _goToRoute(AppRoute.settings),
-                  onBranchSelected: (organizationId, branchId) =>
-                      _selectBranch(ref, organizationId, branchId),
-                  onLogout: () => _confirmLogout(context, ref),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      SafeArea(
-                        bottom: false,
-                        child: _ShellTopBar(
-                          title: selectedRoute.label,
-                          session: session,
-                          onBranchSelected: (organizationId, branchId) =>
-                              _selectBranch(ref, organizationId, branchId),
-                          onRefreshAccess: () => _refreshAccess(ref),
-                          syncState: syncState,
-                          onSync: () => _sync(ref),
-                        ),
-                      ),
-                      Expanded(child: navigationShell),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(selectedRoute.label),
-            actions: [
-              IconButton(
-                tooltip: syncState?.message ?? 'Synchronize now',
-                onPressed: syncState?.status == SyncStatus.syncing
-                    ? null
-                    : () => _sync(ref),
-                icon: syncState?.status == SyncStatus.syncing
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(_syncIcon(syncState)),
-              ),
-              IconButton(
-                tooltip: 'Refresh access',
-                onPressed: () => _refreshAccess(ref),
-                icon: const Icon(Icons.refresh),
-              ),
-              SidebarBranchBadge(
-                session: session,
-                compact: true,
-                onSelected: (organizationId, branchId) =>
-                    _selectBranch(ref, organizationId, branchId),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-            ],
-          ),
-          body: navigationShell,
-          bottomNavigationBar: MobileBottomNavigation(
-            items: navigationItems,
-            selectedRoute: selectedRoute,
-            onDestinationSelected: _goToItem,
-          ),
-        );
-      },
+    return AppSidebarLayout(
+      sidebarBuilder: (context, close, isDesktop) => DesktopSidebar(
+        items: navigationItems,
+        selectedRoute: selectedRoute,
+        session: session,
+        onClose: close,
+        onDestinationSelected: (item) {
+          if (!isDesktop) close();
+          _goToItem(item);
+        },
+        onSettingsSelected: () {
+          if (!isDesktop) close();
+          _goToRoute(AppRoute.settings);
+        },
+        onBranchSelected: (organizationId, branchId) =>
+            _selectBranch(ref, organizationId, branchId),
+        onLogout: () {
+          if (!isDesktop) close();
+          _confirmLogout(context, ref);
+        },
+      ),
+      headerBuilder: (context, toggle, isDesktop) => ShellTopBar(
+        title: selectedRoute.label,
+        session: session,
+        sidebarToggle: toggle,
+        isDesktop: isDesktop,
+        onBranchSelected: (organizationId, branchId) =>
+            _selectBranch(ref, organizationId, branchId),
+        onRefreshAccess: () => _refreshAccess(ref),
+        syncState: syncState,
+        onSync: () => _sync(ref),
+      ),
+      body: navigationShell,
+      bottomNavigationBar: MobileBottomNavigation(
+        items: navigationItems,
+        selectedRoute: selectedRoute,
+        onDestinationSelected: _goToItem,
+      ),
     );
   }
 
@@ -198,95 +150,5 @@ class AppNavigationShell extends ConsumerWidget {
 
   Future<void> _sync(WidgetRef ref) {
     return ref.read(syncStateProvider.notifier).synchronize();
-  }
-
-  IconData _syncIcon(SyncState? state) {
-    return switch (state?.status) {
-      SyncStatus.offline => Icons.cloud_off_outlined,
-      SyncStatus.failed => Icons.sync_problem_outlined,
-      _ =>
-        state != null && (state.failedChanges > 0 || state.conflicts > 0)
-            ? Icons.sync_problem_outlined
-            : Icons.cloud_sync_outlined,
-    };
-  }
-}
-
-class _ShellTopBar extends StatelessWidget {
-  const _ShellTopBar({
-    required this.title,
-    required this.session,
-    required this.onBranchSelected,
-    required this.onRefreshAccess,
-    required this.syncState,
-    required this.onSync,
-  });
-
-  final String title;
-  final AuthSession session;
-  final BranchSelectionCallback onBranchSelected;
-  final VoidCallback onRefreshAccess;
-  final SyncState? syncState;
-  final VoidCallback onSync;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.slate900 : AppColors.slate50,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? AppColors.darkBorder : AppColors.slate200,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(AppConstants.appName, style: theme.textTheme.labelMedium),
-              Text(title, style: theme.textTheme.titleLarge),
-            ],
-          ),
-          const Spacer(),
-          IconButton(
-            tooltip: syncState?.message ?? 'Synchronize now',
-            onPressed: syncState?.status == SyncStatus.syncing ? null : onSync,
-            icon: syncState?.status == SyncStatus.syncing
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    syncState?.status == SyncStatus.offline
-                        ? Icons.cloud_off_outlined
-                        : (syncState?.failedChanges ?? 0) > 0 ||
-                              (syncState?.conflicts ?? 0) > 0
-                        ? Icons.sync_problem_outlined
-                        : Icons.cloud_sync_outlined,
-                  ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          IconButton(
-            tooltip: 'Refresh access',
-            onPressed: onRefreshAccess,
-            icon: const Icon(Icons.refresh),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          SidebarBranchBadge(
-            session: session,
-            compact: true,
-            onSelected: onBranchSelected,
-          ),
-        ],
-      ),
-    );
   }
 }

@@ -8,11 +8,13 @@ class SidebarLogo extends StatelessWidget {
     required this.asset,
     required this.title,
     required this.subtitle,
+    this.trailing,
   });
 
   final String asset;
   final String title;
   final String subtitle;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +22,9 @@ class SidebarLogo extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
         AppSpacing.xl,
-        AppSpacing.xl,
-        AppSpacing.xl,
+        AppSpacing.lg,
         AppSpacing.lg,
       ),
       child: Row(
@@ -43,11 +45,22 @@ class SidebarLogo extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: theme.textTheme.titleMedium),
-                Text(subtitle, style: theme.textTheme.labelMedium),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium,
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelMedium,
+                ),
               ],
             ),
           ),
+          if (trailing != null) trailing!,
         ],
       ),
     );
