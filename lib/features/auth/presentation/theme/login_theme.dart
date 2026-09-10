@@ -23,7 +23,7 @@ abstract final class LoginTheme {
           : const Color(0xFFDAC1A2),
     );
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppRadii.md),
+      borderRadius: BorderRadius.circular(AppRadii.lg),
       borderSide: BorderSide(color: scheme.outlineVariant),
     );
 

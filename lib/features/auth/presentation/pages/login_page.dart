@@ -9,6 +9,7 @@ import '../../../../core/routing/app_route.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_loading_overlay.dart';
 import '../../../../core/widgets/app_split_layout.dart';
+import '../../../../core/widgets/app_translucent_card.dart';
 import '../controllers/auth_controller.dart';
 import '../theme/login_theme.dart';
 import '../widgets/login_brand_header.dart';
@@ -64,33 +65,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           children: [
             SafeArea(
               child: AppSplitLayout(
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const LoginBrandHeader(logoAsset: _logoAsset),
-                    const SizedBox(height: AppSpacing.xxl),
-                    LoginForm(
-                      formKey: _formKey,
-                      emailController: _emailController,
-                      passwordController: _passwordController,
-                      isSubmitting: isLoadingWorkspace,
-                      obscurePassword: _obscurePassword,
-                      errorMessage:
-                          _errorMessage ??
-                          authError ??
-                          (session != null && session.permissions.isEmpty
-                              ? 'This account currently has no permissions.'
-                              : null),
-                      onSubmit: _submit,
-                      onTogglePasswordVisibility: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                      onForgotPassword: _showForgotPasswordMessage,
-                    ),
-                  ],
+                content: AppTranslucentCard(
+                  key: const Key('login-card'),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const LoginBrandHeader(logoAsset: _logoAsset),
+                      const SizedBox(height: AppSpacing.xl),
+                      LoginForm(
+                        formKey: _formKey,
+                        emailController: _emailController,
+                        passwordController: _passwordController,
+                        isSubmitting: isLoadingWorkspace,
+                        obscurePassword: _obscurePassword,
+                        errorMessage:
+                            _errorMessage ??
+                            authError ??
+                            (session != null && session.permissions.isEmpty
+                                ? 'This account currently has no permissions.'
+                                : null),
+                        onSubmit: _submit,
+                        onTogglePasswordVisibility: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        onForgotPassword: _showForgotPasswordMessage,
+                      ),
+                    ],
+                  ),
                 ),
                 illustration: Image.asset(
                   _coverLogoAsset,

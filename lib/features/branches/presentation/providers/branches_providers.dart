@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/database/local_mutation_transaction.dart';
 import '../../../../core/database/database_provider.dart';
@@ -6,7 +7,11 @@ import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/repositories/offline_first_branches_repository.dart';
+import '../../data/data_sources/philippine_address_asset_data_source.dart';
+import '../../data/repositories/asset_philippine_address_repository.dart';
+import '../../domain/entities/philippine_address_catalog.dart';
 import '../../domain/repositories/branches_repository.dart';
+import '../../domain/repositories/philippine_address_repository.dart';
 import '../../domain/usecases/update_branch_name_usecase.dart';
 import '../../domain/entities/branch_profile.dart';
 import '../../domain/usecases/save_branch_usecases.dart';
@@ -24,6 +29,18 @@ final branchesRepositoryProvider = Provider<BranchAdministrationRepository>((
     clock: ref.watch(appClockProvider),
   );
 });
+
+final philippineAddressRepositoryProvider =
+    Provider<PhilippineAddressRepository>((ref) {
+      return AssetPhilippineAddressRepository(
+        dataSource: PhilippineAddressAssetDataSource(assetBundle: rootBundle),
+      );
+    });
+
+final philippineAddressCatalogProvider =
+    FutureProvider<PhilippineAddressCatalog>((ref) {
+      return ref.watch(philippineAddressRepositoryProvider).loadCatalog();
+    });
 
 final branchDirectoryProvider =
     StreamProvider.family<List<BranchProfile>, BranchQuery>((ref, query) {

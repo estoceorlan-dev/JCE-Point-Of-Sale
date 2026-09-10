@@ -47,8 +47,6 @@ class AppNavigationShell extends ConsumerWidget {
           if (!isDesktop) toggle();
           _goToRoute(AppRoute.settings);
         },
-        onBranchSelected: (organizationId, branchId) =>
-            _selectBranch(ref, organizationId, branchId),
         onLogout: () {
           if (!isDesktop) toggle();
           _confirmLogout(context, ref);

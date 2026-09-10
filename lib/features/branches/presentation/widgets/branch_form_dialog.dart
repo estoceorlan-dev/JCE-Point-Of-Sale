@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/entities/branch_profile.dart';
+import 'philippine_address_fields.dart';
 
 class BranchFormDialog extends StatefulWidget {
   const BranchFormDialog({super.key, this.branch});
@@ -25,6 +26,7 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
   late final TextEditingController _phone;
   late final TextEditingController _email;
   late final TextEditingController _receiptName;
+  late String _selectedTimezone;
 
   @override
   void initState() {
@@ -43,6 +45,7 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
     _receiptName = TextEditingController(
       text: branch?.receiptDisplayName ?? '',
     );
+    _selectedTimezone = _timezone.text;
   }
 
   @override
@@ -92,9 +95,7 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
                 const SizedBox(height: AppSpacing.md),
                 Row(
                   children: [
-                    Expanded(
-                      child: _field(_timezone, 'IANA timezone', required: true),
-                    ),
+                    Expanded(child: _timezoneDropdown()),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: _field(_receiptName, 'Receipt display name'),
@@ -106,17 +107,10 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
                 const SizedBox(height: AppSpacing.md),
                 _field(_addressTwo, 'Address line 2'),
                 const SizedBox(height: AppSpacing.md),
-                Row(
-                  children: [
-                    Expanded(child: _field(_city, 'City / municipality')),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(child: _field(_province, 'Province')),
-                    const SizedBox(width: AppSpacing.md),
-                    SizedBox(
-                      width: 130,
-                      child: _field(_postalCode, 'Postal code'),
-                    ),
-                  ],
+                PhilippineAddressFields(
+                  provinceController: _province,
+                  cityController: _city,
+                  postalCodeController: _postalCode,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Row(
@@ -155,6 +149,41 @@ class _BranchFormDialogState extends State<BranchFormDialog> {
         ? (value) => value == null || value.trim().isEmpty ? 'Required' : null
         : null,
   );
+
+  DropdownButtonFormField<String> _timezoneDropdown() {
+    final options = <String>['Asia/Manila'];
+    if (!options.contains(_selectedTimezone)) {
+      options.add(_selectedTimezone);
+    }
+
+    return DropdownButtonFormField<String>(
+      key: const ValueKey('branch-timezone-dropdown'),
+      initialValue: _selectedTimezone,
+      isExpanded: true,
+      decoration: const InputDecoration(labelText: 'IANA timezone'),
+      items: [
+        for (final timezone in options)
+          DropdownMenuItem(
+            value: timezone,
+            child: Text(
+              timezone == 'Asia/Manila'
+                  ? 'Asia/Manila (Philippine Time)'
+                  : timezone,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
+      onChanged: (timezone) {
+        if (timezone == null) return;
+        setState(() {
+          _selectedTimezone = timezone;
+          _timezone.text = timezone;
+        });
+      },
+      validator: (value) =>
+          value == null || value.trim().isEmpty ? 'Required' : null,
+    );
+  }
 
   void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;

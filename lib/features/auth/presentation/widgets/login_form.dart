@@ -141,7 +141,7 @@ class LoginForm extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  borderRadius: BorderRadius.circular(AppRadii.lg),
                 ),
               ),
               onPressed: isSubmitting ? null : onSubmit,

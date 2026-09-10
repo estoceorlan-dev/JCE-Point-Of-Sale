@@ -5,7 +5,7 @@ import '../../shared/models/sync_state.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import 'sidebar/sidebar_branch_badge.dart';
+import 'branch_selector.dart';
 
 class ShellTopBar extends StatelessWidget {
   const ShellTopBar({
@@ -100,9 +100,10 @@ class ShellTopBar extends StatelessWidget {
             icon: const Icon(Icons.refresh),
           ),
           if (isDesktop) const SizedBox(width: AppSpacing.sm),
-          SidebarBranchBadge(
+          BranchSelector(
+            key: const ValueKey('app-bar-branch-selector'),
             session: session,
-            compact: true,
+            maxWidth: isDesktop ? 232 : 136,
             onSelected: onBranchSelected,
           ),
         ],

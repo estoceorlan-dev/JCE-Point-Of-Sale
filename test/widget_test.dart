@@ -40,6 +40,7 @@ void main() {
     expect(find.text('Password'), findsOneWidget);
     expect(find.text('Forgot password?'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);
+    expect(find.byKey(const Key('login-card')), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));

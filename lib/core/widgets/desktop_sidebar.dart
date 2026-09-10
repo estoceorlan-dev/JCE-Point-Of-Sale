@@ -7,7 +7,6 @@ import '../routing/app_route.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import 'sidebar/sidebar_action.dart';
-import 'sidebar/sidebar_branch_badge.dart';
 import 'sidebar/sidebar_logo.dart';
 import 'sidebar/sidebar_toggle.dart';
 import 'sidebar/sidebar_user_panel.dart';
@@ -20,7 +19,6 @@ class DesktopSidebar extends StatelessWidget {
     required this.session,
     required this.onDestinationSelected,
     required this.onSettingsSelected,
-    required this.onBranchSelected,
     required this.onLogout,
     required this.onToggle,
     required this.collapseToRail,
@@ -34,7 +32,6 @@ class DesktopSidebar extends StatelessWidget {
   final AuthSession session;
   final ValueChanged<AppNavigationItem> onDestinationSelected;
   final VoidCallback onSettingsSelected;
-  final BranchSelectionCallback onBranchSelected;
   final VoidCallback onLogout;
   final VoidCallback onToggle;
   final bool collapseToRail;
@@ -165,13 +162,6 @@ class DesktopSidebar extends StatelessWidget {
                             icon: Icons.logout,
                             onTap: onLogout,
                             destructive: true,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          SidebarBranchBadge(
-                            session: session,
-                            onSelected: onBranchSelected,
-                            compact: compact,
-                            iconOnly: compact,
                           ),
                         ],
                       ),

@@ -62,7 +62,6 @@ void main() {
                     if (!isDesktop) toggle();
                   },
                   onSettingsSelected: onSettingsSelected ?? toggle,
-                  onBranchSelected: (_, _) {},
                   onLogout: onLogout ?? toggle,
                 ),
             headerBuilder: (context, toggle, isDesktop) => ShellTopBar(
@@ -169,9 +168,23 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(CircleAvatar), findsOneWidget);
-    await tester.tap(
+    expect(
       find.descendant(
         of: find.byType(DesktopSidebar),
+        matching: find.byTooltip('Switch branch'),
+      ),
+      findsNothing,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(ShellTopBar),
+        matching: find.text('Demo Branch'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(
+      find.descendant(
+        of: find.byType(ShellTopBar),
         matching: find.byTooltip('Switch branch'),
       ),
     );
@@ -252,7 +265,7 @@ void main() {
   }
 
   testWidgets(
-    'drawer dismissal stays in sync and timer does not pop branch menu',
+    'drawer dismissal stays in sync and branch selector stays in app bar',
     (tester) async {
       await mount(tester, size: const Size(390, 844));
       await tester.pumpAndSettle();
@@ -264,11 +277,16 @@ void main() {
       expect(scaffold.isDrawerOpen, isFalse);
       expect(find.byTooltip('Open sidebar'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Open sidebar'));
-      await tester.pumpAndSettle();
-      await tester.tap(
+      expect(
         find.descendant(
           of: find.byType(DesktopSidebar),
+          matching: find.byTooltip('Switch branch'),
+        ),
+        findsNothing,
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byType(ShellTopBar),
           matching: find.byTooltip('Switch branch'),
         ),
       );
