@@ -6,6 +6,13 @@
     "production": "jce-pos-production-259528"
   },
   "targets": {
+    "jce-pos": {
+      "hosting": {
+        "staging-web": [
+          "jce-pos"
+        ]
+      }
+    },
     "jce-pos-staging-259528": {
       "hosting": {
         "staging-web": [

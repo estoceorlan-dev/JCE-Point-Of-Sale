@@ -95,6 +95,16 @@ firebase deploy \
   --project jce-pos-staging-259528
 ```
 
+The same staging build is also published at the shorter public URL
+`https://jce-pos.web.app`. The Hosting target is mapped explicitly in each
+Firebase project, so the project flag remains mandatory:
+
+```sh
+firebase deploy \
+  --only hosting:staging-web \
+  --project jce-pos
+```
+
 For Android App Distribution, obtain the Android app ID from
 `lib/firebase_options_staging.dart` and confirm it belongs to the staging
 project before uploading:
