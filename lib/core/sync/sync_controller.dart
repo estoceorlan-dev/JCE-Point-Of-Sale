@@ -18,6 +18,7 @@ import '../services/administration_snapshot_service.dart';
 import '../services/stock_location_snapshot_service.dart';
 import 'connectivity_monitor.dart';
 import 'background_sync.dart';
+import 'pos_bootstrap_providers.dart';
 
 final syncStateProvider =
     StateNotifierProvider<SyncController, AsyncValue<SyncState>>((ref) {
@@ -36,6 +37,7 @@ final syncStateProvider =
         hydrateAdministration:
             session?.administrationPermissions.isNotEmpty ?? false,
         hydrateLocations: session?.can(AppPermission.manageInventory) ?? false,
+        posActive: session?.can(AppPermission.processSales) ?? false,
       );
     });
 
@@ -59,8 +61,10 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
     required bool automatic,
     required bool hydrateAdministration,
     bool hydrateLocations = false,
+    bool posActive = false,
   }) : _hydrateAdministration = hydrateAdministration,
        _hydrateLocations = hydrateLocations,
+       _posActive = posActive,
        super(const AsyncData(SyncState(status: SyncStatus.idle))) {
     if (_context == null) {
       _legacyPendingSubscription = _ref
@@ -112,7 +116,7 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
           }
         });
     _periodicTimer = Timer.periodic(
-      const Duration(minutes: 5),
+      _posActive ? const Duration(seconds: 30) : const Duration(minutes: 2),
       (_) => unawaited(synchronize(SyncTrigger.periodic)),
     );
     Future<void>.microtask(() => synchronize(SyncTrigger.signIn));
@@ -122,11 +126,14 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
   final BusinessContext? _context;
   final bool _hydrateAdministration;
   final bool _hydrateLocations;
+  final bool _posActive;
   StreamSubscription<SyncDiagnostics>? _diagnosticsSubscription;
   StreamSubscription<int>? _legacyPendingSubscription;
   StreamSubscription<List<SyncConflict>>? _conflictSubscription;
   StreamSubscription<bool>? _connectivitySubscription;
   Timer? _periodicTimer;
+  Timer? _outboxDebounceTimer;
+  int _lastOutstanding = 0;
 
   Future<void> synchronize([SyncTrigger trigger = SyncTrigger.manual]) async {
     final context = _context;
@@ -142,6 +149,20 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
       ),
     );
     try {
+      final config = _ref.read(appConfigProvider);
+      if (_posActive && config.enablePosSyncV2 && !config.enableDemoAuth) {
+        final bootstrap = await _ref
+            .read(posBootstrapRepositoryProvider)
+            .provision(context);
+        if (bootstrap case FailureResult(:final failure)) {
+          final hasCache = await _ref
+              .read(posBootstrapRepositoryProvider)
+              .hasUsableCache(context);
+          if (!hasCache) {
+            throw failure;
+          }
+        }
+      }
       if (_hydrateAdministration &&
           await _ref.read(connectivityMonitorProvider).isConnected) {
         await _ref
@@ -269,6 +290,16 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
         conflicts: diagnostics.conflicted,
       ),
     );
+    final outstanding =
+        diagnostics.pending + diagnostics.retrying + diagnostics.failed;
+    if (outstanding > _lastOutstanding && diagnostics.pending > 0) {
+      _outboxDebounceTimer?.cancel();
+      _outboxDebounceTimer = Timer(
+        const Duration(milliseconds: 300),
+        () => unawaited(synchronize(SyncTrigger.periodic)),
+      );
+    }
+    _lastOutstanding = outstanding;
   }
 
   @override
@@ -278,6 +309,7 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
     _conflictSubscription?.cancel();
     _connectivitySubscription?.cancel();
     _periodicTimer?.cancel();
+    _outboxDebounceTimer?.cancel();
     super.dispose();
   }
 }

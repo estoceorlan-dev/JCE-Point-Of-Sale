@@ -9,7 +9,7 @@ final appConfigProvider = Provider<AppConfig>((ref) {
 class AppConfig {
   static const defaultFirebaseFunctionsRegion = 'asia-southeast1';
   static const defaultAccessRefreshInterval = Duration(minutes: 5);
-  static const defaultMaxOfflineAccessAge = Duration(hours: 24);
+  static const defaultMaxOfflineAccessAge = Duration(days: 7);
 
   const AppConfig({
     required this.environment,
@@ -23,6 +23,11 @@ class AppConfig {
     this.generateStaffInviteFunctionName = 'generateStaffInviteLink',
     this.acceptStaffInviteFunctionName = 'acceptStaffInvitation',
     this.administrationSnapshotFunctionName = 'getAdministrationSnapshot',
+    this.posBootstrapFunctionName = 'getPosBootstrapPage',
+    this.authorizedChangesFunctionName = 'pullAuthorizedChangesV2',
+    this.registerClaimAuthorizationFunctionName =
+        'authorizeRegisterClaimResolution',
+    this.enablePosSyncV2 = true,
     this.accessRefreshInterval = defaultAccessRefreshInterval,
     this.maxOfflineAccessAge = defaultMaxOfflineAccessAge,
     this.apiBaseUri,
@@ -75,6 +80,22 @@ class AppConfig {
       'JCE_ADMINISTRATION_SNAPSHOT_FUNCTION',
       defaultValue: 'getAdministrationSnapshot',
     );
+    const posBootstrapFunction = String.fromEnvironment(
+      'JCE_POS_BOOTSTRAP_FUNCTION',
+      defaultValue: 'getPosBootstrapPage',
+    );
+    const posSyncV2Value = String.fromEnvironment(
+      'JCE_POS_SYNC_V2',
+      defaultValue: 'true',
+    );
+    const authorizedChangesFunction = String.fromEnvironment(
+      'JCE_AUTHORIZED_CHANGES_FUNCTION',
+      defaultValue: 'pullAuthorizedChangesV2',
+    );
+    const registerClaimAuthorizationFunction = String.fromEnvironment(
+      'JCE_REGISTER_CLAIM_AUTHORIZATION_FUNCTION',
+      defaultValue: 'authorizeRegisterClaimResolution',
+    );
     const accessRefreshMinutes = String.fromEnvironment(
       'JCE_ACCESS_REFRESH_MINUTES',
     );
@@ -96,6 +117,11 @@ class AppConfig {
       generateStaffInviteFunctionName: generateStaffInviteFunction,
       acceptStaffInviteFunctionName: acceptStaffInviteFunction,
       administrationSnapshotFunctionName: administrationSnapshotFunction,
+      posBootstrapFunctionName: posBootstrapFunction,
+      authorizedChangesFunctionName: authorizedChangesFunction,
+      registerClaimAuthorizationFunctionName:
+          registerClaimAuthorizationFunction,
+      enablePosSyncV2: posSyncV2Value,
       accessRefreshMinutes: accessRefreshMinutes,
       maxOfflineAccessHours: maxOfflineAccessHours,
     );
@@ -116,6 +142,11 @@ class AppConfig {
     String generateStaffInviteFunctionName = 'generateStaffInviteLink',
     String acceptStaffInviteFunctionName = 'acceptStaffInvitation',
     String administrationSnapshotFunctionName = 'getAdministrationSnapshot',
+    String posBootstrapFunctionName = 'getPosBootstrapPage',
+    String authorizedChangesFunctionName = 'pullAuthorizedChangesV2',
+    String registerClaimAuthorizationFunctionName =
+        'authorizeRegisterClaimResolution',
+    String? enablePosSyncV2,
     String? accessRefreshMinutes,
     String? maxOfflineAccessHours,
   }) {
@@ -167,6 +198,23 @@ class AppConfig {
       administrationSnapshotFunctionName,
       key: 'JCE_ADMINISTRATION_SNAPSHOT_FUNCTION',
     );
+    final normalizedPosBootstrapFunction = _requireValue(
+      posBootstrapFunctionName,
+      key: 'JCE_POS_BOOTSTRAP_FUNCTION',
+    );
+    final parsedPosSyncV2 = _parseOptionalBool(
+      enablePosSyncV2,
+      fallback: true,
+      key: 'JCE_POS_SYNC_V2',
+    );
+    final normalizedAuthorizedChangesFunction = _requireValue(
+      authorizedChangesFunctionName,
+      key: 'JCE_AUTHORIZED_CHANGES_FUNCTION',
+    );
+    final normalizedRegisterClaimAuthorizationFunction = _requireValue(
+      registerClaimAuthorizationFunctionName,
+      key: 'JCE_REGISTER_CLAIM_AUTHORIZATION_FUNCTION',
+    );
     final parsedAccessRefreshMinutes = _parsePositiveInt(
       accessRefreshMinutes,
       fallback: defaultAccessRefreshInterval.inMinutes,
@@ -205,6 +253,11 @@ class AppConfig {
       acceptStaffInviteFunctionName: normalizedAcceptStaffInviteFunction,
       administrationSnapshotFunctionName:
           normalizedAdministrationSnapshotFunction,
+      posBootstrapFunctionName: normalizedPosBootstrapFunction,
+      authorizedChangesFunctionName: normalizedAuthorizedChangesFunction,
+      registerClaimAuthorizationFunctionName:
+          normalizedRegisterClaimAuthorizationFunction,
+      enablePosSyncV2: parsedPosSyncV2,
       accessRefreshInterval: Duration(minutes: parsedAccessRefreshMinutes),
       maxOfflineAccessAge: Duration(hours: parsedMaxOfflineAccessHours),
     );
@@ -224,6 +277,10 @@ class AppConfig {
   final String generateStaffInviteFunctionName;
   final String acceptStaffInviteFunctionName;
   final String administrationSnapshotFunctionName;
+  final String posBootstrapFunctionName;
+  final String authorizedChangesFunctionName;
+  final String registerClaimAuthorizationFunctionName;
+  final bool enablePosSyncV2;
   final Duration accessRefreshInterval;
   final Duration maxOfflineAccessAge;
 

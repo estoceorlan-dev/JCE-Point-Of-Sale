@@ -1,4 +1,5 @@
 import 'generated/pos_connector.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 abstract interface class RemoteSyncDataSource {
   Future<List<RemoteChange>> pullChanges({
@@ -13,6 +14,29 @@ abstract interface class RemoteSyncDataSource {
     required String branchId,
     required String operationId,
   });
+}
+
+abstract interface class PaginatedRemoteSyncDataSource {
+  Future<RemoteChangePage> pullChangePage({
+    required String organizationId,
+    required String branchId,
+    required int afterSequence,
+    int limit = 100,
+  });
+}
+
+class RemoteChangePage {
+  const RemoteChangePage({
+    required this.changes,
+    required this.nextCursor,
+    required this.hasMore,
+    this.permissionDigest,
+  });
+
+  final List<RemoteChange> changes;
+  final int nextCursor;
+  final bool hasMore;
+  final String? permissionDigest;
 }
 
 final class SqlConnectRemoteSyncDataSource implements RemoteSyncDataSource {
@@ -86,6 +110,99 @@ final class SqlConnectRemoteSyncDataSource implements RemoteSyncDataSource {
       processedAt: operation.processedAt.toDateTime().toUtc(),
     );
   }
+}
+
+final class CloudFunctionsAuthorizedRemoteSyncDataSource
+    implements RemoteSyncDataSource, PaginatedRemoteSyncDataSource {
+  CloudFunctionsAuthorizedRemoteSyncDataSource({
+    required FirebaseFunctions functions,
+    required String functionName,
+    RemoteSyncDataSource? processedOperationFallback,
+  }) : _functions = functions,
+       _functionName = functionName,
+       _processedOperationFallback =
+           processedOperationFallback ?? SqlConnectRemoteSyncDataSource();
+
+  final FirebaseFunctions _functions;
+  final String _functionName;
+  final RemoteSyncDataSource _processedOperationFallback;
+
+  @override
+  Future<List<RemoteChange>> pullChanges({
+    required String organizationId,
+    required String branchId,
+    required int afterSequence,
+    int limit = 100,
+  }) async => (await pullChangePage(
+    organizationId: organizationId,
+    branchId: branchId,
+    afterSequence: afterSequence,
+    limit: limit,
+  )).changes;
+
+  @override
+  Future<RemoteChangePage> pullChangePage({
+    required String organizationId,
+    required String branchId,
+    required int afterSequence,
+    int limit = 100,
+  }) async {
+    final response = await _functions.httpsCallable(_functionName).call({
+      'organizationId': organizationId,
+      'branchId': branchId,
+      'afterSequence': afterSequence,
+      'limit': limit,
+      'projection': 'pos',
+    });
+    if (response.data is! Map) {
+      throw const FormatException('Invalid authorized change response.');
+    }
+    final value = Map<String, Object?>.from(response.data as Map);
+    if (value['schemaVersion'] != 2 ||
+        value['organizationId'] != organizationId ||
+        value['branchId'] != branchId ||
+        value['changes'] is! List) {
+      throw const FormatException('Authorized changes are outside this scope.');
+    }
+    final changes = (value['changes'] as List)
+        .map((raw) {
+          final row = Map<String, Object?>.from(raw as Map);
+          return RemoteChange(
+            sequence: (row['sequence'] as num).toInt(),
+            organizationId: row['organizationId'] as String,
+            branchId: row['branchId'] as String?,
+            aggregateType: row['aggregateType'] as String,
+            aggregateId: row['aggregateId'] as String,
+            operationId: row['operationId'] as String,
+            changeType: row['changeType'] as String,
+            version: (row['version'] as num).toInt(),
+            payload: row['payload'],
+            occurredAt: DateTime.parse(row['occurredAt'] as String).toUtc(),
+          );
+        })
+        .toList(growable: false);
+    final nextCursor = (value['nextCursor'] as num?)?.toInt();
+    if (nextCursor == null || nextCursor < afterSequence) {
+      throw const FormatException('Authorized change cursor moved backwards.');
+    }
+    return RemoteChangePage(
+      changes: changes,
+      nextCursor: nextCursor,
+      hasMore: value['hasMore'] == true,
+      permissionDigest: value['permissionDigest'] as String?,
+    );
+  }
+
+  @override
+  Future<ProcessedRemoteOperation?> getProcessedOperation({
+    required String organizationId,
+    required String branchId,
+    required String operationId,
+  }) => _processedOperationFallback.getProcessedOperation(
+    organizationId: organizationId,
+    branchId: branchId,
+    operationId: operationId,
+  );
 }
 
 class RemoteChange {

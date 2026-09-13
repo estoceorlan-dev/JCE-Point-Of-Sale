@@ -6,7 +6,14 @@ import '../../../../core/database/app_database.dart'
     hide Payment, Sale, SaleItem;
 import '../../../../core/database/app_database.dart'
     as db
-    show Branche, Register, Sale, SaleItem, SaleReturn, Shift;
+    show
+        Branche,
+        Register,
+        RegisterClaimRecord,
+        Sale,
+        SaleItem,
+        SaleReturn,
+        Shift;
 import '../../../../core/database/local_mutation_transaction.dart';
 import '../../../../core/database/models/outbox_command.dart';
 import '../../../../core/error/failure.dart';
@@ -73,10 +80,12 @@ class DriftSalesRepository implements SalesRepository {
   @override
   Stream<List<SaleRecord>> watchRecentSales({
     required BusinessContext context,
+    String search = '',
   }) {
     return _localDataSource.watchRecentSales(
       organizationId: context.organizationId,
       branchId: context.branchId,
+      search: search,
     );
   }
 
@@ -304,6 +313,40 @@ class DriftSalesRepository implements SalesRepository {
     final customerDependency = customerId == null
         ? null
         : await _latestCustomerOperation(customerId);
+    final registerClaim = await _latestDeviceClaim(
+      context: context,
+      deviceId: draft.deviceId,
+    );
+    if (registerClaim?.status == 'rejected') {
+      return const Result.failure(
+        ConflictFailure(
+          'This terminal register claim was rejected. A manager must reassign it before checkout.',
+        ),
+      );
+    }
+    final shiftDependency = await _activeDeviceShift(
+      context: context,
+      deviceId: draft.deviceId,
+    );
+    final claimDependency = await _existingOutboxOperation(registerClaim?.id);
+    final shiftOperationDependency = await _existingOutboxOperation(
+      shiftDependency?.operationId,
+    );
+    final outboxPayload = _salePayload(
+      saleId: saleId,
+      inventoryTransactionId: inventoryTransactionId,
+      pricing: pricing,
+      reconciliation: reconciliation,
+      deviceId: draft.deviceId,
+      approvedByUserId: discountApprovedByUserId,
+      saleDiscountReason: draft.cart.saleDiscountReason,
+      customerId: customerId,
+      registerClaimId: registerClaim?.id,
+      registerId:
+          registerClaim?.resolvedRegisterId ??
+          registerClaim?.requestedRegisterId,
+      now: now,
+    );
     final mutation = await _localMutationTransaction.execute(
       businessWrite: (database) async {
         if (customerId != null) {
@@ -355,6 +398,9 @@ class DriftSalesRepository implements SalesRepository {
           branchCode: branch.code,
           now: now,
         );
+        outboxPayload['localReceiptNumber'] = receiptNumber;
+        outboxPayload['receiptNumber'] = receiptNumber;
+        outboxPayload['registerId'] = scope.register.id;
         await _ledgerWriter.post(
           database: database,
           context: context,
@@ -389,6 +435,7 @@ class DriftSalesRepository implements SalesRepository {
                 inventoryTransactionId: Value(inventoryTransactionId),
                 customerId: Value(customerId),
                 operationId: operationId,
+                registerClaimId: Value(registerClaim?.id),
                 receiptNumber: Value(receiptNumber),
                 status: Value(SaleStatus.completed.databaseValue),
                 cashierUserId: context.actorUserId,
@@ -488,6 +535,7 @@ class DriftSalesRepository implements SalesRepository {
                   row.organizationId.equals(context.organizationId) &
                   row.branchId.equals(context.branchId) &
                   row.deviceId.equals(draft.deviceId) &
+                  row.ownerUserId.equals(context.actorUserId) &
                   row.status.equals('active'),
             ))
             .go();
@@ -517,19 +565,15 @@ class DriftSalesRepository implements SalesRepository {
         commandType: 'sale.complete',
         aggregateType: 'sale',
         aggregateId: saleId,
-        payload: _salePayload(
-          saleId: saleId,
-          inventoryTransactionId: inventoryTransactionId,
-          pricing: pricing,
-          reconciliation: reconciliation,
-          deviceId: draft.deviceId,
-          approvedByUserId: discountApprovedByUserId,
-          saleDiscountReason: draft.cart.saleDiscountReason,
-          customerId: customerId,
-          now: now,
-        ),
+        payload: outboxPayload,
         now: now,
         dependsOnOperationId: customerDependency,
+        causalGroupId: registerClaim?.id,
+        dependencyOperationIds: {
+          if (customerDependency != null) customerDependency,
+          if (claimDependency != null) claimDependency,
+          if (shiftOperationDependency != null) shiftOperationDependency,
+        }.toList(growable: false),
       ),
     );
     if (mutation.isFailure) {
@@ -613,8 +657,12 @@ class DriftSalesRepository implements SalesRepository {
               ..orderBy([(row) => OrderingTerm.desc(row.completedAt)])
               ..limit(1))
             .getSingleOrNull();
-    final dependencyOperationId =
-        latestCorrection?.operationId ?? sale.operationId;
+    final dependencyOperationId = await _existingOutboxOperation(
+      latestCorrection?.operationId ?? sale.operationId,
+    );
+    final claimDependency = await _existingOutboxOperation(
+      sale.registerClaimId,
+    );
     final saleItems =
         await (_database.select(_database.saleItems)
               ..where((row) => row.saleId.equals(sale.id))
@@ -978,6 +1026,11 @@ class DriftSalesRepository implements SalesRepository {
         aggregateType: 'sale_correction',
         aggregateId: correctionId,
         dependsOnOperationId: dependencyOperationId,
+        causalGroupId: sale.registerClaimId,
+        dependencyOperationIds: {
+          if (dependencyOperationId != null) dependencyOperationId,
+          if (claimDependency != null) claimDependency,
+        }.toList(growable: false),
         payload: {
           'id': correctionId,
           'saleId': sale.id,
@@ -1449,6 +1502,8 @@ GROUP BY sri.sale_item_id
     required Map<String, Object?> payload,
     required DateTime now,
     String? dependsOnOperationId,
+    String? causalGroupId,
+    List<String> dependencyOperationIds = const [],
   }) {
     return OutboxCommand(
       operationId: operationId,
@@ -1459,6 +1514,8 @@ GROUP BY sri.sale_item_id
       aggregateType: aggregateType,
       aggregateId: aggregateId,
       dependsOnOperationId: dependsOnOperationId,
+      causalGroupId: causalGroupId,
+      dependencyOperationIds: dependencyOperationIds,
       payload: payload,
       createdAt: now,
     );
@@ -1474,11 +1531,15 @@ GROUP BY sri.sale_item_id
     String? customerId,
     String? approvedByUserId,
     String? saleDiscountReason,
+    String? registerClaimId,
+    String? registerId,
   }) {
     return {
       'id': saleId,
       'inventoryTransactionId': inventoryTransactionId,
       'deviceId': deviceId,
+      'registerClaimId': registerClaimId,
+      'registerId': registerId,
       'completedAt': now.toIso8601String(),
       'customerId': customerId,
       'subtotalMinor': pricing.subtotalMinor,
@@ -1538,6 +1599,52 @@ GROUP BY sri.sale_item_id
               ..limit(1))
             .get();
     return rows.firstOrNull?.operationId;
+  }
+
+  Future<db.RegisterClaimRecord?> _latestDeviceClaim({
+    required BusinessContext context,
+    required String deviceId,
+  }) {
+    return (_database.select(_database.registerClaims)
+          ..where(
+            (row) =>
+                row.organizationId.equals(context.organizationId) &
+                row.branchId.equals(context.branchId) &
+                row.deviceId.equals(deviceId) &
+                row.status.isIn([
+                  'provisional',
+                  'accepted',
+                  'rejected',
+                  'resolved',
+                ]),
+          )
+          ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<db.Shift?> _activeDeviceShift({
+    required BusinessContext context,
+    required String deviceId,
+  }) {
+    return (_database.select(_database.shifts)
+          ..where(
+            (row) =>
+                row.organizationId.equals(context.organizationId) &
+                row.branchId.equals(context.branchId) &
+                row.deviceId.equals(deviceId) &
+                row.status.equals('open'),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<String?> _existingOutboxOperation(String? operationId) async {
+    if (operationId == null) return null;
+    final operation = await (_database.select(
+      _database.syncOutboxEntries,
+    )..where((row) => row.operationId.equals(operationId))).getSingleOrNull();
+    return operation?.operationId;
   }
 }
 

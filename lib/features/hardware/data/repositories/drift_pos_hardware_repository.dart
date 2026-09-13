@@ -180,11 +180,24 @@ class DriftPosHardwareRepository implements PosHardwareRepository {
     final deduplicationKey = request.copyType == domain.ReceiptCopyType.original
         ? 'original:${context.organizationId}:${request.saleId}'
         : 'reprint:$jobId';
+    final sale =
+        await (_database.select(_database.sales)..where(
+              (row) =>
+                  row.id.equals(request.saleId) &
+                  row.organizationId.equals(context.organizationId) &
+                  row.branchId.equals(context.branchId),
+            ))
+            .getSingleOrNull();
+    final saleDependency = await _existingOutboxOperation(sale?.operationId);
+    final claimDependency = await _existingOutboxOperation(
+      sale?.registerClaimId,
+    );
     final companion = db.ReceiptPrintJobsCompanion.insert(
       id: jobId,
       organizationId: context.organizationId,
       branchId: context.branchId,
       registerId: request.registerId,
+      registerClaimId: Value(sale?.registerClaimId),
       saleId: request.saleId,
       deduplicationKey: deduplicationKey,
       copyType: request.copyType.databaseValue,
@@ -222,6 +235,11 @@ class DriftPosHardwareRepository implements PosHardwareRepository {
           commandType: 'receipt.reprint',
           aggregateType: 'receipt_reprint_event',
           aggregateId: jobId,
+          causalGroupId: sale?.registerClaimId,
+          dependencyOperationIds: {
+            if (saleDependency != null) saleDependency,
+            if (claimDependency != null) claimDependency,
+          }.toList(growable: false),
           payload: {
             'id': jobId,
             'saleId': request.saleId,
@@ -257,6 +275,14 @@ class DriftPosHardwareRepository implements PosHardwareRepository {
       _database.receiptPrintJobs,
     )..where((candidate) => candidate.id.equals(jobId))).getSingle();
     return Result.success(_job(row));
+  }
+
+  Future<String?> _existingOutboxOperation(String? operationId) async {
+    if (operationId == null) return null;
+    final operation = await (_database.select(
+      _database.syncOutboxEntries,
+    )..where((row) => row.operationId.equals(operationId))).getSingleOrNull();
+    return operation?.operationId;
   }
 
   @override

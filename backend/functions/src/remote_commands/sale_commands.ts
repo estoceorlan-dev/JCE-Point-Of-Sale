@@ -76,7 +76,29 @@ export async function completeSale(
   }
 
   const deviceId = requiredString(payload, "deviceId");
+  const registerClaimId = optionalString(payload, "registerClaimId");
   const scope = await loadCheckoutScope(client, command, deviceId);
+  if (registerClaimId !== null) {
+    const claim = await client.query(
+      `SELECT 1 FROM register_claims
+       WHERE id = $1 AND organization_id = $2 AND branch_id = $3
+         AND device_id = $4 AND status IN ('accepted', 'resolved')
+         AND COALESCE(resolved_register_id, requested_register_id) = $5`,
+      [
+        registerClaimId,
+        command.organizationId,
+        command.branchId,
+        deviceId,
+        scope.registerId,
+      ],
+    );
+    if (claim.rowCount !== 1) {
+      throw new RemoteCommandError(
+        "failed-precondition",
+        "The register claim has not been accepted for this sale.",
+      );
+    }
+  }
   const discountApprovedByUserId = optionalString(payload, "discountApprovedByUserId");
   const discountMinor = requiredInteger(payload, "discountMinor");
   const subtotalMinor = requiredInteger(payload, "subtotalMinor");
@@ -120,14 +142,15 @@ export async function completeSale(
     `
       INSERT INTO sales (
         id, organization_id, branch_id, register_id, shift_id,
-        inventory_transaction_id, customer_id, operation_id, receipt_number, status,
+        register_claim_id, inventory_transaction_id, customer_id,
+        operation_id, receipt_number, status,
         cashier_user_id, subtotal_minor, discount_minor, tax_minor, total_minor,
         tendered_minor, change_minor, discount_approved_by_user_id,
         discount_approved_at, completed_at, version, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'completed', $10, $11,
-        $12, $13, $14, $15, $16, $17,
-        CASE WHEN $17::text IS NULL THEN NULL ELSE now() END,
-        $18, 0, now(), now())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'completed', $11, $12,
+        $13, $14, $15, $16, $17, $18,
+        CASE WHEN $18::text IS NULL THEN NULL ELSE now() END,
+        $19, 0, now(), now())
     `,
     [
       saleId,
@@ -135,6 +158,7 @@ export async function completeSale(
       command.branchId,
       scope.registerId,
       scope.shiftId,
+      registerClaimId,
       inventoryTransactionId,
       customerId,
       command.operationId,
@@ -150,6 +174,26 @@ export async function completeSale(
       completedAt,
     ],
   );
+  const localReceiptNumber = optionalString(payload, "localReceiptNumber") ??
+    optionalString(payload, "receiptNumber");
+  if (localReceiptNumber !== null && localReceiptNumber !== receiptNumber) {
+    await client.query(
+      `INSERT INTO sale_receipt_aliases (
+         id, organization_id, branch_id, sale_id, register_claim_id,
+         alias_receipt_number, canonical_receipt_number, alias_kind, created_at
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'offline_printed', now())
+       ON CONFLICT (sale_id, alias_receipt_number) DO NOTHING`,
+      [
+        randomUUID(),
+        command.organizationId,
+        command.branchId,
+        saleId,
+        registerClaimId,
+        localReceiptNumber,
+        receiptNumber,
+      ],
+    );
+  }
   const saleItemIds: string[] = [];
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
@@ -202,6 +246,7 @@ export async function completeSale(
       inventoryTransactionId,
       customerId,
       receiptNumber,
+      localReceiptNumber,
       status: "completed",
       completedAt: completedAt.toISOString(),
       version: 0,

@@ -8,6 +8,7 @@ enum AppPermission {
   manageInventory('inventory.manage'),
   approveInventoryAdjustments('inventory.adjustments.approve'),
   manageRegisters('registers.manage'),
+  claimRegisters('registers.claim'),
   approveShiftDiscrepancies('shifts.discrepancies.approve'),
   approveTransfers('transfers.approve'),
   createPurchases('purchases.create'),

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,12 +12,26 @@ import '../providers/pos_providers.dart';
 import '../widgets/correction_policy_dialog.dart';
 import '../widgets/sale_details_dialog.dart';
 
-class SalesHistoryPage extends ConsumerWidget {
+class SalesHistoryPage extends ConsumerStatefulWidget {
   const SalesHistoryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sales = ref.watch(recentSalesProvider);
+  ConsumerState<SalesHistoryPage> createState() => _SalesHistoryPageState();
+}
+
+class _SalesHistoryPageState extends ConsumerState<SalesHistoryPage> {
+  Timer? _searchDebounce;
+  String _search = '';
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sales = ref.watch(recentSalesSearchProvider(_search));
     final canManagePolicy =
         ref
             .watch(activePosSessionProvider)
@@ -60,6 +76,23 @@ class SalesHistoryPage extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.xs),
                     const Text(
                       'Recent branch receipts remain readable from their saved product and price snapshots.',
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Find a receipt',
+                        hintText: 'Canonical or offline receipt number',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        _searchDebounce?.cancel();
+                        _searchDebounce = Timer(
+                          const Duration(milliseconds: 250),
+                          () {
+                            if (mounted) setState(() => _search = value.trim());
+                          },
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     sales.when(
@@ -122,7 +155,13 @@ class _SalesList extends StatelessWidget {
             leading: const Icon(Icons.receipt_long_outlined),
             title: Text(sale.receiptNumber),
             subtitle: Text(
-              '${sale.registerName} · ${sale.completedAt.toLocal()} · ${sale.items.length} item(s)',
+              [
+                sale.registerName,
+                sale.completedAt.toLocal().toString(),
+                '${sale.items.length} item(s)',
+                if (sale.receiptAliases.isNotEmpty)
+                  'Offline: ${sale.receiptAliases.join(', ')}',
+              ].join(' · '),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,

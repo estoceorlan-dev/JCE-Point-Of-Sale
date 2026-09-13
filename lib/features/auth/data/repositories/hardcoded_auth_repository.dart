@@ -192,6 +192,7 @@ class HardcodedAuthRepository implements AuthRepository {
         AppPermission.manageProducts,
         AppPermission.manageInventory,
         AppPermission.manageRegisters,
+        AppPermission.claimRegisters,
         AppPermission.approveShiftDiscrepancies,
         AppPermission.approveTransfers,
         AppPermission.createPurchases,

@@ -236,18 +236,32 @@ export async function registerDeviceForUser(
         organization_id,
         branch_id,
         user_id,
+        registered_by_user_id,
+        last_seen_by_user_id,
         platform,
         last_seen_at,
         registered_at,
         disabled_at
       )
-      VALUES ($1, $2, $3, $4, $5, now(), now(), NULL)
+      VALUES ($1, $2, $3, $4, $4, $4, $5, now(), now(), NULL)
       ON CONFLICT (organization_id, id) DO UPDATE SET
-        branch_id = EXCLUDED.branch_id,
+        branch_id = CASE
+          WHEN EXISTS (
+            SELECT 1 FROM registers r
+            WHERE r.organization_id = devices.organization_id
+              AND r.assigned_device_id = devices.id
+              AND r.deleted_at IS NULL
+          ) THEN devices.branch_id
+          ELSE EXCLUDED.branch_id
+        END,
         platform = EXCLUDED.platform,
+        registered_by_user_id = COALESCE(
+          devices.registered_by_user_id,
+          devices.user_id
+        ),
+        last_seen_by_user_id = EXCLUDED.last_seen_by_user_id,
         last_seen_at = now(),
         disabled_at = NULL
-      WHERE devices.user_id = EXCLUDED.user_id
       RETURNING id
     `,
     [

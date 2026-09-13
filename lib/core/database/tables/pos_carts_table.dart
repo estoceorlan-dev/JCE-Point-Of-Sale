@@ -8,6 +8,10 @@ import 'organizations_table.dart';
   name: 'pos_carts_device_status_idx',
   columns: {#organizationId, #branchId, #deviceId, #status, #updatedAt},
 )
+@TableIndex(
+  name: 'pos_carts_owner_status_idx',
+  columns: {#organizationId, #branchId, #deviceId, #ownerUserId, #status},
+)
 class PosCarts extends Table {
   TextColumn get id => text()();
   TextColumn get organizationId =>
@@ -15,6 +19,7 @@ class PosCarts extends Table {
   TextColumn get branchId =>
       text().references(Branches, #id, onDelete: KeyAction.cascade)();
   TextColumn get deviceId => text()();
+  TextColumn get ownerUserId => text().nullable()();
   TextColumn get status => text().check(
     const CustomExpression<bool>("status IN ('active', 'held')"),
   )();

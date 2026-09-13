@@ -35,24 +35,19 @@ class CloudFunctionsAccessRemoteDataSource implements AccessRemoteDataSource {
     required String email,
   }) async {
     try {
-      final acceptFunction = _acceptInvitationFunctionName;
-      if (acceptFunction != null) {
+      try {
+        return await _fetchProfile(firebaseUid: firebaseUid, email: email);
+      } on FirebaseFunctionsException catch (error) {
+        final acceptFunction = _acceptInvitationFunctionName;
+        if (acceptFunction == null || !_couldBePendingInvitation(error.code)) {
+          rethrow;
+        }
+
         await _functions
             .httpsCallable(acceptFunction)
             .call<Object?>(const <String, Object?>{});
+        return _fetchProfile(firebaseUid: firebaseUid, email: email);
       }
-      final result = await _functions
-          .httpsCallable(_functionName)
-          .call<Object?>();
-      final data = _asStringMap(result.data);
-      if (data == null || data['user'] == null) {
-        return null;
-      }
-      return _parseProfile(
-        data,
-        fallbackFirebaseUid: firebaseUid,
-        fallbackEmail: email,
-      );
     } on FirebaseFunctionsException catch (error) {
       if (error.code == 'not-found' ||
           error.code == 'permission-denied' ||
@@ -61,6 +56,28 @@ class CloudFunctionsAccessRemoteDataSource implements AccessRemoteDataSource {
       }
       throw AccessProfileUnavailableException(error.code, cause: error);
     }
+  }
+
+  Future<AppUser?> _fetchProfile({
+    required String firebaseUid,
+    required String email,
+  }) async {
+    final result = await _functions
+        .httpsCallable(_functionName)
+        .call<Object?>();
+    final data = _asStringMap(result.data);
+    if (data == null || data['user'] == null) {
+      return null;
+    }
+    return _parseProfile(
+      data,
+      fallbackFirebaseUid: firebaseUid,
+      fallbackEmail: email,
+    );
+  }
+
+  bool _couldBePendingInvitation(String code) {
+    return code == 'not-found' || code == 'permission-denied';
   }
 
   AppUser _parseProfile(

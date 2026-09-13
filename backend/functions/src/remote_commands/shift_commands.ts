@@ -1,6 +1,7 @@
 import {randomUUID} from "node:crypto";
 import {PoolClient} from "pg";
 import {administerRegister} from "./register_administration_commands";
+import {applyRegisterClaimCommand} from "./register_claim_commands";
 
 import {
   AuthorizedCommand,
@@ -26,6 +27,10 @@ export async function applyShiftCommand(
   client: PoolClient,
   command: AuthorizedCommand,
 ): Promise<CommandResult> {
+  if (["register.claim", "register.claim.resolve", "register.release"]
+    .includes(command.commandType)) {
+    return applyRegisterClaimCommand(client, command);
+  }
   if (["register.update", "register.archive", "register.restore", "register.unassign_device"]
     .includes(command.commandType)) return administerRegister(client, command);
   if (command.commandType === "register.create") return createRegister(client, command);
@@ -198,6 +203,7 @@ async function openShift(
   const shiftId = requiredString(payload, "id");
   const registerId = requiredString(payload, "registerId");
   const deviceId = requiredString(payload, "deviceId");
+  const registerClaimId = optionalString(payload, "registerClaimId");
   const openingCashMinor = requiredInteger(payload, "openingCashMinor");
   if (shiftId !== command.aggregateId || openingCashMinor < 0) {
     throw new RemoteCommandError("invalid-argument", "The shift opening is invalid.");
@@ -222,6 +228,21 @@ async function openShift(
   if (scope.rowCount !== 1) {
     throw new RemoteCommandError("permission-denied", "The device is not assigned to this register.");
   }
+  if (registerClaimId !== null) {
+    const claim = await client.query(
+      `SELECT 1 FROM register_claims
+       WHERE id = $1 AND organization_id = $2 AND branch_id = $3
+         AND device_id = $4 AND status IN ('accepted', 'resolved')
+         AND COALESCE(resolved_register_id, requested_register_id) = $5`,
+      [registerClaimId, command.organizationId, command.branchId, deviceId, registerId],
+    );
+    if (claim.rowCount !== 1) {
+      throw new RemoteCommandError(
+        "failed-precondition",
+        "The register claim has not been accepted for this shift.",
+      );
+    }
+  }
   if (!scope.rows[0].allow_multiple_open_shifts_per_user) {
     const userShift = await client.query(
       `SELECT id FROM shifts WHERE organization_id = $1 AND branch_id = $2
@@ -237,12 +258,12 @@ async function openShift(
     `
       INSERT INTO shifts (
         id, organization_id, branch_id, register_id, device_id, operation_id,
-        status, opening_cash_minor, opening_notes, opened_by_user_id,
+        register_claim_id, status, opening_cash_minor, opening_notes, opened_by_user_id,
         opened_at, version, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, 'open', $7, $8, $9, $10, 0, now(), now())
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'open', $8, $9, $10, $11, 0, now(), now())
       RETURNING id, status, version, opened_at
     `,
-    [shiftId, command.organizationId, command.branchId, registerId, deviceId, command.operationId, openingCashMinor, optionalString(payload, "notes"), command.actorUserId, openedAt],
+    [shiftId, command.organizationId, command.branchId, registerId, deviceId, command.operationId, registerClaimId, openingCashMinor, optionalString(payload, "notes"), command.actorUserId, openedAt],
   );
   return {shift: result.rows[0]};
 }
@@ -264,8 +285,8 @@ async function postCashMovement(
   if (!validAmount) {
     throw new RemoteCommandError("invalid-argument", "The cash movement amount is invalid.");
   }
-  const shift = await client.query<{register_id: string}>(
-    `SELECT register_id FROM shifts
+  const shift = await client.query<{register_id: string; register_claim_id: string | null}>(
+    `SELECT register_id, register_claim_id FROM shifts
      WHERE id = $1 AND organization_id = $2 AND branch_id = $3 AND status = 'open'
      FOR UPDATE`,
     [shiftId, command.organizationId, command.branchId],
@@ -277,9 +298,9 @@ async function postCashMovement(
   const result = await client.query(
     `INSERT INTO cash_movements (
        id, organization_id, branch_id, register_id, shift_id, operation_id,
-       movement_type, amount_minor, reason, created_by_user_id, occurred_at,
-       version, created_at, updated_at
-     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 0, now(), now())
+       register_claim_id, movement_type, amount_minor, reason,
+       created_by_user_id, occurred_at, version, created_at, updated_at
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 0, now(), now())
      RETURNING id, shift_id, movement_type, amount_minor, occurred_at, version`,
     [
       id,
@@ -288,6 +309,7 @@ async function postCashMovement(
       shift.rows[0].register_id,
       shiftId,
       command.operationId,
+      shift.rows[0].register_claim_id,
       movementType,
       amountMinor,
       requiredString(command.payload, "reason"),

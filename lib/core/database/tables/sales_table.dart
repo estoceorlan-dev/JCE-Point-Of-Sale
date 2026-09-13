@@ -5,6 +5,7 @@ import 'customers_table.dart';
 import 'inventory_transactions_table.dart';
 import 'organizations_table.dart';
 import 'registers_table.dart';
+import 'register_claims_table.dart';
 import 'shifts_table.dart';
 
 @TableIndex(
@@ -32,6 +33,11 @@ class Sales extends Table {
     onDelete: KeyAction.restrict,
   )();
   TextColumn get operationId => text()();
+  TextColumn get registerClaimId => text().nullable().references(
+    RegisterClaims,
+    #id,
+    onDelete: KeyAction.restrict,
+  )();
   TextColumn get receiptNumber => text().nullable()();
   TextColumn get status =>
       text().withDefault(const Constant<String>('draft'))();

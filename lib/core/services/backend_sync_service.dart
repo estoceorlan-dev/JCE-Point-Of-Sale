@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+export '../sync/sync_coordinator.dart';
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +23,7 @@ import '../remote/remote_command_data_source.dart';
 import '../remote/remote_sync_data_source.dart';
 import '../sync/connectivity_monitor.dart';
 import '../sync/remote_change_applier.dart';
+import '../sync/sync_coordinator.dart';
 import '../utils/app_clock.dart';
 
 final remoteCommandDataSourceProvider = Provider<RemoteCommandDataSource>((
@@ -36,7 +39,12 @@ final remoteCommandDataSourceProvider = Provider<RemoteCommandDataSource>((
 });
 
 final remoteSyncDataSourceProvider = Provider<RemoteSyncDataSource>((ref) {
-  return SqlConnectRemoteSyncDataSource();
+  final config = ref.watch(appConfigProvider);
+  if (!config.enablePosSyncV2) return SqlConnectRemoteSyncDataSource();
+  return CloudFunctionsAuthorizedRemoteSyncDataSource(
+    functions: ref.watch(firebaseFunctionsProvider),
+    functionName: config.authorizedChangesFunctionName,
+  );
 });
 
 final remoteChangeApplierProvider = Provider<RemoteChangeApplier>((ref) {
@@ -59,29 +67,8 @@ final backendSyncServiceProvider = Provider<BackendSyncService>((ref) {
   );
 });
 
-enum SyncTrigger { manual, signIn, reconnect, foreground, periodic, background }
-
-class SyncRunResult {
-  const SyncRunResult({
-    required this.trigger,
-    required this.startedAt,
-    required this.finishedAt,
-    required this.pushed,
-    required this.pulled,
-    required this.conflicts,
-    required this.offline,
-  });
-
-  final SyncTrigger trigger;
-  final DateTime startedAt;
-  final DateTime finishedAt;
-  final int pushed;
-  final int pulled;
-  final int conflicts;
-  final bool offline;
-}
-
-abstract interface class BackendSyncService {
+abstract interface class BackendSyncService implements SyncCoordinator {
+  @override
   Future<SyncRunResult> synchronize({
     required BusinessContext context,
     SyncTrigger trigger = SyncTrigger.manual,
@@ -115,8 +102,8 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
 
   static const _cursorScope = 'remote-change-feed';
   static const _staleProcessingAge = Duration(minutes: 5);
-  static const _pushBatchSize = 25;
-  static const _maximumPushBatches = 20;
+  static const _pushBatchSize = 4;
+  static const _maximumPushBatches = 125;
   static const _pullBatchSize = 100;
   static const _maximumPullBatches = 20;
 
@@ -132,18 +119,23 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
   final AppClock _clock;
   final AppLogger _logger;
 
-  Future<SyncRunResult>? _activeRun;
+  final Map<String, Future<SyncRunResult>> _activeRuns = {};
 
   @override
   Future<SyncRunResult> synchronize({
     required BusinessContext context,
     SyncTrigger trigger = SyncTrigger.manual,
   }) {
-    final active = _activeRun;
+    final scopeKey = [
+      context.organizationId,
+      context.branchId,
+      context.actorUserId,
+    ].join(':');
+    final active = _activeRuns[scopeKey];
     if (active != null) return active;
     final run = _synchronize(context, trigger);
-    _activeRun = run;
-    return run.whenComplete(() => _activeRun = null);
+    _activeRuns[scopeKey] = run;
+    return run.whenComplete(() => _activeRuns.remove(scopeKey));
   }
 
   Future<SyncRunResult> _synchronize(
@@ -151,7 +143,20 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
     SyncTrigger trigger,
   ) async {
     final startedAt = _clock.nowUtc();
-    if (!await _connectivity.isConnected) {
+    final hasNetworkInterface = await _connectivity.isConnected;
+    int initialPull;
+    try {
+      // A usable network interface is only a hint. A successful authorized
+      // backend pull is the reachability check that establishes online state.
+      initialPull = await _pullAndApply(context);
+    } catch (error, stackTrace) {
+      if (hasNetworkInterface && !_isReachabilityFailure(error)) rethrow;
+      _logger.warning(
+        'The backend is unreachable; local POS operation remains available.',
+        scope: 'sync.reachability',
+        error: error,
+        stackTrace: stackTrace,
+      );
       return SyncRunResult(
         trigger: trigger,
         startedAt: startedAt,
@@ -194,13 +199,13 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
           .length;
     }
 
-    final pulled = await _pullAndApply(context);
+    final finalPull = await _pullAndApply(context);
     return SyncRunResult(
       trigger: trigger,
       startedAt: startedAt,
       finishedAt: _clock.nowUtc(),
       pushed: pushed,
-      pulled: pulled,
+      pulled: initialPull + finalPull,
       conflicts: conflicts,
       offline: false,
     );
@@ -217,6 +222,14 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       );
       if (result.operationId != command.operationId) {
         throw StateError('Remote operation ID did not match the outbox entry.');
+      }
+      if (await _applyStructuredClaimOutcome(command, result.result)) {
+        await _recordConflict(
+          context,
+          command,
+          'register-claim-rejected: the server accepted another installation first',
+        );
+        return _PushOutcome.conflict;
       }
       await _outboxDao.markSucceeded(
         operationId: command.operationId,
@@ -282,11 +295,23 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
   }
 
   Future<int> _pullAndApply(BusinessContext context) async {
-    final key = SyncCursorKey(
+    final deviceId = await _database.metadataDao.readValue('device.id');
+    final digestMetadataKey =
+        'pos_sync_permission_digest:${context.organizationId}:'
+        '${context.branchId}:${context.actorUserId}:${deviceId ?? '_'}';
+    var permissionDigest = await _database.metadataDao.readValue(
+      digestMetadataKey,
+    );
+    SyncCursorKey cursorKey() => SyncCursorKey(
       scope: _cursorScope,
       organizationId: context.organizationId,
       branchId: context.branchId,
+      projection: 'pos_sync_v2',
+      permissionDigest: permissionDigest,
+      actorUserId: context.actorUserId,
+      deviceId: deviceId,
     );
+    var key = cursorKey();
     var cursor = (await _cursorDao.read(key))?.lastChangeSequence ?? 0;
     var applied = 0;
     for (
@@ -294,16 +319,45 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       batchNumber < _maximumPullBatches;
       batchNumber++
     ) {
-      final changes = await _remote.pullChanges(
-        organizationId: context.organizationId,
-        branchId: context.branchId,
-        afterSequence: cursor,
-        limit: _pullBatchSize,
-      );
-      if (changes.isEmpty) break;
+      final requestedCursor = cursor;
+      final RemoteChangePage page;
+      if (_remote case final PaginatedRemoteSyncDataSource paginated) {
+        page = await paginated.pullChangePage(
+          organizationId: context.organizationId,
+          branchId: context.branchId,
+          afterSequence: cursor,
+          limit: _pullBatchSize,
+        );
+      } else {
+        final changes = await _remote.pullChanges(
+          organizationId: context.organizationId,
+          branchId: context.branchId,
+          afterSequence: cursor,
+          limit: _pullBatchSize,
+        );
+        page = RemoteChangePage(
+          changes: changes,
+          nextCursor: changes.isEmpty ? cursor : changes.last.sequence,
+          hasMore: changes.length == _pullBatchSize,
+        );
+      }
+      if (page.permissionDigest != null &&
+          page.permissionDigest != permissionDigest) {
+        permissionDigest = page.permissionDigest;
+        await _database.metadataDao.writeValue(
+          key: digestMetadataKey,
+          value: permissionDigest!,
+          updatedAt: _clock.nowUtc(),
+        );
+        key = cursorKey();
+        cursor = (await _cursorDao.read(key))?.lastChangeSequence ?? 0;
+        // The page was requested with another permission scope. Pull it again
+        // from the independently scoped cursor before applying anything.
+        continue;
+      }
+      if (page.changes.isEmpty && page.nextCursor == requestedCursor) break;
       await _database.transaction(() async {
-        var nextCursor = cursor;
-        for (final change in changes) {
+        for (final change in page.changes) {
           if (change.organizationId != context.organizationId ||
               (change.branchId != null &&
                   change.branchId != context.branchId)) {
@@ -328,17 +382,16 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
               updatedAt: change.occurredAt,
             );
           }
-          nextCursor = change.sequence;
         }
         await _cursorDao.save(
           key: key,
-          lastChangeSequence: nextCursor,
+          lastChangeSequence: page.nextCursor,
           lastSyncedAt: _clock.nowUtc(),
         );
-        cursor = nextCursor;
+        cursor = page.nextCursor;
       });
-      applied += changes.length;
-      if (changes.length < _pullBatchSize) break;
+      applied += page.changes.length;
+      if (!page.hasMore) break;
     }
     return applied;
   }
@@ -498,6 +551,56 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
               'not-found',
               'unauthenticated',
             }.contains(error.code));
+  }
+
+  bool _isReachabilityFailure(Object error) {
+    if (error is FirebaseFunctionsException) {
+      return const {
+        'unavailable',
+        'deadline-exceeded',
+        'internal',
+        'unknown',
+      }.contains(error.code);
+    }
+    final message = error.toString().toLowerCase();
+    return message.contains('network') ||
+        message.contains('socket') ||
+        message.contains('connection') ||
+        message.contains('unavailable') ||
+        message.contains('timeout');
+  }
+
+  Future<bool> _applyStructuredClaimOutcome(
+    SyncOutboxEntry command,
+    Object? result,
+  ) async {
+    if (command.commandType != 'register.claim' || result is! Map) {
+      return false;
+    }
+    final rawClaim = result['registerClaim'];
+    if (rawClaim is! Map) return false;
+    final claim = rawClaim.map((key, value) => MapEntry(key.toString(), value));
+    final status = claim['status']?.toString();
+    if (status == null) return false;
+    final now = _clock.nowUtc();
+    await (_database.update(
+      _database.registerClaims,
+    )..where((row) => row.id.equals(command.aggregateId))).write(
+      RegisterClaimsCompanion(
+        status: Value(status),
+        rejectionCode: Value(
+          claim['rejection_code']?.toString() ??
+              claim['rejectionCode']?.toString(),
+        ),
+        rejectionMessage: Value(
+          claim['rejection_message']?.toString() ??
+              claim['rejectionMessage']?.toString(),
+        ),
+        version: Value(_resultVersion(claim) ?? 0),
+        updatedAt: Value(now),
+      ),
+    );
+    return status == 'rejected';
   }
 
   int? _resultVersion(Object? value) {

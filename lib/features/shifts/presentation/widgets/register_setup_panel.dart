@@ -9,6 +9,8 @@ class RegisterSetupPanel extends StatelessWidget {
     required this.registers,
     required this.deviceId,
     required this.canManage,
+    required this.canClaim,
+    required this.onClaim,
     required this.onAssign,
     required this.onConfigureHardware,
     required this.onEdit,
@@ -19,6 +21,8 @@ class RegisterSetupPanel extends StatelessWidget {
   final List<Register> registers;
   final String deviceId;
   final bool canManage;
+  final bool canClaim;
+  final ValueChanged<Register> onClaim;
   final ValueChanged<Register> onAssign;
   final ValueChanged<Register> onConfigureHardware;
   final ValueChanged<Register> onEdit;
@@ -64,7 +68,7 @@ class RegisterSetupPanel extends StatelessWidget {
                         ? 'Assigned to this device'
                         : 'Assigned to another device',
                   ),
-                  trailing: canManage
+                  trailing: canManage || canClaim
                       ? Wrap(
                           spacing: AppSpacing.sm,
                           children: [
@@ -75,38 +79,50 @@ class RegisterSetupPanel extends StatelessWidget {
                                 label: const Text('Hardware'),
                               ),
                             if (register.isActive &&
-                                !register.isAssignedTo(deviceId))
+                                register.assignedDeviceId == null &&
+                                canClaim)
+                              FilledButton(
+                                onPressed: () => onClaim(register),
+                                child: const Text('Claim'),
+                              ),
+                            if (register.isActive &&
+                                !register.isAssignedTo(deviceId) &&
+                                canManage &&
+                                !canClaim)
                               OutlinedButton(
                                 onPressed: () => onAssign(register),
                                 child: const Text('Assign this device'),
                               ),
-                            PopupMenuButton<String>(
-                              tooltip: 'Manage register',
-                              onSelected: (action) {
-                                if (action == 'edit') onEdit(register);
-                                if (action == 'archive') onArchive(register);
-                                if (action == 'unassign') onUnassign(register);
-                              },
-                              itemBuilder: (_) => [
-                                if (register.isActive)
-                                  const PopupMenuItem(
-                                    value: 'edit',
-                                    child: Text('Edit'),
+                            if (canManage)
+                              PopupMenuButton<String>(
+                                tooltip: 'Manage register',
+                                onSelected: (action) {
+                                  if (action == 'edit') onEdit(register);
+                                  if (action == 'archive') onArchive(register);
+                                  if (action == 'unassign') {
+                                    onUnassign(register);
+                                  }
+                                },
+                                itemBuilder: (_) => [
+                                  if (register.isActive)
+                                    const PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text('Edit'),
+                                    ),
+                                  if (register.isActive &&
+                                      register.assignedDeviceId != null)
+                                    const PopupMenuItem(
+                                      value: 'unassign',
+                                      child: Text('Unassign device'),
+                                    ),
+                                  PopupMenuItem(
+                                    value: 'archive',
+                                    child: Text(
+                                      register.isActive ? 'Archive' : 'Restore',
+                                    ),
                                   ),
-                                if (register.isActive &&
-                                    register.assignedDeviceId != null)
-                                  const PopupMenuItem(
-                                    value: 'unassign',
-                                    child: Text('Unassign device'),
-                                  ),
-                                PopupMenuItem(
-                                  value: 'archive',
-                                  child: Text(
-                                    register.isActive ? 'Archive' : 'Restore',
-                                  ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                           ],
                         )
                       : null,

@@ -30,6 +30,9 @@ import {
 } from "./staff_invites";
 import {loadAdministrationSnapshot} from "./administration_snapshot";
 import {loadStockLocationsSnapshot} from "./stock_locations_snapshot";
+import {getPosBootstrapPageForUser} from "./pos_bootstrap";
+import {pullAuthorizedChangesForUser} from "./pull_authorized_changes";
+import {issueRegisterClaimResolutionGrant} from "./manager_action_grants";
 
 initializeApp();
 
@@ -334,6 +337,109 @@ export const getAdministrationSnapshot = onCall(
       }
       logger.error("Administration snapshot failed.", error);
       throw new HttpsError("internal", "The administration snapshot could not be loaded.");
+    }
+  },
+);
+
+export const getPosBootstrapPage = onCall(
+  {region: functionsRegion, serviceAccount: runtimeServiceAccount},
+  async (request) => {
+    const firebaseUid = request.auth?.uid;
+    if (firebaseUid === undefined) {
+      throw new HttpsError("unauthenticated", "Authentication is required.");
+    }
+    try {
+      const data = asObject(request.data, "data");
+      const rawPageSize = data.pageSize;
+      if (rawPageSize !== undefined &&
+          (typeof rawPageSize !== "number" || !Number.isSafeInteger(rawPageSize))) {
+        throw new RemoteCommandError("invalid-argument", "pageSize must be an integer.");
+      }
+      return await withDatabase(databaseConfig(), (client) =>
+        getPosBootstrapPageForUser(client, {
+          firebaseUid,
+          organizationId: requiredString(data, "organizationId"),
+          branchId: requiredString(data, "branchId"),
+          collection: requiredString(data, "collection"),
+          cursor: optionalString(data, "cursor"),
+          pageSize: rawPageSize as number | undefined,
+          snapshotToken: optionalString(data, "snapshotToken"),
+        }),
+      );
+    } catch (error) {
+      if (error instanceof RemoteCommandError) {
+        throw new HttpsError(error.code, error.message);
+      }
+      logger.error("POS bootstrap failed.", error);
+      throw new HttpsError("internal", "The POS cache could not be prepared.");
+    }
+  },
+);
+
+export const pullAuthorizedChangesV2 = onCall(
+  {region: functionsRegion, serviceAccount: runtimeServiceAccount},
+  async (request) => {
+    const firebaseUid = request.auth?.uid;
+    if (firebaseUid === undefined) {
+      throw new HttpsError("unauthenticated", "Authentication is required.");
+    }
+    try {
+      const data = asObject(request.data, "data");
+      const afterSequence = data.afterSequence;
+      const limit = data.limit;
+      if (typeof afterSequence !== "number" || typeof limit !== "number") {
+        throw new RemoteCommandError(
+          "invalid-argument",
+          "afterSequence and limit must be integers.",
+        );
+      }
+      return await withDatabase(databaseConfig(), (client) =>
+        pullAuthorizedChangesForUser(client, {
+          firebaseUid,
+          organizationId: requiredString(data, "organizationId"),
+          branchId: requiredString(data, "branchId"),
+          afterSequence,
+          limit,
+          projection: optionalString(data, "projection") ?? "pos",
+        }),
+      );
+    } catch (error) {
+      if (error instanceof RemoteCommandError) {
+        throw new HttpsError(error.code, error.message);
+      }
+      logger.error("Authorized change pull failed.", error);
+      throw new HttpsError("internal", "Authorized changes could not be loaded.");
+    }
+  },
+);
+
+export const authorizeRegisterClaimResolution = onCall(
+  {region: functionsRegion, serviceAccount: runtimeServiceAccount},
+  async (request) => {
+    const managerFirebaseUid = request.auth?.uid;
+    if (managerFirebaseUid === undefined) {
+      throw new HttpsError("unauthenticated", "Manager authentication is required.");
+    }
+    try {
+      const data = asObject(request.data, "data");
+      return await withDatabase(databaseConfig(), (client) =>
+        issueRegisterClaimResolutionGrant(client, {
+          managerFirebaseUid,
+          organizationId: requiredString(data, "organizationId"),
+          branchId: requiredString(data, "branchId"),
+          conflictId: requiredString(data, "conflictId"),
+          targetRegisterId: requiredString(data, "targetRegisterId"),
+          deviceId: requiredString(data, "deviceId"),
+          requestedByUserId: requiredString(data, "requestedByUserId"),
+          nonce: requiredString(data, "nonce"),
+        }),
+      );
+    } catch (error) {
+      if (error instanceof RemoteCommandError) {
+        throw new HttpsError(error.code, error.message);
+      }
+      logger.error("Register claim authorization failed.", error);
+      throw new HttpsError("internal", "The manager action could not be authorized.");
     }
   },
 );

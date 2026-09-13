@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'branches_table.dart';
 import 'organizations_table.dart';
 import 'registers_table.dart';
+import 'register_claims_table.dart';
 import 'sales_table.dart';
 
 @TableIndex(
@@ -21,6 +22,11 @@ class ReceiptPrintJobs extends Table {
       text().references(Branches, #id, onDelete: KeyAction.restrict)();
   TextColumn get registerId =>
       text().references(Registers, #id, onDelete: KeyAction.restrict)();
+  TextColumn get registerClaimId => text().nullable().references(
+    RegisterClaims,
+    #id,
+    onDelete: KeyAction.restrict,
+  )();
   TextColumn get saleId =>
       text().references(Sales, #id, onDelete: KeyAction.restrict)();
   TextColumn get deduplicationKey => text().unique()();

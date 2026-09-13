@@ -11,6 +11,7 @@ import '../../../../core/utils/id_generator.dart';
 import '../../data/datasources/access_local_data_source.dart';
 import '../../data/datasources/access_remote_data_source.dart';
 import '../../data/repositories/cloud_functions_device_registration_repository.dart';
+import '../../data/repositories/cached_operational_access_policy.dart';
 import '../../data/repositories/demo_device_registration_repository.dart';
 import '../../data/repositories/drift_active_context_repository.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
@@ -23,6 +24,7 @@ import '../../domain/repositories/active_context_repository.dart';
 import '../../domain/repositories/auth_audit_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/device_registration_repository.dart';
+import '../../domain/repositories/operational_access_policy.dart';
 import '../../domain/usecases/refresh_access_usecase.dart';
 import '../../domain/usecases/require_permission_usecase.dart';
 import '../../domain/usecases/select_active_branch_usecase.dart';
@@ -59,6 +61,18 @@ final accessProfileRepositoryProvider = Provider<AccessProfileRepository>((
   );
   ref.onDispose(repository.dispose);
   return repository;
+});
+
+final operationalAccessPolicyProvider = Provider<OperationalAccessPolicy?>((
+  ref,
+) {
+  final config = ref.watch(appConfigProvider);
+  if (config.enableDemoAuth) return null;
+  return CachedOperationalAccessPolicy(
+    metadataDao: ref.watch(metadataDaoProvider),
+    clock: ref.watch(appClockProvider),
+    maxOfflineAge: config.maxOfflineAccessAge,
+  );
 });
 
 final activeContextRepositoryProvider = Provider<ActiveContextRepository>((

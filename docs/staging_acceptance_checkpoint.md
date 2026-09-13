@@ -3,6 +3,33 @@
 Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 `jce-pos-instance`, database `jce-pos-database`. Production was not touched.
 
+## POS sync v2 deployment — 2026-09-14
+
+- A fresh logical backup was restored locally and migrations were rehearsed
+  before the live change. Backup:
+  `C:/JCE/.backups/staging-SdgPXO/public.dump`, SHA-256
+  `f3b8b7133060e374a623555c9657944be845995e530d3dcaf01d8063a078ff99`.
+- Migration `0014_pos_sync_v2.sql` is applied. All 14 migration checksums
+  match, all 63 public tables are owned by `jce_pos_migrator`, required runtime
+  privileges and indexes are present, and duplicate active device/register
+  claims remain zero.
+- All 12 Functions are active in `asia-southeast1`. The three added callables
+  are `getPosBootstrapPage`, `pullAuthorizedChangesV2`, and
+  `authorizeRegisterClaimResolution`; deployed source hash:
+  `fbc570457afb3dcbc2910836ea33eb963762ad07`.
+- Twenty-four unauthenticated probes across all callables were rejected with
+  HTTP 401/`UNAUTHENTICATED`. This verifies the public authentication boundary,
+  not the remaining signed-in multi-terminal workflow acceptance.
+- Staging Hosting version `a1821e0ec78ba723` is live at
+  `https://jce-pos-staging-259528.web.app`. Local and live `main.dart.js`
+  SHA-256 both equal
+  `48435B06D49BE8D04F9E3292623350A6E87C9B267CB1C579D7EB58D97ED5F02C`.
+  Root and SPA fallback checks returned HTTP 200; the Drift worker and SQLite
+  WASM were served with the expected content types.
+- The schema-19 Windows release bundle was built successfully. Installation on
+  pilot hardware and signed-in two-terminal claim/rebase acceptance remain
+  rollout gates. No production resources or LAN configuration were changed.
+
 ## Result: staging backend, Android and web clients deployed; full acceptance remains open
 
 The 2026-09-08 backend deployment includes invitation binding hardening,
@@ -77,10 +104,11 @@ replace signed-in PostgreSQL/Firebase workflow acceptance.
 - Android staging release `6bb3mf5vdh9k0`, version `1.0.0 (1)`, uploaded to
   Firebase App Distribution without a tester group. APK SHA-256:
   `29538012C1B4AC1C39BC066411C6CF546C0A12D0B991EF05E40CED2C559CAF1F`.
-- Web staging release deployed to `https://jce-pos-staging-259528.web.app` as
-  Hosting version `815d116f50af2c5a`. The local and live SHA-256 of
-  `main.dart.js` is
-  `FE781A0FFCAACB76D3B4AA187C61629BCE49D2CBE303F12923EBD42665345405`.
+- Web staging release deployed to `https://jce-pos-staging-259528.web.app`.
+  The local and live SHA-256 of `main.dart.js` is
+  `68F7CDAC1C786280FACF1C9CEB486EF4FAFD5061F4CB36096A3C54F3730C118D`
+  after the 2026-09-10 authentication/session hotfix. The same verified bundle
+  is live at `https://jce-pos.web.app`.
   Live HTTP checks passed for the root shell, `/branches` SPA fallback, main bundle,
   Drift worker and SQLite WASM MIME type. Visual browser acceptance is pending.
 - No production, billing, storage-rule or pilot feature-flag changes.
@@ -96,6 +124,8 @@ replace signed-in PostgreSQL/Firebase workflow acceptance.
 Real Firebase sessions and deployed callables passed:
 
 - Administrator access includes the approved administration permissions.
+- Two administrator password sign-ins issued distinct ID and refresh tokens;
+  both sessions concurrently loaded the deployed access profile successfully.
 - Invitation creates/binds a separate QA identity, generates a transient setup
   URL, completes password setup, activates the matching profile, and handles
   repeated acceptance idempotently.
@@ -176,7 +206,9 @@ and existing application credentials; never print secret values.
 - `staging-database-check.js`: checksums, duplicates, ownership;
   `--check-locks` optionally checks rollback-only locking primitives.
 - `staging-logical-backup.js`: public-schema backup and local restore/rehearsal.
-- `staging-callable-check.js`: unauthenticated probes for all nine callables.
+- `staging-callable-check.js`: unauthenticated probes for all 12 callables.
+- `staging-pos-sync-v2-check.js`: validates migration 0014, runtime privileges,
+  required indexes, permission grants and active-claim uniqueness.
 - `staging-auth-permissions.js`: preview; `--apply` configures the exact Auth
   role/binding. Requires JCE_FUNCTIONS_SERVICE_ACCOUNT and JCE_AUTH_ROLE_ID.
 - `staging-admin-permissions.js`: preview; `--apply` provisions approved IDs

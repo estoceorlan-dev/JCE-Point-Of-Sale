@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/database/app_database.dart';
+import '../../../../core/database/app_database.dart' hide Register;
+import '../../../../core/database/database_provider.dart';
 import '../../../../core/sync/sync_controller.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../shared/models/business_context.dart';
+import '../../../../shared/models/permission.dart';
+import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../shifts/domain/entities/register.dart';
+import '../../../shifts/presentation/providers/shift_providers.dart';
 
 class SyncConflictPanel extends ConsumerWidget {
   const SyncConflictPanel({super.key});
@@ -68,6 +74,10 @@ class _ConflictTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final session = ref.watch(authControllerProvider).asData?.value;
+    final canResolveClaim =
+        conflict.entityType == 'register_claim' &&
+        (session?.can(AppPermission.manageRegisters) ?? false);
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: const Icon(Icons.warning_amber_rounded),
@@ -76,25 +86,104 @@ class _ConflictTile extends ConsumerWidget {
       trailing: Wrap(
         spacing: AppSpacing.sm,
         children: [
-          OutlinedButton(
-            onPressed: () async {
-              final result = await ref
-                  .read(syncStateProvider.notifier)
-                  .acceptRemote(conflict);
-              if (context.mounted && result.failureOrNull != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(result.failureOrNull!.message)),
-                );
-              }
-            },
-            child: const Text('Accept remote'),
-          ),
-          FilledButton(
-            onPressed: () =>
-                ref.read(syncStateProvider.notifier).retryConflict(conflict),
-            child: const Text('Retry local'),
-          ),
+          if (canResolveClaim)
+            FilledButton(
+              onPressed: () => _resolveRegisterClaim(context, ref),
+              child: const Text('Reassign'),
+            ),
+          if (!canResolveClaim)
+            OutlinedButton(
+              onPressed: () async {
+                final result = await ref
+                    .read(syncStateProvider.notifier)
+                    .acceptRemote(conflict);
+                if (context.mounted && result.failureOrNull != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(result.failureOrNull!.message)),
+                  );
+                }
+              },
+              child: const Text('Accept remote'),
+            ),
+          if (!canResolveClaim)
+            FilledButton(
+              onPressed: () =>
+                  ref.read(syncStateProvider.notifier).retryConflict(conflict),
+              child: const Text('Retry local'),
+            ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _resolveRegisterClaim(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final session = ref.read(authControllerProvider).asData?.value;
+    if (session == null) return;
+    final database = ref.read(appDatabaseProvider);
+    final claim = await (database.select(
+      database.registerClaims,
+    )..where((row) => row.id.equals(conflict.entityId))).getSingleOrNull();
+    if (claim == null || !context.mounted) return;
+    final registers = await ref.read(registersProvider.future);
+    if (!context.mounted) return;
+    final available = registers
+        .where(
+          (register) =>
+              register.branchId == claim.branchId &&
+              register.isActive &&
+              register.assignedDeviceId == null,
+        )
+        .toList(growable: false);
+    if (available.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Create an unclaimed register in this branch first.'),
+        ),
+      );
+      return;
+    }
+    final target = await showDialog<Register>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Reassign terminal records'),
+        children: [
+          for (final register in available)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(dialogContext, register),
+              child: ListTile(
+                title: Text(register.name),
+                subtitle: Text(register.code),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (target == null || !context.mounted) return;
+    final businessContext = BusinessContext(
+      organizationId: session.activeOrganizationId,
+      branchId: session.activeBranchId,
+      actorUserId: session.activeOrganization.appUserId,
+    );
+    final result = await ref
+        .read(registerClaimRepositoryProvider)
+        .resolve(
+          context: businessContext,
+          claimId: claim.id,
+          targetRegisterId: target.id,
+        );
+    if (result.isSuccess) {
+      await ref.read(syncStateProvider.notifier).synchronize();
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.failureOrNull?.message ??
+              'Register reassignment queued and will rebase the losing terminal.',
+        ),
       ),
     );
   }

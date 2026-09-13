@@ -6,4 +6,6 @@ part of 'outbox_dao.dart';
 mixin _$OutboxDaoMixin on DatabaseAccessor<AppDatabase> {
   $SyncOutboxEntriesTable get syncOutboxEntries =>
       attachedDatabase.syncOutboxEntries;
+  $SyncOutboxDependenciesTable get syncOutboxDependencies =>
+      attachedDatabase.syncOutboxDependencies;
 }

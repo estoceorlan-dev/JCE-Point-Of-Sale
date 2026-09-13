@@ -12,7 +12,10 @@ abstract interface class SalesRepository {
     String? categoryId,
   });
 
-  Stream<List<SaleRecord>> watchRecentSales({required BusinessContext context});
+  Stream<List<SaleRecord>> watchRecentSales({
+    required BusinessContext context,
+    String search = '',
+  });
 
   Future<SaleRecord?> getSale({
     required BusinessContext context,

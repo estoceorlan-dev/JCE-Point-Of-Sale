@@ -54,6 +54,7 @@ class PlainTextReceiptRenderer implements ReceiptRenderer {
         separator,
       ],
       'Receipt ${sale.receiptNumber}',
+      for (final alias in sale.receiptAliases) 'Offline receipt alias: $alias',
       'Register: ${sale.registerName}',
       'Date: ${sale.completedAt.toLocal()}',
       if (sale.customerDisplayName case final customer?) 'Customer: $customer',

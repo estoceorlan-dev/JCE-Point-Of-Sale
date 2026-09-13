@@ -50,6 +50,13 @@ class SaleDetailsDialog extends ConsumerWidget {
                   Chip(label: Text(sale.completedAt.toLocal().toString())),
                 ],
               ),
+              if (sale.receiptAliases.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Offline receipt alias${sale.receiptAliases.length == 1 ? '' : 'es'}: '
+                  '${sale.receiptAliases.join(', ')}',
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               for (final item in sale.items)
                 ListTile(

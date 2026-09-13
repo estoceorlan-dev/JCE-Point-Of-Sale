@@ -53,7 +53,43 @@ void main() {
     expect(retries, 1);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('refresh keeps the last product frame and search state', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'original');
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(_host(controller, const AsyncData([_saleProduct])));
+    await tester.pump();
+    expect(find.text('Original Product'), findsOneWidget);
+    expect(find.byKey(const Key('product-row-product')), findsOneWidget);
+
+    await tester.pumpWidget(_host(controller, const AsyncLoading()));
+    await tester.pump();
+
+    expect(find.text('Original Product'), findsOneWidget);
+    expect(find.byKey(const Key('product-row-product')), findsOneWidget);
+    expect(find.byKey(const Key('pos-products-loading')), findsNothing);
+    expect(controller.text, 'original');
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+  });
 }
+
+const _saleProduct = SaleProduct(
+  id: 'product',
+  sku: 'SKU-1',
+  name: 'Original Product',
+  unitName: 'Piece',
+  stockLocationId: 'location',
+  stockLocationName: 'Sales Floor',
+  unitPriceMinor: 100,
+  unitCostMinor: 50,
+  taxRateBasisPoints: 0,
+  taxInclusive: true,
+  availableQuantityMilli: 1000,
+  inventoryVersion: 1,
+);
 
 Widget _host(
   TextEditingController controller,

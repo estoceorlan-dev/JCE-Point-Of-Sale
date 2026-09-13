@@ -3,11 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../core/constants/app_breakpoints.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/sync/sync_controller.dart';
+import '../../../../core/sync/pos_bootstrap_providers.dart';
+import '../../../../core/sync/pos_bootstrap_repository.dart';
 import '../../../../shared/models/permission.dart';
+import '../../../../shared/models/business_context.dart';
+import '../../../../shared/models/sync_state.dart';
 import '../../../../shared/utils/formatters.dart';
 import '../../../shifts/presentation/providers/shift_providers.dart';
 import '../../../hardware/domain/entities/register_hardware_profile.dart';
@@ -22,6 +27,7 @@ import '../widgets/cart_panel.dart';
 import '../widgets/discount_policy_dialog.dart';
 import '../widgets/payment_dialog.dart';
 import '../widgets/product_search_panel.dart';
+import '../widgets/preparing_terminal_panel.dart';
 import '../widgets/receipt_dialog.dart';
 import '../widgets/held_carts_dialog.dart';
 import '../widgets/terminal_status_strip.dart';
@@ -63,12 +69,38 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(activePosSessionProvider);
+    final bootstrap =
+        ref.watch(posBootstrapProgressProvider).valueOrNull ??
+        const PosBootstrapProgress(status: PosBootstrapStatus.notProvisioned);
+    if (session != null && bootstrap.status != PosBootstrapStatus.ready) {
+      return PreparingTerminalPanel(
+        progress: bootstrap,
+        onRetry: () {
+          final session = ref.read(activePosSessionProvider);
+          if (session == null) return;
+          unawaited(
+            ref
+                .read(posBootstrapRepositoryProvider)
+                .provision(
+                  BusinessContext(
+                    organizationId: session.activeOrganizationId,
+                    branchId: session.activeBranchId,
+                    actorUserId: session.activeOrganization.appUserId,
+                  ),
+                  force: bootstrap.status == PosBootstrapStatus.failed,
+                ),
+          );
+        },
+      );
+    }
     final productQuery = (search: _search, categoryId: _categoryId);
     final products = ref.watch(saleProductBrowserProvider(productQuery));
     final shift = ref.watch(activeShiftProvider).value;
     final shiftPolicy = ref.watch(shiftPolicyProvider).value;
+    final syncState = ref.watch(syncStateProvider).asData?.value;
     final checkoutAllowed =
-        shift != null || (shiftPolicy?.allowSalesWithoutOpenShift ?? false);
+        (shift != null || (shiftPolicy?.allowSalesWithoutOpenShift ?? false)) &&
+        (!kIsWeb || syncState?.status == SyncStatus.idle);
     final canManagePolicy = session?.can(AppPermission.manageSettings) ?? false;
     final canViewCustomers = session?.can(AppPermission.viewCustomers) ?? false;
     final scannerType = ref
@@ -76,7 +108,6 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         .value
         ?.scannerType;
     final hardware = ref.watch(activeRegisterHardwareProfileProvider).value;
-    final syncState = ref.watch(syncStateProvider).asData?.value;
     ref.listen(barcodeScansProvider, (previous, next) {
       next.whenData((scan) => unawaited(_submitBarcode(scan.value)));
     });

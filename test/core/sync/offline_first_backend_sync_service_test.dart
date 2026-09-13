@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/core/database/app_database.dart';
 import 'package:jce_pos/core/database/models/outbox_command.dart';
 import 'package:jce_pos/core/database/models/outbox_state.dart';
+import 'package:jce_pos/core/database/models/sync_cursor_key.dart';
 import 'package:jce_pos/core/logger/app_logger.dart';
 import 'package:jce_pos/core/remote/remote_command_data_source.dart';
 import 'package:jce_pos/core/remote/remote_sync_data_source.dart';
@@ -40,10 +41,13 @@ void main() {
 
   tearDown(() => database.close());
 
-  OfflineFirstBackendSyncService service({RemoteChangeApplier? applier}) {
+  OfflineFirstBackendSyncService service({
+    RemoteChangeApplier? applier,
+    RemoteSyncDataSource? remoteOverride,
+  }) {
     return OfflineFirstBackendSyncService(
       commands: commands,
-      remote: remote,
+      remote: remoteOverride ?? remote,
       database: database,
       outboxDao: database.outboxDao,
       cursorDao: database.syncCursorDao,
@@ -59,6 +63,7 @@ void main() {
   test('offline commands synchronize after connectivity returns', () async {
     await _enqueue(database, initialTime, operationId: 'op-1');
     connectivity.connected = false;
+    remote.error = _FunctionsError('unavailable');
 
     final offline = await service().synchronize(context: context);
 
@@ -70,6 +75,7 @@ void main() {
     );
 
     connectivity.connected = true;
+    remote.error = null;
     final online = await service().synchronize(context: context);
 
     expect(online.pushed, 1);
@@ -94,6 +100,36 @@ void main() {
 
     expect(result.pushed, 1);
     expect(commands.executed, ['op-interrupted']);
+  });
+
+  test('authorized empty pages advance a permission-scoped cursor', () async {
+    await database.metadataDao.writeValue(
+      key: 'device.id',
+      value: 'device',
+      updatedAt: initialTime,
+    );
+    final pagedRemote = _PagedRemote();
+
+    final result = await service(
+      remoteOverride: pagedRemote,
+    ).synchronize(context: context);
+
+    expect(result.pulled, 0);
+    // Initial and final pulls both prove that the filtered empty page cursor
+    // remains stable after the permission digest is adopted.
+    expect(pagedRemote.requestedCursors, [0, 0, 100, 100]);
+    final cursor = await database.syncCursorDao.read(
+      const SyncCursorKey(
+        scope: 'remote-change-feed',
+        organizationId: 'org',
+        branchId: 'branch',
+        projection: 'pos_sync_v2',
+        permissionDigest: 'permission-digest',
+        actorUserId: 'user',
+        deviceId: 'device',
+      ),
+    );
+    expect(cursor?.lastChangeSequence, 100);
   });
 
   test(
@@ -434,6 +470,7 @@ class _Commands implements RemoteCommandDataSource {
 
 class _Remote implements RemoteSyncDataSource {
   List<RemoteChange> changes = [];
+  Object? error;
 
   @override
   Future<List<RemoteChange>> pullChanges({
@@ -442,11 +479,53 @@ class _Remote implements RemoteSyncDataSource {
     required int afterSequence,
     int limit = 100,
   }) async {
+    if (error != null) throw error!;
     return changes
         .where((change) => change.sequence > afterSequence)
         .take(limit)
         .toList();
   }
+
+  @override
+  Future<ProcessedRemoteOperation?> getProcessedOperation({
+    required String organizationId,
+    required String branchId,
+    required String operationId,
+  }) async => null;
+}
+
+class _PagedRemote
+    implements RemoteSyncDataSource, PaginatedRemoteSyncDataSource {
+  final List<int> requestedCursors = [];
+
+  @override
+  Future<RemoteChangePage> pullChangePage({
+    required String organizationId,
+    required String branchId,
+    required int afterSequence,
+    int limit = 100,
+  }) async {
+    requestedCursors.add(afterSequence);
+    return RemoteChangePage(
+      changes: const [],
+      nextCursor: afterSequence == 0 ? 100 : afterSequence,
+      hasMore: afterSequence == 0,
+      permissionDigest: 'permission-digest',
+    );
+  }
+
+  @override
+  Future<List<RemoteChange>> pullChanges({
+    required String organizationId,
+    required String branchId,
+    required int afterSequence,
+    int limit = 100,
+  }) async => (await pullChangePage(
+    organizationId: organizationId,
+    branchId: branchId,
+    afterSequence: afterSequence,
+    limit: limit,
+  )).changes;
 
   @override
   Future<ProcessedRemoteOperation?> getProcessedOperation({

@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'branches_table.dart';
 import 'organizations_table.dart';
 import 'registers_table.dart';
+import 'register_claims_table.dart';
 import 'shifts_table.dart';
 
 @TableIndex(
@@ -20,6 +21,11 @@ class CashMovements extends Table {
   TextColumn get shiftId =>
       text().references(Shifts, #id, onDelete: KeyAction.restrict)();
   TextColumn get operationId => text()();
+  TextColumn get registerClaimId => text().nullable().references(
+    RegisterClaims,
+    #id,
+    onDelete: KeyAction.restrict,
+  )();
   TextColumn get movementType => text()();
   IntColumn get amountMinor => integer()();
   TextColumn get reason => text()();

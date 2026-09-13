@@ -1,6 +1,6 @@
-import '../entities/auth_session.dart';
+import 'terminal_installation_repository.dart';
 
-abstract interface class DeviceRegistrationRepository {
-  Future<String> deviceId();
-  Future<void> register(AuthSession session);
-}
+/// Compatibility name retained while callers migrate to the installation
+/// terminology.
+abstract interface class DeviceRegistrationRepository
+    implements TerminalInstallationRepository {}

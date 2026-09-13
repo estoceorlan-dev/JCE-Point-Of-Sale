@@ -36,77 +36,73 @@ class ProductSearchPanel extends ConsumerStatefulWidget {
 
 class _ProductSearchPanelState extends ConsumerState<ProductSearchPanel> {
   bool _grid = false;
+  final ScrollController _scrollController = ScrollController();
+  List<SaleProduct> _lastProducts = const [];
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final categories = widget.onCategoryChanged == null
         ? null
         : ref.watch(productCategoriesProvider).value;
-    final results = widget.products.when(
-      loading: () => Center(
-        key: const Key('pos-products-loading'),
-        child: Semantics(
-          liveRegion: true,
-          label: 'Loading products',
-          child: const CircularProgressIndicator(),
-        ),
-      ),
-      error: (error, _) => Center(
-        key: const Key('pos-products-error'),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    final latest = widget.products.valueOrNull;
+    if (latest != null) _lastProducts = latest;
+    final hasRetainedProducts = latest == null && _lastProducts.isNotEmpty;
+    final results = hasRetainedProducts
+        ? Stack(
             children: [
-              const Icon(Icons.cloud_off_outlined),
-              const SizedBox(height: AppSpacing.sm),
-              const Text(
-                'Products could not be loaded. Your saved cart is still available.',
-                textAlign: TextAlign.center,
-              ),
-              if (widget.onRetry != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                OutlinedButton.icon(
-                  key: const Key('retry-products-button'),
-                  onPressed: widget.onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Try again'),
+              Positioned.fill(child: _productResults(_lastProducts)),
+              if (widget.products.isLoading)
+                const Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  child: LinearProgressIndicator(minHeight: 2),
                 ),
-              ],
             ],
-          ),
-        ),
-      ),
-      data: (items) => items.isEmpty
-          ? const Center(
-              key: Key('pos-products-empty'),
+          )
+        : widget.products.when(
+            loading: () => Center(
+              key: const Key('pos-products-loading'),
+              child: Semantics(
+                liveRegion: true,
+                label: 'Loading products',
+                child: const CircularProgressIndicator(),
+              ),
+            ),
+            error: (error, _) => Center(
+              key: const Key('pos-products-error'),
               child: Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
-                child: Text(
-                  'No sellable products found. Check the branch price and default stock location.',
-                  textAlign: TextAlign.center,
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.cloud_off_outlined),
+                    const SizedBox(height: AppSpacing.sm),
+                    const Text(
+                      'Products could not be loaded. Your saved cart is still available.',
+                      textAlign: TextAlign.center,
+                    ),
+                    if (widget.onRetry != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      OutlinedButton.icon(
+                        key: const Key('retry-products-button'),
+                        onPressed: widget.onRetry,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try again'),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            )
-          : _grid
-          ? GridView.builder(
-              shrinkWrap: !widget.fillHeight,
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 240,
-                mainAxisExtent: 164,
-                mainAxisSpacing: AppSpacing.sm,
-                crossAxisSpacing: AppSpacing.sm,
-              ),
-              itemCount: items.length,
-              itemBuilder: (context, index) => _productCard(items[index]),
-            )
-          : ListView.separated(
-              shrinkWrap: !widget.fillHeight,
-              itemCount: items.length,
-              separatorBuilder: (_, _) => const Divider(height: 1),
-              itemBuilder: (context, index) => _productTile(items[index]),
             ),
-    );
+            data: _productResults,
+          );
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -188,6 +184,44 @@ class _ProductSearchPanelState extends ConsumerState<ProductSearchPanel> {
       ),
     );
   }
+
+  Widget _productResults(List<SaleProduct> items) => items.isEmpty
+      ? const Center(
+          key: Key('pos-products-empty'),
+          child: Padding(
+            padding: EdgeInsets.all(AppSpacing.lg),
+            child: Text(
+              'No sellable products found. Check the branch price and default stock location.',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        )
+      : _grid
+      ? GridView.builder(
+          controller: _scrollController,
+          shrinkWrap: !widget.fillHeight,
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 240,
+            mainAxisExtent: 164,
+            mainAxisSpacing: AppSpacing.sm,
+            crossAxisSpacing: AppSpacing.sm,
+          ),
+          itemCount: items.length,
+          itemBuilder: (context, index) => KeyedSubtree(
+            key: ValueKey('product-grid-${items[index].id}'),
+            child: _productCard(items[index]),
+          ),
+        )
+      : ListView.separated(
+          controller: _scrollController,
+          shrinkWrap: !widget.fillHeight,
+          itemCount: items.length,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (context, index) => KeyedSubtree(
+            key: ValueKey('product-row-${items[index].id}'),
+            child: _productTile(items[index]),
+          ),
+        );
 
   bool _sellable(SaleProduct product) =>
       product.unitPriceMinor > 0 && product.availableQuantityMilli >= 1000;

@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/controllers/auth_controller.dart';
+import '../../features/auth/presentation/providers/session_exit_providers.dart';
+import '../../shared/models/business_context.dart';
 import '../config/app_config.dart';
-import '../database/database_provider.dart';
 import '../routing/app_navigation_item.dart';
 import '../routing/app_route.dart';
 import '../sync/sync_controller.dart';
@@ -97,30 +98,35 @@ class AppNavigationShell extends ConsumerWidget {
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
     final session = ref.read(authControllerProvider).asData?.value;
-    var pending = 0;
+    String? blocker;
     if (session != null && !ref.read(appConfigProvider).enableDemoAuth) {
-      try {
-        pending = await ref
-            .read(outboxDaoProvider)
-            .pendingCountFor(
+      final readiness = await ref
+          .read(sessionExitRepositoryProvider)
+          .prepareLogout(
+            context: BusinessContext(
               organizationId: session.activeOrganizationId,
               branchId: session.activeBranchId,
               actorUserId: session.activeOrganization.appUserId,
-            );
-      } catch (_) {
-        // Sign-out remains available if local diagnostics cannot be read.
-      }
+            ),
+          );
+      blocker = readiness.fold(
+        onSuccess: (value) => value.canLogout ? null : value.blockerMessage,
+        onFailure: (failure) =>
+            'Logout safety checks could not complete: ${failure.message}',
+      );
     }
     if (!context.mounted) return;
+    if (blocker != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(blocker)));
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AppConfirmationDialog(
         title: 'Log out?',
-        message: pending > 0
-            ? '$pending local change(s) have not synchronized. They remain '
-                  'in this device database and only this account can '
-                  'upload them after signing in again.'
-            : 'Are you sure you want to log out of your account?',
+        message: 'Are you sure you want to log out of your account?',
         confirmLabel: 'Logout',
         destructive: true,
         icon: Icons.logout_rounded,

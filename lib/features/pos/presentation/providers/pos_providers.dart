@@ -84,6 +84,15 @@ final recentSalesProvider = StreamProvider<List<SaleRecord>>((ref) {
   return ref.watch(salesRepositoryProvider).watchRecentSales(context: context);
 });
 
+final recentSalesSearchProvider = StreamProvider.autoDispose
+    .family<List<SaleRecord>, String>((ref, search) {
+      final context = ref.watch(businessContextProvider);
+      if (context == null) return Stream.value(const []);
+      return ref
+          .watch(salesRepositoryProvider)
+          .watchRecentSales(context: context, search: search);
+    });
+
 final saleProductBrowserProvider =
     StreamProvider.family<
       List<SaleProduct>,
@@ -164,6 +173,7 @@ final checkoutSaleUseCaseProvider = Provider<CheckoutSaleUseCase>(
   (ref) => CheckoutSaleUseCase(
     repository: ref.watch(salesRepositoryProvider),
     requirePermission: ref.watch(requirePermissionUseCaseProvider),
+    operationalAccessPolicy: ref.watch(operationalAccessPolicyProvider),
   ),
 );
 

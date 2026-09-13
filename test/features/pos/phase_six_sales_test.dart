@@ -188,6 +188,48 @@ void main() {
       );
     });
 
+    test('canonical and offline receipt numbers remain searchable', () async {
+      final checkout = await repository.checkout(
+        context: _context,
+        draft: _checkoutDraft(operationId: 'aliased-sale'),
+      );
+      final saleId = checkout.valueOrNull!.saleId;
+      const offlineReceipt = 'MAIN-REGA-00000001';
+      const canonicalReceipt = 'MAIN-REGB-00000421';
+      final now = DateTime.utc(2026, 8, 26);
+
+      await database.transaction(() async {
+        await (database.update(
+          database.sales,
+        )..where((row) => row.id.equals(saleId))).write(
+          const SalesCompanion(receiptNumber: Value(canonicalReceipt)),
+        );
+        await database
+            .into(database.saleReceiptAliases)
+            .insert(
+              SaleReceiptAliasesCompanion.insert(
+                id: 'alias-$saleId',
+                organizationId: _context.organizationId,
+                branchId: _context.branchId,
+                saleId: saleId,
+                aliasReceiptNumber: offlineReceipt,
+                canonicalReceiptNumber: canonicalReceipt,
+                createdAt: now,
+              ),
+            );
+      });
+
+      final byCanonical = await repository
+          .watchRecentSales(context: _context, search: 'REGB-00000421')
+          .first;
+      final byAlias = await repository
+          .watchRecentSales(context: _context, search: 'REGA-00000001')
+          .first;
+
+      expect(byCanonical.single.receiptNumber, canonicalReceipt);
+      expect(byAlias.single.receiptAliases, [offlineReceipt]);
+    });
+
     test(
       'sale commit removes only this terminal active cart atomically',
       () async {
@@ -204,6 +246,7 @@ void main() {
                   deviceId: id == 'other-device'
                       ? 'other-terminal'
                       : draft.deviceId,
+                  ownerUserId: Value(_context.actorUserId),
                   status: id == 'held' ? 'held' : 'active',
                   activeScope: Value(id),
                   createdAt: now,

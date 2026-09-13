@@ -90,6 +90,7 @@ void main() {
       ),
       clock: FixedAppClock(now),
       maxOfflineAge: const Duration(hours: 24),
+      remoteRetryDelays: const [],
     );
     addTearDown(repository.dispose);
 
@@ -99,7 +100,41 @@ void main() {
     );
 
     expect(result.failureOrNull, isA<NetworkFailure>());
+    expect(
+      result.failureOrNull?.message,
+      'The JCE access service is temporarily unavailable. Please try again.',
+    );
   });
+
+  test(
+    'transient access failures are retried before login is denied',
+    () async {
+      var attempts = 0;
+      final repository = OfflineFirstAccessProfileRepository(
+        local: _FakeAccessLocalDataSource(),
+        remote: _FakeAccessRemoteDataSource(() async {
+          attempts += 1;
+          if (attempts < 3) {
+            throw const AccessProfileUnavailableException('internal');
+          }
+          return _profile(displayName: 'Verified User');
+        }),
+        clock: FixedAppClock(now),
+        maxOfflineAge: const Duration(hours: 24),
+        remoteRetryDelays: const [Duration.zero, Duration.zero],
+      );
+      addTearDown(repository.dispose);
+
+      final result = await repository.loadProfile(
+        firebaseUid: 'firebase-user',
+        email: 'user@jce.test',
+        forceRefresh: true,
+      );
+
+      expect(result.valueOrNull?.displayName, 'Verified User');
+      expect(attempts, 3);
+    },
+  );
 
   test('local branch changes are published from the cached profile', () async {
     final local = _FakeAccessLocalDataSource(

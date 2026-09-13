@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'branches_table.dart';
 import 'organizations_table.dart';
 import 'registers_table.dart';
+import 'register_claims_table.dart';
 
 @TableIndex(
   name: 'shifts_active_idx',
@@ -18,6 +19,11 @@ class Shifts extends Table {
       text().references(Registers, #id, onDelete: KeyAction.restrict)();
   TextColumn get deviceId => text()();
   TextColumn get operationId => text()();
+  TextColumn get registerClaimId => text().nullable().references(
+    RegisterClaims,
+    #id,
+    onDelete: KeyAction.restrict,
+  )();
   TextColumn get closeOperationId => text().nullable()();
   TextColumn get status => text().withDefault(const Constant<String>('open'))();
   IntColumn get openingCashMinor => integer().check(

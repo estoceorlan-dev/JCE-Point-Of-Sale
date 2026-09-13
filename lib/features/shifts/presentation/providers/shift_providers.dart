@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_provider.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/database/local_mutation_transaction.dart';
 import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/id_generator.dart';
@@ -9,10 +10,16 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/data_sources/shift_local_data_source.dart';
 import '../../data/repositories/drift_shift_repository.dart';
+import '../../data/repositories/drift_register_claim_repository.dart';
+import '../../data/services/firebase_register_claim_authorization_service.dart';
 import '../../domain/entities/cash_shift.dart';
 import '../../domain/entities/register.dart';
+import '../../domain/entities/register_claim.dart';
 import '../../domain/repositories/shift_repository.dart';
+import '../../domain/repositories/register_claim_repository.dart';
+import '../../domain/repositories/register_claim_authorization_service.dart';
 import '../../domain/use_cases/assign_register_device_use_case.dart';
+import '../../domain/use_cases/claim_register_use_case.dart';
 import '../../domain/use_cases/close_shift_use_case.dart';
 import '../../domain/use_cases/configure_shift_policy_use_case.dart';
 import '../../domain/use_cases/create_register_use_case.dart';
@@ -36,6 +43,37 @@ final shiftRepositoryProvider = Provider<ShiftRepository>((ref) {
 
 final currentDeviceIdProvider = FutureProvider<String>((ref) {
   return ref.watch(deviceRegistrationRepositoryProvider).deviceId();
+});
+
+final registerClaimRepositoryProvider = Provider<RegisterClaimRepository>((
+  ref,
+) {
+  return DriftRegisterClaimRepository(
+    database: ref.watch(appDatabaseProvider),
+    localMutationTransaction: ref.watch(localMutationTransactionProvider),
+    idGenerator: ref.watch(idGeneratorProvider),
+    clock: ref.watch(appClockProvider),
+  );
+});
+
+final registerClaimAuthorizationServiceProvider =
+    Provider<RegisterClaimAuthorizationService>((ref) {
+      final config = ref.watch(appConfigProvider);
+      return FirebaseRegisterClaimAuthorizationService(
+        functionName: config.registerClaimAuthorizationFunctionName,
+        region:
+            config.firebaseFunctionsRegion ??
+            AppConfig.defaultFirebaseFunctionsRegion,
+      );
+    });
+
+final currentRegisterClaimProvider = StreamProvider<RegisterClaim?>((ref) {
+  final context = ref.watch(businessContextProvider);
+  final deviceId = ref.watch(currentDeviceIdProvider).value;
+  if (context == null || deviceId == null) return Stream.value(null);
+  return ref
+      .watch(registerClaimRepositoryProvider)
+      .watchInstallationClaim(context: context, deviceId: deviceId);
 });
 
 final registersProvider = StreamProvider<List<Register>>((ref) {
@@ -80,10 +118,18 @@ final assignRegisterDeviceUseCaseProvider =
       ),
     );
 
+final claimRegisterUseCaseProvider = Provider<ClaimRegisterUseCase>(
+  (ref) => ClaimRegisterUseCase(
+    repository: ref.watch(registerClaimRepositoryProvider),
+    requirePermission: ref.watch(requirePermissionUseCaseProvider),
+  ),
+);
+
 final openShiftUseCaseProvider = Provider<OpenShiftUseCase>(
   (ref) => OpenShiftUseCase(
     repository: ref.watch(shiftRepositoryProvider),
     requirePermission: ref.watch(requirePermissionUseCaseProvider),
+    operationalAccessPolicy: ref.watch(operationalAccessPolicyProvider),
   ),
 );
 

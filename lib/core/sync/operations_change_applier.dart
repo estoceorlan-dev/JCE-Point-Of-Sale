@@ -24,6 +24,8 @@ class OperationsChangeApplier {
       await _stockLocation(envelope);
     } else if (type.startsWith('inventory.')) {
       await _inventory(envelope);
+    } else if (type == 'register.claim' || type == 'register.claim.resolve') {
+      await _registerClaim(envelope);
     } else if (type.startsWith('register.')) {
       await _register(envelope);
     } else if (type.startsWith('shift.')) {
@@ -55,6 +57,211 @@ class OperationsChangeApplier {
       return false;
     }
     return true;
+  }
+
+  Future<void> _registerClaim(RemoteChangeEnvelope envelope) async {
+    final row = _requiredMap(
+      envelope.result['registerClaim'],
+      'register claim',
+    );
+    final claimId = envelope.change.aggregateId;
+    final existing = await (database.select(
+      database.registerClaims,
+    )..where((claim) => claim.id.equals(claimId))).getSingleOrNull();
+    final status = _requiredString(row, 'status');
+    final requestedRegisterId =
+        _string(row['requested_register_id']) ??
+        _string(row['requestedRegisterId']) ??
+        _string(envelope.commandPayload['registerId']) ??
+        existing?.requestedRegisterId;
+    final deviceId =
+        _string(row['device_id']) ??
+        _string(row['deviceId']) ??
+        _string(envelope.commandPayload['deviceId']) ??
+        existing?.deviceId;
+    if (requestedRegisterId == null || deviceId == null) {
+      throw const FormatException('Register claim scope is incomplete.');
+    }
+    final updatedAt =
+        _date(row['updated_at'] ?? row['updatedAt']) ??
+        envelope.change.occurredAt;
+    await database
+        .into(database.registerClaims)
+        .insertOnConflictUpdate(
+          RegisterClaimsCompanion.insert(
+            id: claimId,
+            organizationId: envelope.change.organizationId,
+            branchId: _branchId(envelope),
+            requestedRegisterId: requestedRegisterId,
+            resolvedRegisterId: Value(
+              _string(row['resolved_register_id']) ??
+                  _string(row['resolvedRegisterId']) ??
+                  existing?.resolvedRegisterId,
+            ),
+            deviceId: deviceId,
+            claimedByUserId: existing?.claimedByUserId ?? envelope.actorUserId,
+            status: status,
+            rejectionCode: Value(
+              _string(row['rejection_code']) ?? _string(row['rejectionCode']),
+            ),
+            rejectionMessage: Value(
+              _string(row['rejection_message']) ??
+                  _string(row['rejectionMessage']),
+            ),
+            resolutionOperationId: Value(
+              _string(row['resolution_operation_id']) ??
+                  _string(row['resolutionOperationId']),
+            ),
+            resolvedByUserId: Value(
+              _string(row['resolved_by_user_id']) ??
+                  _string(row['resolvedByUserId']),
+            ),
+            resolvedAt: Value(_date(row['resolved_at'] ?? row['resolvedAt'])),
+            version: Value(_nullableInt(row['version']) ?? 0),
+            createdAt:
+                existing?.createdAt ??
+                _date(row['created_at'] ?? row['createdAt']) ??
+                envelope.change.occurredAt,
+            updatedAt: updatedAt,
+          ),
+        );
+    if (status == 'rejected') {
+      await database.syncConflictDao.add(
+        SyncConflictsCompanion.insert(
+          id: 'conflict:$claimId',
+          operationId: claimId,
+          organizationId: Value(envelope.change.organizationId),
+          branchId: Value(_branchId(envelope)),
+          actorUserId: Value(existing?.claimedByUserId ?? envelope.actorUserId),
+          entityType: 'register_claim',
+          entityId: claimId,
+          localPayloadJson: jsonEncode(envelope.commandPayload),
+          remotePayloadJson: jsonEncode(row),
+          reason:
+              _string(row['rejection_message']) ??
+              _string(row['rejectionMessage']) ??
+              'Another installation claimed this register first.',
+          resolutionStatus: 'unresolved',
+          createdAt: envelope.change.occurredAt,
+        ),
+      );
+    } else if (status == 'resolved') {
+      final conflict = await database.syncConflictDao.unresolvedForOperation(
+        claimId,
+      );
+      if (conflict != null) {
+        await database.syncConflictDao.resolve(
+          id: conflict.id,
+          resolutionStatus: 'reassigned',
+          resolvedAt: updatedAt,
+        );
+      }
+    }
+    final directive = envelope.result['directive'];
+    if (directive is Map) {
+      final value = directive.map(
+        (key, item) => MapEntry(key.toString(), item),
+      );
+      if (value['type'] == 'rebase_unsynced_claim_chain') {
+        await _rebaseClaimChain(
+          claimId: claimId,
+          oldRegisterId: _requiredString(value, 'fromRegisterId'),
+          targetRegisterId: _requiredString(value, 'targetRegisterId'),
+          deviceId: _requiredString(value, 'deviceId'),
+          managerUserId:
+              _string(row['resolved_by_user_id']) ??
+              _string(row['resolvedByUserId']) ??
+              envelope.actorUserId,
+          updatedAt: updatedAt,
+        );
+      }
+    }
+  }
+
+  Future<void> _rebaseClaimChain({
+    required String claimId,
+    required String oldRegisterId,
+    required String targetRegisterId,
+    required String deviceId,
+    required String managerUserId,
+    required DateTime updatedAt,
+  }) async {
+    await (database.update(
+      database.shifts,
+    )..where((row) => row.registerClaimId.equals(claimId))).write(
+      ShiftsCompanion(
+        registerId: Value(targetRegisterId),
+        updatedAt: Value(updatedAt),
+      ),
+    );
+    await (database.update(database.cashMovements)
+          ..where((row) => row.registerClaimId.equals(claimId)))
+        .write(CashMovementsCompanion(registerId: Value(targetRegisterId)));
+    await (database.update(
+      database.sales,
+    )..where((row) => row.registerClaimId.equals(claimId))).write(
+      SalesCompanion(
+        registerId: Value(targetRegisterId),
+        updatedAt: Value(updatedAt),
+      ),
+    );
+    await (database.update(
+      database.receiptPrintJobs,
+    )..where((row) => row.registerClaimId.equals(claimId))).write(
+      ReceiptPrintJobsCompanion(
+        registerId: Value(targetRegisterId),
+        updatedAt: Value(updatedAt),
+      ),
+    );
+    final commands =
+        await (database.select(database.syncOutboxEntries)..where(
+              (row) =>
+                  row.causalGroupId.equals(claimId) &
+                  row.status.isNotIn(const ['succeeded', 'discarded']),
+            ))
+            .get();
+    for (final command in commands) {
+      final raw = jsonDecode(command.payloadJson);
+      if (raw is! Map) continue;
+      final payload = raw.map((key, value) => MapEntry(key.toString(), value));
+      if (payload['registerId'] != oldRegisterId) continue;
+      payload['registerId'] = targetRegisterId;
+      await (database.update(
+        database.syncOutboxEntries,
+      )..where((row) => row.operationId.equals(command.operationId))).write(
+        SyncOutboxEntriesCompanion(
+          payloadJson: Value(jsonEncode(payload)),
+          status: const Value('pending'),
+          nextAttemptAt: const Value(null),
+          lastError: const Value(null),
+          updatedAt: Value(updatedAt),
+        ),
+      );
+    }
+    await database.outboxDao.markSucceeded(
+      operationId: claimId,
+      now: updatedAt,
+    );
+    await (database.update(
+      database.registers,
+    )..where((row) => row.id.equals(oldRegisterId))).write(
+      RegistersCompanion(
+        assignedDeviceId: const Value(null),
+        assignedByUserId: const Value(null),
+        assignedAt: const Value(null),
+        updatedAt: Value(updatedAt),
+      ),
+    );
+    await (database.update(
+      database.registers,
+    )..where((row) => row.id.equals(targetRegisterId))).write(
+      RegistersCompanion(
+        assignedDeviceId: Value(deviceId),
+        assignedByUserId: Value(managerUserId),
+        assignedAt: Value(updatedAt),
+        updatedAt: Value(updatedAt),
+      ),
+    );
   }
 
   Future<void> _settings(RemoteChangeEnvelope envelope) async {
@@ -838,6 +1045,32 @@ class OperationsChangeApplier {
             deletedAt: Value(row['is_active'] == false ? now : null),
           ),
         );
+    if (envelope.commandType == 'register.release') {
+      final releasedDeviceId =
+          _string(envelope.result['releasedDeviceId']) ??
+          _string(payload['deviceId']);
+      if (releasedDeviceId != null) {
+        await (database.update(database.registerClaims)..where(
+              (claim) =>
+                  claim.organizationId.equals(envelope.change.organizationId) &
+                  claim.branchId.equals(_branchId(envelope)) &
+                  claim.deviceId.equals(releasedDeviceId) &
+                  claim.status.isIn(['accepted', 'resolved']),
+            ))
+            .write(
+              RegisterClaimsCompanion(
+                status: const Value('released'),
+                releasedByUserId: Value(envelope.actorUserId),
+                releasedAt: Value(now),
+                updatedAt: Value(now),
+              ),
+            );
+        await database.metadataDao.deleteValue(
+          'terminal.pinned_branch:${envelope.change.organizationId}:'
+          '$releasedDeviceId',
+        );
+      }
+    }
   }
 
   Future<void> _shift(RemoteChangeEnvelope envelope) async {
@@ -854,6 +1087,7 @@ class OperationsChangeApplier {
               registerId: _requiredString(payload, 'registerId'),
               shiftId: _requiredString(payload, 'shiftId'),
               operationId: envelope.change.operationId,
+              registerClaimId: Value(_string(payload['registerClaimId'])),
               movementType: _requiredString(payload, 'movementType'),
               amountMinor: _integer(payload['amountMinor']),
               reason: _requiredString(payload, 'reason'),
@@ -885,6 +1119,7 @@ class OperationsChangeApplier {
               registerId: _requiredString(payload, 'registerId'),
               deviceId: _requiredString(payload, 'deviceId'),
               operationId: envelope.change.operationId,
+              registerClaimId: Value(_string(payload['registerClaimId'])),
               openingCashMinor: _integer(payload['openingCashMinor']),
               openingNotes: Value(_string(payload['notes'])),
               openedByUserId: envelope.actorUserId,
@@ -1145,6 +1380,9 @@ class OperationsChangeApplier {
                   existing?.customerId,
             ),
             operationId: existing?.operationId ?? envelope.change.operationId,
+            registerClaimId: Value(
+              _string(payload['registerClaimId']) ?? existing?.registerClaimId,
+            ),
             receiptNumber: Value(_string(sale['receiptNumber'])),
             status: Value(_string(sale['status']) ?? 'completed'),
             cashierUserId: envelope.actorUserId,
@@ -1163,6 +1401,30 @@ class OperationsChangeApplier {
             updatedAt: envelope.change.occurredAt,
           ),
         );
+    final canonicalReceiptNumber = _string(sale['receiptNumber']);
+    final aliasReceiptNumber =
+        _string(sale['localReceiptNumber']) ??
+        _string(payload['localReceiptNumber']) ??
+        existing?.receiptNumber;
+    if (canonicalReceiptNumber != null &&
+        aliasReceiptNumber != null &&
+        canonicalReceiptNumber != aliasReceiptNumber) {
+      await database
+          .into(database.saleReceiptAliases)
+          .insert(
+            SaleReceiptAliasesCompanion.insert(
+              id: 'alias:${envelope.change.aggregateId}:$aliasReceiptNumber',
+              organizationId: envelope.change.organizationId,
+              branchId: _branchId(envelope),
+              saleId: envelope.change.aggregateId,
+              registerClaimId: Value(_string(payload['registerClaimId'])),
+              aliasReceiptNumber: aliasReceiptNumber,
+              canonicalReceiptNumber: canonicalReceiptNumber,
+              createdAt: envelope.change.occurredAt,
+            ),
+            mode: InsertMode.insertOrIgnore,
+          );
+    }
     if (existing != null) return;
     final items = payload['items'] as List;
     for (var index = 0; index < items.length; index++) {

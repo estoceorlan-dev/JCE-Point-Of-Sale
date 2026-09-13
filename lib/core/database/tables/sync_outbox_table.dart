@@ -11,6 +11,7 @@ class SyncOutboxEntries extends Table {
   TextColumn get commandType => text()();
   TextColumn get aggregateType => text()();
   TextColumn get aggregateId => text()();
+  TextColumn get causalGroupId => text().nullable()();
   TextColumn get dependsOnOperationId => text().nullable()();
   TextColumn get payloadJson => text()();
   TextColumn get status => text()();

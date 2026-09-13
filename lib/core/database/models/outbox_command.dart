@@ -11,6 +11,8 @@ class OutboxCommand {
     required this.payload,
     required this.createdAt,
     this.dependsOnOperationId,
+    this.dependencyOperationIds = const [],
+    this.causalGroupId,
     this.organizationId,
     this.branchId,
     this.actorUserId,
@@ -25,9 +27,16 @@ class OutboxCommand {
   final String aggregateType;
   final String aggregateId;
   final String? dependsOnOperationId;
+  final List<String> dependencyOperationIds;
+  final String? causalGroupId;
   final Map<String, Object?> payload;
   final DateTime createdAt;
   final OutboxState state;
 
   String get payloadJson => jsonEncode(payload);
+
+  List<String> get allDependencyOperationIds => {
+    if (dependsOnOperationId != null) dependsOnOperationId!,
+    ...dependencyOperationIds,
+  }.toList(growable: false);
 }

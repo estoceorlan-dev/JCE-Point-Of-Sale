@@ -6,15 +6,16 @@ import '../models/outbox_state.dart';
 import '../models/sync_diagnostics.dart';
 import '../outbox_retry_policy.dart';
 import '../tables/sync_outbox_table.dart';
+import '../tables/sync_outbox_dependencies_table.dart';
 
 part 'outbox_dao.g.dart';
 
-@DriftAccessor(tables: [SyncOutboxEntries])
+@DriftAccessor(tables: [SyncOutboxEntries, SyncOutboxDependencies])
 class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
   OutboxDao(super.attachedDatabase);
 
-  Future<void> enqueue(OutboxCommand command) {
-    return into(syncOutboxEntries).insert(
+  Future<void> enqueue(OutboxCommand command) async {
+    await into(syncOutboxEntries).insert(
       SyncOutboxEntriesCompanion.insert(
         operationId: command.operationId,
         organizationId: Value(command.organizationId),
@@ -23,6 +24,7 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
         commandType: command.commandType,
         aggregateType: command.aggregateType,
         aggregateId: command.aggregateId,
+        causalGroupId: Value(command.causalGroupId),
         dependsOnOperationId: Value(command.dependsOnOperationId),
         payloadJson: command.payloadJson,
         status: command.state.databaseValue,
@@ -30,6 +32,15 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
         updatedAt: command.createdAt.toUtc(),
       ),
     );
+    for (final dependency in command.allDependencyOperationIds) {
+      await into(syncOutboxDependencies).insertOnConflictUpdate(
+        SyncOutboxDependenciesCompanion.insert(
+          operationId: command.operationId,
+          dependsOnOperationId: dependency,
+          createdAt: command.createdAt.toUtc(),
+        ),
+      );
+    }
   }
 
   Stream<int> watchPendingCount() {
@@ -108,28 +119,42 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
                   .getSingleOrNull();
           if (satisfied == null) continue;
         }
-        final olderBlocker =
-            await (select(syncOutboxEntries)
-                  ..where(
-                    (row) =>
-                        row.organizationId.equalsNullable(
-                          entry.organizationId,
-                        ) &
-                        row.branchId.equalsNullable(entry.branchId) &
-                        row.aggregateType.equals(entry.aggregateType) &
-                        row.aggregateId.equals(entry.aggregateId) &
-                        row.status.isNotIn([
-                          OutboxState.succeeded.databaseValue,
-                          OutboxState.discarded.databaseValue,
-                        ]) &
-                        (row.createdAt.isSmallerThanValue(entry.createdAt) |
-                            (row.createdAt.equals(entry.createdAt) &
-                                row.operationId.isSmallerThanValue(
-                                  entry.operationId,
-                                ))),
-                  )
-                  ..limit(1))
-                .getSingleOrNull();
+        final unsatisfiedDependency = await customSelect(
+          'SELECT 1 FROM sync_outbox_dependencies d '
+          'LEFT JOIN sync_outbox dependency '
+          'ON dependency.operation_id = d.depends_on_operation_id '
+          'WHERE d.operation_id = ? AND '
+          '(dependency.operation_id IS NULL OR dependency.status <> ?) LIMIT 1',
+          variables: [
+            Variable<String>(entry.operationId),
+            Variable<String>(OutboxState.succeeded.databaseValue),
+          ],
+          readsFrom: {syncOutboxEntries, syncOutboxDependencies},
+        ).getSingleOrNull();
+        if (unsatisfiedDependency != null) continue;
+        final olderBlocker = entry.commandType == 'register.claim.resolve'
+            ? null
+            : await (select(syncOutboxEntries)
+                    ..where(
+                      (row) =>
+                          row.organizationId.equalsNullable(
+                            entry.organizationId,
+                          ) &
+                          row.branchId.equalsNullable(entry.branchId) &
+                          row.aggregateType.equals(entry.aggregateType) &
+                          row.aggregateId.equals(entry.aggregateId) &
+                          row.status.isNotIn([
+                            OutboxState.succeeded.databaseValue,
+                            OutboxState.discarded.databaseValue,
+                          ]) &
+                          (row.createdAt.isSmallerThanValue(entry.createdAt) |
+                              (row.createdAt.equals(entry.createdAt) &
+                                  row.operationId.isSmallerThanValue(
+                                    entry.operationId,
+                                  ))),
+                    )
+                    ..limit(1))
+                  .getSingleOrNull();
         if (olderBlocker == null) {
           entries.add(entry);
         }

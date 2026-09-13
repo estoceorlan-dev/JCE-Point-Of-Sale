@@ -69,6 +69,7 @@ class DriftPosCartRepository implements PosCartRepository {
               organizationId: context.organizationId,
               branchId: context.branchId,
               deviceId: deviceId,
+              ownerUserId: Value(context.actorUserId),
               status: 'active',
               customerId: Value(cart.customerId),
               saleDiscountMinor: Value(cart.saleDiscountMinor),
@@ -103,6 +104,7 @@ class DriftPosCartRepository implements PosCartRepository {
             row.organizationId.equals(context.organizationId) &
             row.branchId.equals(context.branchId) &
             row.deviceId.equals(deviceId) &
+            row.ownerUserId.equals(context.actorUserId) &
             row.status.equals('held'),
       )
       ..orderBy([(row) => OrderingTerm.desc(row.updatedAt)]);
@@ -161,6 +163,7 @@ class DriftPosCartRepository implements PosCartRepository {
                     row.organizationId.equals(context.organizationId) &
                     row.branchId.equals(context.branchId) &
                     row.deviceId.equals(deviceId) &
+                    row.ownerUserId.equals(context.actorUserId) &
                     row.status.equals('held'),
               ))
               .getSingleOrNull();
@@ -197,6 +200,7 @@ class DriftPosCartRepository implements PosCartRepository {
               row.organizationId.equals(context.organizationId) &
               row.branchId.equals(context.branchId) &
               row.deviceId.equals(deviceId) &
+              row.ownerUserId.equals(context.actorUserId) &
               row.status.equals('held'),
         ))
         .go();
@@ -299,6 +303,7 @@ class DriftPosCartRepository implements PosCartRepository {
           row.organizationId.equals(context.organizationId) &
           row.branchId.equals(context.branchId) &
           row.deviceId.equals(deviceId) &
+          row.ownerUserId.equals(context.actorUserId) &
           row.status.equals('active'),
     );
   }
@@ -448,7 +453,7 @@ class DriftPosCartRepository implements PosCartRepository {
   );
 
   String _activeScope(BusinessContext context, String deviceId) =>
-      '${context.organizationId}|${context.branchId}|$deviceId';
+      '${context.organizationId}|${context.branchId}|$deviceId|${context.actorUserId}';
 }
 
 String? _normalizedReference(String? value) {

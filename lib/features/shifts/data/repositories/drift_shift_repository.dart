@@ -271,6 +271,12 @@ class DriftShiftRepository implements ShiftRepository {
     if (existing != null) return Result.success(existing.id);
     final shiftId = _idGenerator.newId();
     final now = _clock.nowUtc();
+    final registerClaim = await _activeClaim(
+      context: context,
+      deviceId: draft.deviceId,
+      registerId: draft.registerId,
+    );
+    final claimDependency = await _existingOutboxOperation(registerClaim?.id);
     return _localMutationTransaction.execute(
       businessWrite: (database) async {
         final register = await _requireRegister(
@@ -325,6 +331,7 @@ class DriftShiftRepository implements ShiftRepository {
                 registerId: draft.registerId,
                 deviceId: draft.deviceId,
                 operationId: operationId,
+                registerClaimId: Value(registerClaim?.id),
                 openingCashMinor: draft.openingCashMinor,
                 openingNotes: Value(_trimmedOrNull(draft.notes)),
                 openedByUserId: context.actorUserId,
@@ -361,8 +368,11 @@ class DriftShiftRepository implements ShiftRepository {
           'openingCashMinor': draft.openingCashMinor,
           'notes': draft.notes,
           'openedAt': now.toIso8601String(),
+          'registerClaimId': registerClaim?.id,
         },
         now: now,
+        causalGroupId: registerClaim?.id,
+        dependencyOperationIds: [if (claimDependency != null) claimDependency],
       ),
     );
   }
@@ -383,6 +393,18 @@ class DriftShiftRepository implements ShiftRepository {
     if (existing != null) return Result.success(existing.id);
     final movementId = _idGenerator.newId();
     final now = _clock.nowUtc();
+    final dependencyShift = await _openShiftOrNull(context, draft.shiftId);
+    if (dependencyShift == null) {
+      return const Result.failure(
+        ConflictFailure('The shift is no longer open.'),
+      );
+    }
+    final shiftDependency = await _existingOutboxOperation(
+      dependencyShift.operationId,
+    );
+    final claimDependency = await _existingOutboxOperation(
+      dependencyShift.registerClaimId,
+    );
     return _localMutationTransaction.execute(
       businessWrite: (database) async {
         final shift = await _requireOpenShift(database, context, draft.shiftId);
@@ -401,6 +423,7 @@ class DriftShiftRepository implements ShiftRepository {
                 registerId: shift.registerId,
                 shiftId: shift.id,
                 operationId: operationId,
+                registerClaimId: Value(shift.registerClaimId),
                 movementType: draft.type.databaseValue,
                 amountMinor: draft.amountMinor,
                 reason: reason,
@@ -438,8 +461,15 @@ class DriftShiftRepository implements ShiftRepository {
           'amountMinor': draft.amountMinor,
           'reason': reason,
           'occurredAt': now.toIso8601String(),
+          'registerClaimId': dependencyShift.registerClaimId,
+          'registerId': dependencyShift.registerId,
         },
         now: now,
+        causalGroupId: dependencyShift.registerClaimId,
+        dependencyOperationIds: [
+          if (shiftDependency != null) shiftDependency,
+          if (claimDependency != null) claimDependency,
+        ],
       ),
     );
   }
@@ -466,6 +496,22 @@ class DriftShiftRepository implements ShiftRepository {
     final existing = await _shiftForCloseOperation(context, operationId);
     if (existing != null) return const Result.success(null);
     final now = _clock.nowUtc();
+    final dependencyShift = await _openShiftOrNull(context, draft.shiftId);
+    if (dependencyShift == null) {
+      return const Result.failure(
+        ConflictFailure('The shift is no longer open.'),
+      );
+    }
+    final dependencyOperationIds = await _claimChainDependencies(
+      dependencyShift.registerClaimId,
+      before: now,
+    );
+    final shiftDependency = await _existingOutboxOperation(
+      dependencyShift.operationId,
+    );
+    final claimDependency = await _existingOutboxOperation(
+      dependencyShift.registerClaimId,
+    );
     return _localMutationTransaction.execute(
       businessWrite: (database) async {
         final shift = await _requireOpenShift(database, context, draft.shiftId);
@@ -589,8 +635,15 @@ class DriftShiftRepository implements ShiftRepository {
           'approvedByUserId': approvedByUserId,
           'approvalNotes': draft.approvalNotes,
           'closedAt': now.toIso8601String(),
+          'registerClaimId': dependencyShift.registerClaimId,
         },
         now: now,
+        causalGroupId: dependencyShift.registerClaimId,
+        dependencyOperationIds: {
+          if (shiftDependency != null) shiftDependency,
+          if (claimDependency != null) claimDependency,
+          ...dependencyOperationIds,
+        }.toList(growable: false),
       ),
     );
   }
@@ -876,6 +929,8 @@ class DriftShiftRepository implements ShiftRepository {
     required String aggregateId,
     required Map<String, Object?> payload,
     required DateTime now,
+    String? causalGroupId,
+    List<String> dependencyOperationIds = const [],
   }) {
     return OutboxCommand(
       operationId: operationId,
@@ -885,9 +940,66 @@ class DriftShiftRepository implements ShiftRepository {
       commandType: commandType,
       aggregateType: aggregateType,
       aggregateId: aggregateId,
+      causalGroupId: causalGroupId,
+      dependencyOperationIds: dependencyOperationIds,
       payload: payload,
       createdAt: now,
     );
+  }
+
+  Future<RegisterClaimRecord?> _activeClaim({
+    required BusinessContext context,
+    required String deviceId,
+    required String registerId,
+  }) {
+    return (_database.select(_database.registerClaims)
+          ..where(
+            (row) =>
+                row.organizationId.equals(context.organizationId) &
+                row.branchId.equals(context.branchId) &
+                row.deviceId.equals(deviceId) &
+                row.status.isIn(['provisional', 'accepted', 'resolved']) &
+                (row.requestedRegisterId.equals(registerId) |
+                    row.resolvedRegisterId.equals(registerId)),
+          )
+          ..orderBy([(row) => OrderingTerm.desc(row.createdAt)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<List<String>> _claimChainDependencies(
+    String? claimId, {
+    required DateTime before,
+  }) async {
+    if (claimId == null) return const [];
+    final commands =
+        await (_database.select(_database.syncOutboxEntries)..where(
+              (row) =>
+                  row.causalGroupId.equals(claimId) &
+                  row.createdAt.isSmallerOrEqualValue(before) &
+                  row.status.isNotIn(['discarded']),
+            ))
+            .get();
+    return commands.map((command) => command.operationId).toList();
+  }
+
+  Future<Shift?> _openShiftOrNull(BusinessContext context, String shiftId) {
+    return (_database.select(_database.shifts)..where(
+          (row) =>
+              row.id.equals(shiftId) &
+              row.organizationId.equals(context.organizationId) &
+              row.branchId.equals(context.branchId) &
+              row.status.equals('open'),
+        ))
+        .getSingleOrNull();
+  }
+
+  Future<String?> _existingOutboxOperation(String? operationId) async {
+    if (operationId == null) return null;
+    final operation = await (_database.select(
+      _database.syncOutboxEntries,
+    )..where((row) => row.operationId.equals(operationId))).getSingleOrNull();
+    return operation?.operationId;
   }
 }
 

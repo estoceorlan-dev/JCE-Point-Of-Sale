@@ -5,6 +5,7 @@ import {
   RemoteCommandError,
   RemoteCommandInput,
 } from "./command_types";
+import {hasValidRegisterClaimGrant} from "../manager_action_grants";
 
 type AccessRow = {
   actor_user_id: string;
@@ -53,6 +54,9 @@ const permissionByCommand: Readonly<Record<string, string>> = {
   "customer.anonymize": "customers.anonymize",
   "sale.return": "sales.returns.process",
   "sale.void": "sales.returns.process",
+  "register.claim": "registers.claim",
+  "register.claim.resolve": "registers.manage",
+  "register.release": "registers.manage",
 };
 
 export async function authorizeCommand(
@@ -113,7 +117,15 @@ export async function authorizeCommand(
     );
   }
   const permissions = new Set(result.rows[0].permission_codes);
-  if (!permissions.has(permission)) {
+  const hasManagerGrant = input.commandType === "register.claim.resolve" &&
+    await hasValidRegisterClaimGrant(
+      client,
+      input,
+      result.rows[0].actor_user_id,
+    );
+  const hasPermission = permissions.has(permission) || hasManagerGrant ||
+    (input.commandType === "register.claim" && permissions.has("registers.manage"));
+  if (!hasPermission) {
     throw new RemoteCommandError(
       "permission-denied",
       `The ${permission} permission is required.`,

@@ -46,6 +46,7 @@ import 'tables/payments_table.dart';
 import 'tables/receipt_sequences_table.dart';
 import 'tables/receipt_print_jobs_table.dart';
 import 'tables/registers_table.dart';
+import 'tables/register_claims_table.dart';
 import 'tables/reason_codes_table.dart';
 import 'tables/role_permissions_table.dart';
 import 'tables/roles_table.dart';
@@ -53,12 +54,15 @@ import 'tables/sale_discounts_table.dart';
 import 'tables/sale_items_table.dart';
 import 'tables/sale_return_items_table.dart';
 import 'tables/sale_returns_table.dart';
+import 'tables/sale_receipt_aliases_table.dart';
 import 'tables/sales_table.dart';
 import 'tables/refund_payments_table.dart';
 import 'tables/sync_conflicts_table.dart';
 import 'tables/sync_cursors_table.dart';
 import 'tables/sync_entity_versions_table.dart';
 import 'tables/sync_outbox_table.dart';
+import 'tables/sync_outbox_dependencies_table.dart';
+import 'tables/sync_snapshot_staging_table.dart';
 import 'tables/stock_count_items_table.dart';
 import 'tables/stock_counts_table.dart';
 import 'tables/stock_locations_table.dart';
@@ -80,7 +84,9 @@ part 'app_database.g.dart';
   tables: [
     LocalMetadata,
     SyncOutboxEntries,
+    SyncOutboxDependencies,
     SyncCursors,
+    SyncSnapshotStagingRecords,
     SyncConflicts,
     SyncEntityVersions,
     LocalAuditLogs,
@@ -105,10 +111,12 @@ part 'app_database.g.dart';
     StockCounts,
     StockCountItems,
     Registers,
+    RegisterClaims,
     Shifts,
     CashMovements,
     ShiftCounts,
     Sales,
+    SaleReceiptAliases,
     SaleItems,
     Payments,
     SaleDiscounts,
@@ -157,7 +165,7 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 18;
+  static const int currentSchemaVersion = 19;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -427,6 +435,7 @@ class AppDatabase extends _$AppDatabase {
             sales,
             columnTransformer: {
               sales.customerId: const CustomExpression<String>('NULL'),
+              sales.registerClaimId: const CustomExpression<String>('NULL'),
             },
           ),
         );
@@ -556,6 +565,62 @@ class AppDatabase extends _$AppDatabase {
       case 18:
         await migrator.createIndex(productBarcodesProductLookupIdx);
         await migrator.createIndex(productPricesLookupIdx);
+      case 19:
+        if (!await _tableHasColumn('sync_outbox', 'causal_group_id')) {
+          await migrator.addColumn(
+            syncOutboxEntries,
+            syncOutboxEntries.causalGroupId,
+          );
+        }
+        if (!await _tableHasColumn('sync_cursors', 'projection')) {
+          await migrator.addColumn(syncCursors, syncCursors.projection);
+        }
+        if (!await _tableHasColumn('sync_cursors', 'permission_digest')) {
+          await migrator.addColumn(syncCursors, syncCursors.permissionDigest);
+        }
+        if (!await _tableHasColumn('sync_cursors', 'actor_user_id')) {
+          await migrator.addColumn(syncCursors, syncCursors.actorUserId);
+        }
+        if (!await _tableHasColumn('sync_cursors', 'device_id')) {
+          await migrator.addColumn(syncCursors, syncCursors.deviceId);
+        }
+        if (!await _tableHasColumn('pos_carts', 'owner_user_id')) {
+          await migrator.addColumn(posCarts, posCarts.ownerUserId);
+        }
+        await migrator.createTable(registerClaims);
+        if (!await _tableHasColumn('shifts', 'register_claim_id')) {
+          await migrator.addColumn(shifts, shifts.registerClaimId);
+        }
+        if (!await _tableHasColumn('cash_movements', 'register_claim_id')) {
+          await migrator.addColumn(
+            cashMovements,
+            cashMovements.registerClaimId,
+          );
+        }
+        if (!await _tableHasColumn('sales', 'register_claim_id')) {
+          await migrator.addColumn(sales, sales.registerClaimId);
+        }
+        if (!await _tableHasColumn('receipt_print_jobs', 'register_claim_id')) {
+          await migrator.addColumn(
+            receiptPrintJobs,
+            receiptPrintJobs.registerClaimId,
+          );
+        }
+        await migrator.createTable(syncOutboxDependencies);
+        await customUpdate(
+          'INSERT OR IGNORE INTO sync_outbox_dependencies '
+          '(operation_id, depends_on_operation_id, created_at) '
+          'SELECT operation_id, depends_on_operation_id, created_at '
+          'FROM sync_outbox WHERE depends_on_operation_id IS NOT NULL',
+          updates: {syncOutboxDependencies},
+        );
+        await migrator.createTable(syncSnapshotStagingRecords);
+        await migrator.createTable(saleReceiptAliases);
+        await migrator.createIndex(registerClaimsUnresolvedIdx);
+        await migrator.createIndex(registerClaimsDeviceIdx);
+        await migrator.createIndex(syncSnapshotStagingScopeIdx);
+        await migrator.createIndex(saleReceiptAliasesLookupIdx);
+        await migrator.createIndex(posCartsOwnerStatusIdx);
       default:
         throw StateError('Missing migration for schema version $version.');
     }

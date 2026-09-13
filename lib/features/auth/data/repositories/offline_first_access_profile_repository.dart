@@ -16,15 +16,21 @@ class OfflineFirstAccessProfileRepository implements AccessProfileRepository {
     required AccessRemoteDataSource remote,
     required AppClock clock,
     required Duration maxOfflineAge,
+    List<Duration> remoteRetryDelays = const [
+      Duration(milliseconds: 250),
+      Duration(milliseconds: 750),
+    ],
   }) : _local = local,
        _remote = remote,
        _clock = clock,
-       _maxOfflineAge = maxOfflineAge;
+       _maxOfflineAge = maxOfflineAge,
+       _remoteRetryDelays = List.unmodifiable(remoteRetryDelays);
 
   final AccessLocalDataSource _local;
   final AccessRemoteDataSource _remote;
   final AppClock _clock;
   final Duration _maxOfflineAge;
+  final List<Duration> _remoteRetryDelays;
   final StreamController<AccessProfileEvent> _events =
       StreamController<AccessProfileEvent>.broadcast();
   final Map<String, StreamSubscription<AppUser?>> _localSubscriptions = {};
@@ -73,7 +79,7 @@ class OfflineFirstAccessProfileRepository implements AccessProfileRepository {
     required bool publish,
   }) async {
     try {
-      final remote = await _remote.fetchCurrentProfile(
+      final remote = await _fetchRemoteWithRetry(
         firebaseUid: firebaseUid,
         email: email,
       );
@@ -113,7 +119,7 @@ class OfflineFirstAccessProfileRepository implements AccessProfileRepository {
         return Result<AppUser?, Failure>.success(cached);
       }
       final failure = NetworkFailure(
-        'Access could not be verified. Connect to the internet and try again.',
+        'The JCE access service is temporarily unavailable. Please try again.',
         code: error.reason,
         cause: error.cause ?? error,
       );
@@ -130,6 +136,36 @@ class OfflineFirstAccessProfileRepository implements AccessProfileRepository {
       }
       return result;
     }
+  }
+
+  Future<AppUser?> _fetchRemoteWithRetry({
+    required String firebaseUid,
+    required String email,
+  }) async {
+    var attempt = 0;
+    while (true) {
+      try {
+        return await _remote.fetchCurrentProfile(
+          firebaseUid: firebaseUid,
+          email: email,
+        );
+      } on AccessProfileUnavailableException catch (error) {
+        if (!_isRetryable(error.reason) ||
+            attempt >= _remoteRetryDelays.length) {
+          rethrow;
+        }
+        await Future<void>.delayed(_remoteRetryDelays[attempt]);
+        attempt += 1;
+      }
+    }
+  }
+
+  bool _isRetryable(String reason) {
+    return reason == 'deadline-exceeded' ||
+        reason == 'internal' ||
+        reason == 'resource-exhausted' ||
+        reason == 'unavailable' ||
+        reason == 'unknown';
   }
 
   Future<Result<AppUser?, Failure>> _revoke(

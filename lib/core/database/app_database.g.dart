@@ -352,6 +352,17 @@ class $SyncOutboxEntriesTable extends SyncOutboxEntries
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _causalGroupIdMeta = const VerificationMeta(
+    'causalGroupId',
+  );
+  @override
+  late final GeneratedColumn<String> causalGroupId = GeneratedColumn<String>(
+    'causal_group_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _dependsOnOperationIdMeta =
       const VerificationMeta('dependsOnOperationId');
   @override
@@ -449,6 +460,7 @@ class $SyncOutboxEntriesTable extends SyncOutboxEntries
     commandType,
     aggregateType,
     aggregateId,
+    causalGroupId,
     dependsOnOperationId,
     payloadJson,
     status,
@@ -537,6 +549,15 @@ class $SyncOutboxEntriesTable extends SyncOutboxEntries
       );
     } else if (isInserting) {
       context.missing(_aggregateIdMeta);
+    }
+    if (data.containsKey('causal_group_id')) {
+      context.handle(
+        _causalGroupIdMeta,
+        causalGroupId.isAcceptableOrUnknown(
+          data['causal_group_id']!,
+          _causalGroupIdMeta,
+        ),
+      );
     }
     if (data.containsKey('depends_on_operation_id')) {
       context.handle(
@@ -643,6 +664,10 @@ class $SyncOutboxEntriesTable extends SyncOutboxEntries
         DriftSqlType.string,
         data['${effectivePrefix}aggregate_id'],
       )!,
+      causalGroupId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}causal_group_id'],
+      ),
       dependsOnOperationId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}depends_on_operation_id'],
@@ -692,6 +717,7 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
   final String commandType;
   final String aggregateType;
   final String aggregateId;
+  final String? causalGroupId;
   final String? dependsOnOperationId;
   final String payloadJson;
   final String status;
@@ -708,6 +734,7 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
     required this.commandType,
     required this.aggregateType,
     required this.aggregateId,
+    this.causalGroupId,
     this.dependsOnOperationId,
     required this.payloadJson,
     required this.status,
@@ -733,6 +760,9 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
     map['command_type'] = Variable<String>(commandType);
     map['aggregate_type'] = Variable<String>(aggregateType);
     map['aggregate_id'] = Variable<String>(aggregateId);
+    if (!nullToAbsent || causalGroupId != null) {
+      map['causal_group_id'] = Variable<String>(causalGroupId);
+    }
     if (!nullToAbsent || dependsOnOperationId != null) {
       map['depends_on_operation_id'] = Variable<String>(dependsOnOperationId);
     }
@@ -765,6 +795,9 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
       commandType: Value(commandType),
       aggregateType: Value(aggregateType),
       aggregateId: Value(aggregateId),
+      causalGroupId: causalGroupId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(causalGroupId),
       dependsOnOperationId: dependsOnOperationId == null && nullToAbsent
           ? const Value.absent()
           : Value(dependsOnOperationId),
@@ -795,6 +828,7 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
       commandType: serializer.fromJson<String>(json['commandType']),
       aggregateType: serializer.fromJson<String>(json['aggregateType']),
       aggregateId: serializer.fromJson<String>(json['aggregateId']),
+      causalGroupId: serializer.fromJson<String?>(json['causalGroupId']),
       dependsOnOperationId: serializer.fromJson<String?>(
         json['dependsOnOperationId'],
       ),
@@ -818,6 +852,7 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
       'commandType': serializer.toJson<String>(commandType),
       'aggregateType': serializer.toJson<String>(aggregateType),
       'aggregateId': serializer.toJson<String>(aggregateId),
+      'causalGroupId': serializer.toJson<String?>(causalGroupId),
       'dependsOnOperationId': serializer.toJson<String?>(dependsOnOperationId),
       'payloadJson': serializer.toJson<String>(payloadJson),
       'status': serializer.toJson<String>(status),
@@ -837,6 +872,7 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
     String? commandType,
     String? aggregateType,
     String? aggregateId,
+    Value<String?> causalGroupId = const Value.absent(),
     Value<String?> dependsOnOperationId = const Value.absent(),
     String? payloadJson,
     String? status,
@@ -855,6 +891,9 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
     commandType: commandType ?? this.commandType,
     aggregateType: aggregateType ?? this.aggregateType,
     aggregateId: aggregateId ?? this.aggregateId,
+    causalGroupId: causalGroupId.present
+        ? causalGroupId.value
+        : this.causalGroupId,
     dependsOnOperationId: dependsOnOperationId.present
         ? dependsOnOperationId.value
         : this.dependsOnOperationId,
@@ -889,6 +928,9 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
       aggregateId: data.aggregateId.present
           ? data.aggregateId.value
           : this.aggregateId,
+      causalGroupId: data.causalGroupId.present
+          ? data.causalGroupId.value
+          : this.causalGroupId,
       dependsOnOperationId: data.dependsOnOperationId.present
           ? data.dependsOnOperationId.value
           : this.dependsOnOperationId,
@@ -918,6 +960,7 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
           ..write('commandType: $commandType, ')
           ..write('aggregateType: $aggregateType, ')
           ..write('aggregateId: $aggregateId, ')
+          ..write('causalGroupId: $causalGroupId, ')
           ..write('dependsOnOperationId: $dependsOnOperationId, ')
           ..write('payloadJson: $payloadJson, ')
           ..write('status: $status, ')
@@ -939,6 +982,7 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
     commandType,
     aggregateType,
     aggregateId,
+    causalGroupId,
     dependsOnOperationId,
     payloadJson,
     status,
@@ -959,6 +1003,7 @@ class SyncOutboxEntry extends DataClass implements Insertable<SyncOutboxEntry> {
           other.commandType == this.commandType &&
           other.aggregateType == this.aggregateType &&
           other.aggregateId == this.aggregateId &&
+          other.causalGroupId == this.causalGroupId &&
           other.dependsOnOperationId == this.dependsOnOperationId &&
           other.payloadJson == this.payloadJson &&
           other.status == this.status &&
@@ -977,6 +1022,7 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
   final Value<String> commandType;
   final Value<String> aggregateType;
   final Value<String> aggregateId;
+  final Value<String?> causalGroupId;
   final Value<String?> dependsOnOperationId;
   final Value<String> payloadJson;
   final Value<String> status;
@@ -994,6 +1040,7 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
     this.commandType = const Value.absent(),
     this.aggregateType = const Value.absent(),
     this.aggregateId = const Value.absent(),
+    this.causalGroupId = const Value.absent(),
     this.dependsOnOperationId = const Value.absent(),
     this.payloadJson = const Value.absent(),
     this.status = const Value.absent(),
@@ -1012,6 +1059,7 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
     required String commandType,
     required String aggregateType,
     required String aggregateId,
+    this.causalGroupId = const Value.absent(),
     this.dependsOnOperationId = const Value.absent(),
     required String payloadJson,
     required String status,
@@ -1037,6 +1085,7 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
     Expression<String>? commandType,
     Expression<String>? aggregateType,
     Expression<String>? aggregateId,
+    Expression<String>? causalGroupId,
     Expression<String>? dependsOnOperationId,
     Expression<String>? payloadJson,
     Expression<String>? status,
@@ -1055,6 +1104,7 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
       if (commandType != null) 'command_type': commandType,
       if (aggregateType != null) 'aggregate_type': aggregateType,
       if (aggregateId != null) 'aggregate_id': aggregateId,
+      if (causalGroupId != null) 'causal_group_id': causalGroupId,
       if (dependsOnOperationId != null)
         'depends_on_operation_id': dependsOnOperationId,
       if (payloadJson != null) 'payload_json': payloadJson,
@@ -1076,6 +1126,7 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
     Value<String>? commandType,
     Value<String>? aggregateType,
     Value<String>? aggregateId,
+    Value<String?>? causalGroupId,
     Value<String?>? dependsOnOperationId,
     Value<String>? payloadJson,
     Value<String>? status,
@@ -1094,6 +1145,7 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
       commandType: commandType ?? this.commandType,
       aggregateType: aggregateType ?? this.aggregateType,
       aggregateId: aggregateId ?? this.aggregateId,
+      causalGroupId: causalGroupId ?? this.causalGroupId,
       dependsOnOperationId: dependsOnOperationId ?? this.dependsOnOperationId,
       payloadJson: payloadJson ?? this.payloadJson,
       status: status ?? this.status,
@@ -1129,6 +1181,9 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
     }
     if (aggregateId.present) {
       map['aggregate_id'] = Variable<String>(aggregateId.value);
+    }
+    if (causalGroupId.present) {
+      map['causal_group_id'] = Variable<String>(causalGroupId.value);
     }
     if (dependsOnOperationId.present) {
       map['depends_on_operation_id'] = Variable<String>(
@@ -1172,6 +1227,7 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
           ..write('commandType: $commandType, ')
           ..write('aggregateType: $aggregateType, ')
           ..write('aggregateId: $aggregateId, ')
+          ..write('causalGroupId: $causalGroupId, ')
           ..write('dependsOnOperationId: $dependsOnOperationId, ')
           ..write('payloadJson: $payloadJson, ')
           ..write('status: $status, ')
@@ -1180,6 +1236,302 @@ class SyncOutboxEntriesCompanion extends UpdateCompanion<SyncOutboxEntry> {
           ..write('lastError: $lastError, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncOutboxDependenciesTable extends SyncOutboxDependencies
+    with TableInfo<$SyncOutboxDependenciesTable, SyncOutboxDependency> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncOutboxDependenciesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _operationIdMeta = const VerificationMeta(
+    'operationId',
+  );
+  @override
+  late final GeneratedColumn<String> operationId = GeneratedColumn<String>(
+    'operation_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES sync_outbox (operation_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _dependsOnOperationIdMeta =
+      const VerificationMeta('dependsOnOperationId');
+  @override
+  late final GeneratedColumn<String> dependsOnOperationId =
+      GeneratedColumn<String>(
+        'depends_on_operation_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES sync_outbox (operation_id) ON DELETE RESTRICT',
+        ),
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    operationId,
+    dependsOnOperationId,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_outbox_dependencies';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncOutboxDependency> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('operation_id')) {
+      context.handle(
+        _operationIdMeta,
+        operationId.isAcceptableOrUnknown(
+          data['operation_id']!,
+          _operationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_operationIdMeta);
+    }
+    if (data.containsKey('depends_on_operation_id')) {
+      context.handle(
+        _dependsOnOperationIdMeta,
+        dependsOnOperationId.isAcceptableOrUnknown(
+          data['depends_on_operation_id']!,
+          _dependsOnOperationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dependsOnOperationIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {operationId, dependsOnOperationId};
+  @override
+  SyncOutboxDependency map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncOutboxDependency(
+      operationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation_id'],
+      )!,
+      dependsOnOperationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}depends_on_operation_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncOutboxDependenciesTable createAlias(String alias) {
+    return $SyncOutboxDependenciesTable(attachedDatabase, alias);
+  }
+}
+
+class SyncOutboxDependency extends DataClass
+    implements Insertable<SyncOutboxDependency> {
+  final String operationId;
+  final String dependsOnOperationId;
+  final DateTime createdAt;
+  const SyncOutboxDependency({
+    required this.operationId,
+    required this.dependsOnOperationId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['operation_id'] = Variable<String>(operationId);
+    map['depends_on_operation_id'] = Variable<String>(dependsOnOperationId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SyncOutboxDependenciesCompanion toCompanion(bool nullToAbsent) {
+    return SyncOutboxDependenciesCompanion(
+      operationId: Value(operationId),
+      dependsOnOperationId: Value(dependsOnOperationId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SyncOutboxDependency.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncOutboxDependency(
+      operationId: serializer.fromJson<String>(json['operationId']),
+      dependsOnOperationId: serializer.fromJson<String>(
+        json['dependsOnOperationId'],
+      ),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'operationId': serializer.toJson<String>(operationId),
+      'dependsOnOperationId': serializer.toJson<String>(dependsOnOperationId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SyncOutboxDependency copyWith({
+    String? operationId,
+    String? dependsOnOperationId,
+    DateTime? createdAt,
+  }) => SyncOutboxDependency(
+    operationId: operationId ?? this.operationId,
+    dependsOnOperationId: dependsOnOperationId ?? this.dependsOnOperationId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  SyncOutboxDependency copyWithCompanion(SyncOutboxDependenciesCompanion data) {
+    return SyncOutboxDependency(
+      operationId: data.operationId.present
+          ? data.operationId.value
+          : this.operationId,
+      dependsOnOperationId: data.dependsOnOperationId.present
+          ? data.dependsOnOperationId.value
+          : this.dependsOnOperationId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncOutboxDependency(')
+          ..write('operationId: $operationId, ')
+          ..write('dependsOnOperationId: $dependsOnOperationId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(operationId, dependsOnOperationId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncOutboxDependency &&
+          other.operationId == this.operationId &&
+          other.dependsOnOperationId == this.dependsOnOperationId &&
+          other.createdAt == this.createdAt);
+}
+
+class SyncOutboxDependenciesCompanion
+    extends UpdateCompanion<SyncOutboxDependency> {
+  final Value<String> operationId;
+  final Value<String> dependsOnOperationId;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const SyncOutboxDependenciesCompanion({
+    this.operationId = const Value.absent(),
+    this.dependsOnOperationId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncOutboxDependenciesCompanion.insert({
+    required String operationId,
+    required String dependsOnOperationId,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : operationId = Value(operationId),
+       dependsOnOperationId = Value(dependsOnOperationId),
+       createdAt = Value(createdAt);
+  static Insertable<SyncOutboxDependency> custom({
+    Expression<String>? operationId,
+    Expression<String>? dependsOnOperationId,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (operationId != null) 'operation_id': operationId,
+      if (dependsOnOperationId != null)
+        'depends_on_operation_id': dependsOnOperationId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncOutboxDependenciesCompanion copyWith({
+    Value<String>? operationId,
+    Value<String>? dependsOnOperationId,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return SyncOutboxDependenciesCompanion(
+      operationId: operationId ?? this.operationId,
+      dependsOnOperationId: dependsOnOperationId ?? this.dependsOnOperationId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (operationId.present) {
+      map['operation_id'] = Variable<String>(operationId.value);
+    }
+    if (dependsOnOperationId.present) {
+      map['depends_on_operation_id'] = Variable<String>(
+        dependsOnOperationId.value,
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncOutboxDependenciesCompanion(')
+          ..write('operationId: $operationId, ')
+          ..write('dependsOnOperationId: $dependsOnOperationId, ')
+          ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1234,6 +1586,50 @@ class $SyncCursorsTable extends SyncCursors
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _projectionMeta = const VerificationMeta(
+    'projection',
+  );
+  @override
+  late final GeneratedColumn<String> projection = GeneratedColumn<String>(
+    'projection',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _permissionDigestMeta = const VerificationMeta(
+    'permissionDigest',
+  );
+  @override
+  late final GeneratedColumn<String> permissionDigest = GeneratedColumn<String>(
+    'permission_digest',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _actorUserIdMeta = const VerificationMeta(
+    'actorUserId',
+  );
+  @override
+  late final GeneratedColumn<String> actorUserId = GeneratedColumn<String>(
+    'actor_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _lastChangeSequenceMeta =
       const VerificationMeta('lastChangeSequence');
   @override
@@ -1262,6 +1658,10 @@ class $SyncCursorsTable extends SyncCursors
     scope,
     organizationId,
     branchId,
+    projection,
+    permissionDigest,
+    actorUserId,
+    deviceId,
     lastChangeSequence,
     lastSyncedAt,
   ];
@@ -1308,6 +1708,36 @@ class $SyncCursorsTable extends SyncCursors
         branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
       );
     }
+    if (data.containsKey('projection')) {
+      context.handle(
+        _projectionMeta,
+        projection.isAcceptableOrUnknown(data['projection']!, _projectionMeta),
+      );
+    }
+    if (data.containsKey('permission_digest')) {
+      context.handle(
+        _permissionDigestMeta,
+        permissionDigest.isAcceptableOrUnknown(
+          data['permission_digest']!,
+          _permissionDigestMeta,
+        ),
+      );
+    }
+    if (data.containsKey('actor_user_id')) {
+      context.handle(
+        _actorUserIdMeta,
+        actorUserId.isAcceptableOrUnknown(
+          data['actor_user_id']!,
+          _actorUserIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
     if (data.containsKey('last_change_sequence')) {
       context.handle(
         _lastChangeSequenceMeta,
@@ -1351,6 +1781,22 @@ class $SyncCursorsTable extends SyncCursors
         DriftSqlType.string,
         data['${effectivePrefix}branch_id'],
       ),
+      projection: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}projection'],
+      ),
+      permissionDigest: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}permission_digest'],
+      ),
+      actorUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}actor_user_id'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
       lastChangeSequence: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}last_change_sequence'],
@@ -1373,6 +1819,10 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
   final String scope;
   final String? organizationId;
   final String? branchId;
+  final String? projection;
+  final String? permissionDigest;
+  final String? actorUserId;
+  final String? deviceId;
   final int lastChangeSequence;
   final DateTime? lastSyncedAt;
   const SyncCursor({
@@ -1380,6 +1830,10 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
     required this.scope,
     this.organizationId,
     this.branchId,
+    this.projection,
+    this.permissionDigest,
+    this.actorUserId,
+    this.deviceId,
     required this.lastChangeSequence,
     this.lastSyncedAt,
   });
@@ -1393,6 +1847,18 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
     }
     if (!nullToAbsent || branchId != null) {
       map['branch_id'] = Variable<String>(branchId);
+    }
+    if (!nullToAbsent || projection != null) {
+      map['projection'] = Variable<String>(projection);
+    }
+    if (!nullToAbsent || permissionDigest != null) {
+      map['permission_digest'] = Variable<String>(permissionDigest);
+    }
+    if (!nullToAbsent || actorUserId != null) {
+      map['actor_user_id'] = Variable<String>(actorUserId);
+    }
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
     }
     map['last_change_sequence'] = Variable<int>(lastChangeSequence);
     if (!nullToAbsent || lastSyncedAt != null) {
@@ -1411,6 +1877,18 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
       branchId: branchId == null && nullToAbsent
           ? const Value.absent()
           : Value(branchId),
+      projection: projection == null && nullToAbsent
+          ? const Value.absent()
+          : Value(projection),
+      permissionDigest: permissionDigest == null && nullToAbsent
+          ? const Value.absent()
+          : Value(permissionDigest),
+      actorUserId: actorUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(actorUserId),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
       lastChangeSequence: Value(lastChangeSequence),
       lastSyncedAt: lastSyncedAt == null && nullToAbsent
           ? const Value.absent()
@@ -1428,6 +1906,10 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
       scope: serializer.fromJson<String>(json['scope']),
       organizationId: serializer.fromJson<String?>(json['organizationId']),
       branchId: serializer.fromJson<String?>(json['branchId']),
+      projection: serializer.fromJson<String?>(json['projection']),
+      permissionDigest: serializer.fromJson<String?>(json['permissionDigest']),
+      actorUserId: serializer.fromJson<String?>(json['actorUserId']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
       lastChangeSequence: serializer.fromJson<int>(json['lastChangeSequence']),
       lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
     );
@@ -1440,6 +1922,10 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
       'scope': serializer.toJson<String>(scope),
       'organizationId': serializer.toJson<String?>(organizationId),
       'branchId': serializer.toJson<String?>(branchId),
+      'projection': serializer.toJson<String?>(projection),
+      'permissionDigest': serializer.toJson<String?>(permissionDigest),
+      'actorUserId': serializer.toJson<String?>(actorUserId),
+      'deviceId': serializer.toJson<String?>(deviceId),
       'lastChangeSequence': serializer.toJson<int>(lastChangeSequence),
       'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
     };
@@ -1450,6 +1936,10 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
     String? scope,
     Value<String?> organizationId = const Value.absent(),
     Value<String?> branchId = const Value.absent(),
+    Value<String?> projection = const Value.absent(),
+    Value<String?> permissionDigest = const Value.absent(),
+    Value<String?> actorUserId = const Value.absent(),
+    Value<String?> deviceId = const Value.absent(),
     int? lastChangeSequence,
     Value<DateTime?> lastSyncedAt = const Value.absent(),
   }) => SyncCursor(
@@ -1459,6 +1949,12 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
         ? organizationId.value
         : this.organizationId,
     branchId: branchId.present ? branchId.value : this.branchId,
+    projection: projection.present ? projection.value : this.projection,
+    permissionDigest: permissionDigest.present
+        ? permissionDigest.value
+        : this.permissionDigest,
+    actorUserId: actorUserId.present ? actorUserId.value : this.actorUserId,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
     lastChangeSequence: lastChangeSequence ?? this.lastChangeSequence,
     lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
   );
@@ -1470,6 +1966,16 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
           ? data.organizationId.value
           : this.organizationId,
       branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      projection: data.projection.present
+          ? data.projection.value
+          : this.projection,
+      permissionDigest: data.permissionDigest.present
+          ? data.permissionDigest.value
+          : this.permissionDigest,
+      actorUserId: data.actorUserId.present
+          ? data.actorUserId.value
+          : this.actorUserId,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
       lastChangeSequence: data.lastChangeSequence.present
           ? data.lastChangeSequence.value
           : this.lastChangeSequence,
@@ -1486,6 +1992,10 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
           ..write('scope: $scope, ')
           ..write('organizationId: $organizationId, ')
           ..write('branchId: $branchId, ')
+          ..write('projection: $projection, ')
+          ..write('permissionDigest: $permissionDigest, ')
+          ..write('actorUserId: $actorUserId, ')
+          ..write('deviceId: $deviceId, ')
           ..write('lastChangeSequence: $lastChangeSequence, ')
           ..write('lastSyncedAt: $lastSyncedAt')
           ..write(')'))
@@ -1498,6 +2008,10 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
     scope,
     organizationId,
     branchId,
+    projection,
+    permissionDigest,
+    actorUserId,
+    deviceId,
     lastChangeSequence,
     lastSyncedAt,
   );
@@ -1509,6 +2023,10 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
           other.scope == this.scope &&
           other.organizationId == this.organizationId &&
           other.branchId == this.branchId &&
+          other.projection == this.projection &&
+          other.permissionDigest == this.permissionDigest &&
+          other.actorUserId == this.actorUserId &&
+          other.deviceId == this.deviceId &&
           other.lastChangeSequence == this.lastChangeSequence &&
           other.lastSyncedAt == this.lastSyncedAt);
 }
@@ -1518,6 +2036,10 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
   final Value<String> scope;
   final Value<String?> organizationId;
   final Value<String?> branchId;
+  final Value<String?> projection;
+  final Value<String?> permissionDigest;
+  final Value<String?> actorUserId;
+  final Value<String?> deviceId;
   final Value<int> lastChangeSequence;
   final Value<DateTime?> lastSyncedAt;
   final Value<int> rowid;
@@ -1526,6 +2048,10 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
     this.scope = const Value.absent(),
     this.organizationId = const Value.absent(),
     this.branchId = const Value.absent(),
+    this.projection = const Value.absent(),
+    this.permissionDigest = const Value.absent(),
+    this.actorUserId = const Value.absent(),
+    this.deviceId = const Value.absent(),
     this.lastChangeSequence = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1535,6 +2061,10 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
     required String scope,
     this.organizationId = const Value.absent(),
     this.branchId = const Value.absent(),
+    this.projection = const Value.absent(),
+    this.permissionDigest = const Value.absent(),
+    this.actorUserId = const Value.absent(),
+    this.deviceId = const Value.absent(),
     this.lastChangeSequence = const Value.absent(),
     this.lastSyncedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1545,6 +2075,10 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
     Expression<String>? scope,
     Expression<String>? organizationId,
     Expression<String>? branchId,
+    Expression<String>? projection,
+    Expression<String>? permissionDigest,
+    Expression<String>? actorUserId,
+    Expression<String>? deviceId,
     Expression<int>? lastChangeSequence,
     Expression<DateTime>? lastSyncedAt,
     Expression<int>? rowid,
@@ -1554,6 +2088,10 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
       if (scope != null) 'scope': scope,
       if (organizationId != null) 'organization_id': organizationId,
       if (branchId != null) 'branch_id': branchId,
+      if (projection != null) 'projection': projection,
+      if (permissionDigest != null) 'permission_digest': permissionDigest,
+      if (actorUserId != null) 'actor_user_id': actorUserId,
+      if (deviceId != null) 'device_id': deviceId,
       if (lastChangeSequence != null)
         'last_change_sequence': lastChangeSequence,
       if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
@@ -1566,6 +2104,10 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
     Value<String>? scope,
     Value<String?>? organizationId,
     Value<String?>? branchId,
+    Value<String?>? projection,
+    Value<String?>? permissionDigest,
+    Value<String?>? actorUserId,
+    Value<String?>? deviceId,
     Value<int>? lastChangeSequence,
     Value<DateTime?>? lastSyncedAt,
     Value<int>? rowid,
@@ -1575,6 +2117,10 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
       scope: scope ?? this.scope,
       organizationId: organizationId ?? this.organizationId,
       branchId: branchId ?? this.branchId,
+      projection: projection ?? this.projection,
+      permissionDigest: permissionDigest ?? this.permissionDigest,
+      actorUserId: actorUserId ?? this.actorUserId,
+      deviceId: deviceId ?? this.deviceId,
       lastChangeSequence: lastChangeSequence ?? this.lastChangeSequence,
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       rowid: rowid ?? this.rowid,
@@ -1596,6 +2142,18 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
     if (branchId.present) {
       map['branch_id'] = Variable<String>(branchId.value);
     }
+    if (projection.present) {
+      map['projection'] = Variable<String>(projection.value);
+    }
+    if (permissionDigest.present) {
+      map['permission_digest'] = Variable<String>(permissionDigest.value);
+    }
+    if (actorUserId.present) {
+      map['actor_user_id'] = Variable<String>(actorUserId.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
     if (lastChangeSequence.present) {
       map['last_change_sequence'] = Variable<int>(lastChangeSequence.value);
     }
@@ -1615,8 +2173,607 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
           ..write('scope: $scope, ')
           ..write('organizationId: $organizationId, ')
           ..write('branchId: $branchId, ')
+          ..write('projection: $projection, ')
+          ..write('permissionDigest: $permissionDigest, ')
+          ..write('actorUserId: $actorUserId, ')
+          ..write('deviceId: $deviceId, ')
           ..write('lastChangeSequence: $lastChangeSequence, ')
           ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncSnapshotStagingRecordsTable extends SyncSnapshotStagingRecords
+    with
+        TableInfo<$SyncSnapshotStagingRecordsTable, SyncSnapshotStagingRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncSnapshotStagingRecordsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _snapshotTokenMeta = const VerificationMeta(
+    'snapshotToken',
+  );
+  @override
+  late final GeneratedColumn<String> snapshotToken = GeneratedColumn<String>(
+    'snapshot_token',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _collectionMeta = const VerificationMeta(
+    'collection',
+  );
+  @override
+  late final GeneratedColumn<String> collection = GeneratedColumn<String>(
+    'collection',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordIdMeta = const VerificationMeta(
+    'recordId',
+  );
+  @override
+  late final GeneratedColumn<String> recordId = GeneratedColumn<String>(
+    'record_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+    'payload_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pageChecksumMeta = const VerificationMeta(
+    'pageChecksum',
+  );
+  @override
+  late final GeneratedColumn<String> pageChecksum = GeneratedColumn<String>(
+    'page_checksum',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _watermarkMeta = const VerificationMeta(
+    'watermark',
+  );
+  @override
+  late final GeneratedColumn<int> watermark = GeneratedColumn<int>(
+    'watermark',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stagedAtMeta = const VerificationMeta(
+    'stagedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> stagedAt = GeneratedColumn<DateTime>(
+    'staged_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    snapshotToken,
+    organizationId,
+    branchId,
+    collection,
+    recordId,
+    payloadJson,
+    pageChecksum,
+    watermark,
+    stagedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_snapshot_staging_records';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncSnapshotStagingRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('snapshot_token')) {
+      context.handle(
+        _snapshotTokenMeta,
+        snapshotToken.isAcceptableOrUnknown(
+          data['snapshot_token']!,
+          _snapshotTokenMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_snapshotTokenMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('collection')) {
+      context.handle(
+        _collectionMeta,
+        collection.isAcceptableOrUnknown(data['collection']!, _collectionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_collectionMeta);
+    }
+    if (data.containsKey('record_id')) {
+      context.handle(
+        _recordIdMeta,
+        recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordIdMeta);
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
+          _payloadJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    if (data.containsKey('page_checksum')) {
+      context.handle(
+        _pageChecksumMeta,
+        pageChecksum.isAcceptableOrUnknown(
+          data['page_checksum']!,
+          _pageChecksumMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_pageChecksumMeta);
+    }
+    if (data.containsKey('watermark')) {
+      context.handle(
+        _watermarkMeta,
+        watermark.isAcceptableOrUnknown(data['watermark']!, _watermarkMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_watermarkMeta);
+    }
+    if (data.containsKey('staged_at')) {
+      context.handle(
+        _stagedAtMeta,
+        stagedAt.isAcceptableOrUnknown(data['staged_at']!, _stagedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stagedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {snapshotToken, collection, recordId};
+  @override
+  SyncSnapshotStagingRecord map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncSnapshotStagingRecord(
+      snapshotToken: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}snapshot_token'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      collection: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}collection'],
+      )!,
+      recordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}record_id'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      )!,
+      pageChecksum: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}page_checksum'],
+      )!,
+      watermark: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}watermark'],
+      )!,
+      stagedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}staged_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncSnapshotStagingRecordsTable createAlias(String alias) {
+    return $SyncSnapshotStagingRecordsTable(attachedDatabase, alias);
+  }
+}
+
+class SyncSnapshotStagingRecord extends DataClass
+    implements Insertable<SyncSnapshotStagingRecord> {
+  final String snapshotToken;
+  final String organizationId;
+  final String branchId;
+  final String collection;
+  final String recordId;
+  final String payloadJson;
+  final String pageChecksum;
+  final int watermark;
+  final DateTime stagedAt;
+  const SyncSnapshotStagingRecord({
+    required this.snapshotToken,
+    required this.organizationId,
+    required this.branchId,
+    required this.collection,
+    required this.recordId,
+    required this.payloadJson,
+    required this.pageChecksum,
+    required this.watermark,
+    required this.stagedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['snapshot_token'] = Variable<String>(snapshotToken);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['branch_id'] = Variable<String>(branchId);
+    map['collection'] = Variable<String>(collection);
+    map['record_id'] = Variable<String>(recordId);
+    map['payload_json'] = Variable<String>(payloadJson);
+    map['page_checksum'] = Variable<String>(pageChecksum);
+    map['watermark'] = Variable<int>(watermark);
+    map['staged_at'] = Variable<DateTime>(stagedAt);
+    return map;
+  }
+
+  SyncSnapshotStagingRecordsCompanion toCompanion(bool nullToAbsent) {
+    return SyncSnapshotStagingRecordsCompanion(
+      snapshotToken: Value(snapshotToken),
+      organizationId: Value(organizationId),
+      branchId: Value(branchId),
+      collection: Value(collection),
+      recordId: Value(recordId),
+      payloadJson: Value(payloadJson),
+      pageChecksum: Value(pageChecksum),
+      watermark: Value(watermark),
+      stagedAt: Value(stagedAt),
+    );
+  }
+
+  factory SyncSnapshotStagingRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncSnapshotStagingRecord(
+      snapshotToken: serializer.fromJson<String>(json['snapshotToken']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      collection: serializer.fromJson<String>(json['collection']),
+      recordId: serializer.fromJson<String>(json['recordId']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+      pageChecksum: serializer.fromJson<String>(json['pageChecksum']),
+      watermark: serializer.fromJson<int>(json['watermark']),
+      stagedAt: serializer.fromJson<DateTime>(json['stagedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'snapshotToken': serializer.toJson<String>(snapshotToken),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'branchId': serializer.toJson<String>(branchId),
+      'collection': serializer.toJson<String>(collection),
+      'recordId': serializer.toJson<String>(recordId),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+      'pageChecksum': serializer.toJson<String>(pageChecksum),
+      'watermark': serializer.toJson<int>(watermark),
+      'stagedAt': serializer.toJson<DateTime>(stagedAt),
+    };
+  }
+
+  SyncSnapshotStagingRecord copyWith({
+    String? snapshotToken,
+    String? organizationId,
+    String? branchId,
+    String? collection,
+    String? recordId,
+    String? payloadJson,
+    String? pageChecksum,
+    int? watermark,
+    DateTime? stagedAt,
+  }) => SyncSnapshotStagingRecord(
+    snapshotToken: snapshotToken ?? this.snapshotToken,
+    organizationId: organizationId ?? this.organizationId,
+    branchId: branchId ?? this.branchId,
+    collection: collection ?? this.collection,
+    recordId: recordId ?? this.recordId,
+    payloadJson: payloadJson ?? this.payloadJson,
+    pageChecksum: pageChecksum ?? this.pageChecksum,
+    watermark: watermark ?? this.watermark,
+    stagedAt: stagedAt ?? this.stagedAt,
+  );
+  SyncSnapshotStagingRecord copyWithCompanion(
+    SyncSnapshotStagingRecordsCompanion data,
+  ) {
+    return SyncSnapshotStagingRecord(
+      snapshotToken: data.snapshotToken.present
+          ? data.snapshotToken.value
+          : this.snapshotToken,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      collection: data.collection.present
+          ? data.collection.value
+          : this.collection,
+      recordId: data.recordId.present ? data.recordId.value : this.recordId,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
+      pageChecksum: data.pageChecksum.present
+          ? data.pageChecksum.value
+          : this.pageChecksum,
+      watermark: data.watermark.present ? data.watermark.value : this.watermark,
+      stagedAt: data.stagedAt.present ? data.stagedAt.value : this.stagedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncSnapshotStagingRecord(')
+          ..write('snapshotToken: $snapshotToken, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('collection: $collection, ')
+          ..write('recordId: $recordId, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('pageChecksum: $pageChecksum, ')
+          ..write('watermark: $watermark, ')
+          ..write('stagedAt: $stagedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    snapshotToken,
+    organizationId,
+    branchId,
+    collection,
+    recordId,
+    payloadJson,
+    pageChecksum,
+    watermark,
+    stagedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncSnapshotStagingRecord &&
+          other.snapshotToken == this.snapshotToken &&
+          other.organizationId == this.organizationId &&
+          other.branchId == this.branchId &&
+          other.collection == this.collection &&
+          other.recordId == this.recordId &&
+          other.payloadJson == this.payloadJson &&
+          other.pageChecksum == this.pageChecksum &&
+          other.watermark == this.watermark &&
+          other.stagedAt == this.stagedAt);
+}
+
+class SyncSnapshotStagingRecordsCompanion
+    extends UpdateCompanion<SyncSnapshotStagingRecord> {
+  final Value<String> snapshotToken;
+  final Value<String> organizationId;
+  final Value<String> branchId;
+  final Value<String> collection;
+  final Value<String> recordId;
+  final Value<String> payloadJson;
+  final Value<String> pageChecksum;
+  final Value<int> watermark;
+  final Value<DateTime> stagedAt;
+  final Value<int> rowid;
+  const SyncSnapshotStagingRecordsCompanion({
+    this.snapshotToken = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.collection = const Value.absent(),
+    this.recordId = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.pageChecksum = const Value.absent(),
+    this.watermark = const Value.absent(),
+    this.stagedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncSnapshotStagingRecordsCompanion.insert({
+    required String snapshotToken,
+    required String organizationId,
+    required String branchId,
+    required String collection,
+    required String recordId,
+    required String payloadJson,
+    required String pageChecksum,
+    required int watermark,
+    required DateTime stagedAt,
+    this.rowid = const Value.absent(),
+  }) : snapshotToken = Value(snapshotToken),
+       organizationId = Value(organizationId),
+       branchId = Value(branchId),
+       collection = Value(collection),
+       recordId = Value(recordId),
+       payloadJson = Value(payloadJson),
+       pageChecksum = Value(pageChecksum),
+       watermark = Value(watermark),
+       stagedAt = Value(stagedAt);
+  static Insertable<SyncSnapshotStagingRecord> custom({
+    Expression<String>? snapshotToken,
+    Expression<String>? organizationId,
+    Expression<String>? branchId,
+    Expression<String>? collection,
+    Expression<String>? recordId,
+    Expression<String>? payloadJson,
+    Expression<String>? pageChecksum,
+    Expression<int>? watermark,
+    Expression<DateTime>? stagedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (snapshotToken != null) 'snapshot_token': snapshotToken,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (branchId != null) 'branch_id': branchId,
+      if (collection != null) 'collection': collection,
+      if (recordId != null) 'record_id': recordId,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (pageChecksum != null) 'page_checksum': pageChecksum,
+      if (watermark != null) 'watermark': watermark,
+      if (stagedAt != null) 'staged_at': stagedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncSnapshotStagingRecordsCompanion copyWith({
+    Value<String>? snapshotToken,
+    Value<String>? organizationId,
+    Value<String>? branchId,
+    Value<String>? collection,
+    Value<String>? recordId,
+    Value<String>? payloadJson,
+    Value<String>? pageChecksum,
+    Value<int>? watermark,
+    Value<DateTime>? stagedAt,
+    Value<int>? rowid,
+  }) {
+    return SyncSnapshotStagingRecordsCompanion(
+      snapshotToken: snapshotToken ?? this.snapshotToken,
+      organizationId: organizationId ?? this.organizationId,
+      branchId: branchId ?? this.branchId,
+      collection: collection ?? this.collection,
+      recordId: recordId ?? this.recordId,
+      payloadJson: payloadJson ?? this.payloadJson,
+      pageChecksum: pageChecksum ?? this.pageChecksum,
+      watermark: watermark ?? this.watermark,
+      stagedAt: stagedAt ?? this.stagedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (snapshotToken.present) {
+      map['snapshot_token'] = Variable<String>(snapshotToken.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (collection.present) {
+      map['collection'] = Variable<String>(collection.value);
+    }
+    if (recordId.present) {
+      map['record_id'] = Variable<String>(recordId.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (pageChecksum.present) {
+      map['page_checksum'] = Variable<String>(pageChecksum.value);
+    }
+    if (watermark.present) {
+      map['watermark'] = Variable<int>(watermark.value);
+    }
+    if (stagedAt.present) {
+      map['staged_at'] = Variable<DateTime>(stagedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncSnapshotStagingRecordsCompanion(')
+          ..write('snapshotToken: $snapshotToken, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('collection: $collection, ')
+          ..write('recordId: $recordId, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('pageChecksum: $pageChecksum, ')
+          ..write('watermark: $watermark, ')
+          ..write('stagedAt: $stagedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -18994,6 +20151,1095 @@ class RegistersCompanion extends UpdateCompanion<Register> {
   }
 }
 
+class $RegisterClaimsTable extends RegisterClaims
+    with TableInfo<$RegisterClaimsTable, RegisterClaimRecord> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RegisterClaimsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES branches (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _requestedRegisterIdMeta =
+      const VerificationMeta('requestedRegisterId');
+  @override
+  late final GeneratedColumn<String> requestedRegisterId =
+      GeneratedColumn<String>(
+        'requested_register_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES registers (id) ON DELETE RESTRICT',
+        ),
+      );
+  static const VerificationMeta _resolvedRegisterIdMeta =
+      const VerificationMeta('resolvedRegisterId');
+  @override
+  late final GeneratedColumn<String> resolvedRegisterId =
+      GeneratedColumn<String>(
+        'resolved_register_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES registers (id) ON DELETE RESTRICT',
+        ),
+      );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _claimedByUserIdMeta = const VerificationMeta(
+    'claimedByUserId',
+  );
+  @override
+  late final GeneratedColumn<String> claimedByUserId = GeneratedColumn<String>(
+    'claimed_by_user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    check: () => const CustomExpression<bool>(
+      "status IN ('provisional', 'accepted', 'rejected', 'resolved', 'released')",
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rejectionCodeMeta = const VerificationMeta(
+    'rejectionCode',
+  );
+  @override
+  late final GeneratedColumn<String> rejectionCode = GeneratedColumn<String>(
+    'rejection_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _rejectionMessageMeta = const VerificationMeta(
+    'rejectionMessage',
+  );
+  @override
+  late final GeneratedColumn<String> rejectionMessage = GeneratedColumn<String>(
+    'rejection_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resolutionOperationIdMeta =
+      const VerificationMeta('resolutionOperationId');
+  @override
+  late final GeneratedColumn<String> resolutionOperationId =
+      GeneratedColumn<String>(
+        'resolution_operation_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _resolvedByUserIdMeta = const VerificationMeta(
+    'resolvedByUserId',
+  );
+  @override
+  late final GeneratedColumn<String> resolvedByUserId = GeneratedColumn<String>(
+    'resolved_by_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resolvedAtMeta = const VerificationMeta(
+    'resolvedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> resolvedAt = GeneratedColumn<DateTime>(
+    'resolved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _releasedByUserIdMeta = const VerificationMeta(
+    'releasedByUserId',
+  );
+  @override
+  late final GeneratedColumn<String> releasedByUserId = GeneratedColumn<String>(
+    'released_by_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _releasedAtMeta = const VerificationMeta(
+    'releasedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> releasedAt = GeneratedColumn<DateTime>(
+    'released_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<int>(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    branchId,
+    requestedRegisterId,
+    resolvedRegisterId,
+    deviceId,
+    claimedByUserId,
+    status,
+    rejectionCode,
+    rejectionMessage,
+    resolutionOperationId,
+    resolvedByUserId,
+    resolvedAt,
+    releasedByUserId,
+    releasedAt,
+    version,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'register_claims';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RegisterClaimRecord> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('requested_register_id')) {
+      context.handle(
+        _requestedRegisterIdMeta,
+        requestedRegisterId.isAcceptableOrUnknown(
+          data['requested_register_id']!,
+          _requestedRegisterIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_requestedRegisterIdMeta);
+    }
+    if (data.containsKey('resolved_register_id')) {
+      context.handle(
+        _resolvedRegisterIdMeta,
+        resolvedRegisterId.isAcceptableOrUnknown(
+          data['resolved_register_id']!,
+          _resolvedRegisterIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('claimed_by_user_id')) {
+      context.handle(
+        _claimedByUserIdMeta,
+        claimedByUserId.isAcceptableOrUnknown(
+          data['claimed_by_user_id']!,
+          _claimedByUserIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_claimedByUserIdMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('rejection_code')) {
+      context.handle(
+        _rejectionCodeMeta,
+        rejectionCode.isAcceptableOrUnknown(
+          data['rejection_code']!,
+          _rejectionCodeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rejection_message')) {
+      context.handle(
+        _rejectionMessageMeta,
+        rejectionMessage.isAcceptableOrUnknown(
+          data['rejection_message']!,
+          _rejectionMessageMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resolution_operation_id')) {
+      context.handle(
+        _resolutionOperationIdMeta,
+        resolutionOperationId.isAcceptableOrUnknown(
+          data['resolution_operation_id']!,
+          _resolutionOperationIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resolved_by_user_id')) {
+      context.handle(
+        _resolvedByUserIdMeta,
+        resolvedByUserId.isAcceptableOrUnknown(
+          data['resolved_by_user_id']!,
+          _resolvedByUserIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resolved_at')) {
+      context.handle(
+        _resolvedAtMeta,
+        resolvedAt.isAcceptableOrUnknown(data['resolved_at']!, _resolvedAtMeta),
+      );
+    }
+    if (data.containsKey('released_by_user_id')) {
+      context.handle(
+        _releasedByUserIdMeta,
+        releasedByUserId.isAcceptableOrUnknown(
+          data['released_by_user_id']!,
+          _releasedByUserIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('released_at')) {
+      context.handle(
+        _releasedAtMeta,
+        releasedAt.isAcceptableOrUnknown(data['released_at']!, _releasedAtMeta),
+      );
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RegisterClaimRecord map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RegisterClaimRecord(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      requestedRegisterId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}requested_register_id'],
+      )!,
+      resolvedRegisterId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resolved_register_id'],
+      ),
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      claimedByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}claimed_by_user_id'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      rejectionCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rejection_code'],
+      ),
+      rejectionMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rejection_message'],
+      ),
+      resolutionOperationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resolution_operation_id'],
+      ),
+      resolvedByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}resolved_by_user_id'],
+      ),
+      resolvedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}resolved_at'],
+      ),
+      releasedByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}released_by_user_id'],
+      ),
+      releasedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}released_at'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RegisterClaimsTable createAlias(String alias) {
+    return $RegisterClaimsTable(attachedDatabase, alias);
+  }
+}
+
+class RegisterClaimRecord extends DataClass
+    implements Insertable<RegisterClaimRecord> {
+  final String id;
+  final String organizationId;
+  final String branchId;
+  final String requestedRegisterId;
+  final String? resolvedRegisterId;
+  final String deviceId;
+  final String claimedByUserId;
+  final String status;
+  final String? rejectionCode;
+  final String? rejectionMessage;
+  final String? resolutionOperationId;
+  final String? resolvedByUserId;
+  final DateTime? resolvedAt;
+  final String? releasedByUserId;
+  final DateTime? releasedAt;
+  final int version;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const RegisterClaimRecord({
+    required this.id,
+    required this.organizationId,
+    required this.branchId,
+    required this.requestedRegisterId,
+    this.resolvedRegisterId,
+    required this.deviceId,
+    required this.claimedByUserId,
+    required this.status,
+    this.rejectionCode,
+    this.rejectionMessage,
+    this.resolutionOperationId,
+    this.resolvedByUserId,
+    this.resolvedAt,
+    this.releasedByUserId,
+    this.releasedAt,
+    required this.version,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['branch_id'] = Variable<String>(branchId);
+    map['requested_register_id'] = Variable<String>(requestedRegisterId);
+    if (!nullToAbsent || resolvedRegisterId != null) {
+      map['resolved_register_id'] = Variable<String>(resolvedRegisterId);
+    }
+    map['device_id'] = Variable<String>(deviceId);
+    map['claimed_by_user_id'] = Variable<String>(claimedByUserId);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || rejectionCode != null) {
+      map['rejection_code'] = Variable<String>(rejectionCode);
+    }
+    if (!nullToAbsent || rejectionMessage != null) {
+      map['rejection_message'] = Variable<String>(rejectionMessage);
+    }
+    if (!nullToAbsent || resolutionOperationId != null) {
+      map['resolution_operation_id'] = Variable<String>(resolutionOperationId);
+    }
+    if (!nullToAbsent || resolvedByUserId != null) {
+      map['resolved_by_user_id'] = Variable<String>(resolvedByUserId);
+    }
+    if (!nullToAbsent || resolvedAt != null) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt);
+    }
+    if (!nullToAbsent || releasedByUserId != null) {
+      map['released_by_user_id'] = Variable<String>(releasedByUserId);
+    }
+    if (!nullToAbsent || releasedAt != null) {
+      map['released_at'] = Variable<DateTime>(releasedAt);
+    }
+    map['version'] = Variable<int>(version);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  RegisterClaimsCompanion toCompanion(bool nullToAbsent) {
+    return RegisterClaimsCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      branchId: Value(branchId),
+      requestedRegisterId: Value(requestedRegisterId),
+      resolvedRegisterId: resolvedRegisterId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedRegisterId),
+      deviceId: Value(deviceId),
+      claimedByUserId: Value(claimedByUserId),
+      status: Value(status),
+      rejectionCode: rejectionCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rejectionCode),
+      rejectionMessage: rejectionMessage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rejectionMessage),
+      resolutionOperationId: resolutionOperationId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolutionOperationId),
+      resolvedByUserId: resolvedByUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedByUserId),
+      resolvedAt: resolvedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resolvedAt),
+      releasedByUserId: releasedByUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(releasedByUserId),
+      releasedAt: releasedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(releasedAt),
+      version: Value(version),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory RegisterClaimRecord.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RegisterClaimRecord(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      requestedRegisterId: serializer.fromJson<String>(
+        json['requestedRegisterId'],
+      ),
+      resolvedRegisterId: serializer.fromJson<String?>(
+        json['resolvedRegisterId'],
+      ),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      claimedByUserId: serializer.fromJson<String>(json['claimedByUserId']),
+      status: serializer.fromJson<String>(json['status']),
+      rejectionCode: serializer.fromJson<String?>(json['rejectionCode']),
+      rejectionMessage: serializer.fromJson<String?>(json['rejectionMessage']),
+      resolutionOperationId: serializer.fromJson<String?>(
+        json['resolutionOperationId'],
+      ),
+      resolvedByUserId: serializer.fromJson<String?>(json['resolvedByUserId']),
+      resolvedAt: serializer.fromJson<DateTime?>(json['resolvedAt']),
+      releasedByUserId: serializer.fromJson<String?>(json['releasedByUserId']),
+      releasedAt: serializer.fromJson<DateTime?>(json['releasedAt']),
+      version: serializer.fromJson<int>(json['version']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'branchId': serializer.toJson<String>(branchId),
+      'requestedRegisterId': serializer.toJson<String>(requestedRegisterId),
+      'resolvedRegisterId': serializer.toJson<String?>(resolvedRegisterId),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'claimedByUserId': serializer.toJson<String>(claimedByUserId),
+      'status': serializer.toJson<String>(status),
+      'rejectionCode': serializer.toJson<String?>(rejectionCode),
+      'rejectionMessage': serializer.toJson<String?>(rejectionMessage),
+      'resolutionOperationId': serializer.toJson<String?>(
+        resolutionOperationId,
+      ),
+      'resolvedByUserId': serializer.toJson<String?>(resolvedByUserId),
+      'resolvedAt': serializer.toJson<DateTime?>(resolvedAt),
+      'releasedByUserId': serializer.toJson<String?>(releasedByUserId),
+      'releasedAt': serializer.toJson<DateTime?>(releasedAt),
+      'version': serializer.toJson<int>(version),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  RegisterClaimRecord copyWith({
+    String? id,
+    String? organizationId,
+    String? branchId,
+    String? requestedRegisterId,
+    Value<String?> resolvedRegisterId = const Value.absent(),
+    String? deviceId,
+    String? claimedByUserId,
+    String? status,
+    Value<String?> rejectionCode = const Value.absent(),
+    Value<String?> rejectionMessage = const Value.absent(),
+    Value<String?> resolutionOperationId = const Value.absent(),
+    Value<String?> resolvedByUserId = const Value.absent(),
+    Value<DateTime?> resolvedAt = const Value.absent(),
+    Value<String?> releasedByUserId = const Value.absent(),
+    Value<DateTime?> releasedAt = const Value.absent(),
+    int? version,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => RegisterClaimRecord(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    branchId: branchId ?? this.branchId,
+    requestedRegisterId: requestedRegisterId ?? this.requestedRegisterId,
+    resolvedRegisterId: resolvedRegisterId.present
+        ? resolvedRegisterId.value
+        : this.resolvedRegisterId,
+    deviceId: deviceId ?? this.deviceId,
+    claimedByUserId: claimedByUserId ?? this.claimedByUserId,
+    status: status ?? this.status,
+    rejectionCode: rejectionCode.present
+        ? rejectionCode.value
+        : this.rejectionCode,
+    rejectionMessage: rejectionMessage.present
+        ? rejectionMessage.value
+        : this.rejectionMessage,
+    resolutionOperationId: resolutionOperationId.present
+        ? resolutionOperationId.value
+        : this.resolutionOperationId,
+    resolvedByUserId: resolvedByUserId.present
+        ? resolvedByUserId.value
+        : this.resolvedByUserId,
+    resolvedAt: resolvedAt.present ? resolvedAt.value : this.resolvedAt,
+    releasedByUserId: releasedByUserId.present
+        ? releasedByUserId.value
+        : this.releasedByUserId,
+    releasedAt: releasedAt.present ? releasedAt.value : this.releasedAt,
+    version: version ?? this.version,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  RegisterClaimRecord copyWithCompanion(RegisterClaimsCompanion data) {
+    return RegisterClaimRecord(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      requestedRegisterId: data.requestedRegisterId.present
+          ? data.requestedRegisterId.value
+          : this.requestedRegisterId,
+      resolvedRegisterId: data.resolvedRegisterId.present
+          ? data.resolvedRegisterId.value
+          : this.resolvedRegisterId,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      claimedByUserId: data.claimedByUserId.present
+          ? data.claimedByUserId.value
+          : this.claimedByUserId,
+      status: data.status.present ? data.status.value : this.status,
+      rejectionCode: data.rejectionCode.present
+          ? data.rejectionCode.value
+          : this.rejectionCode,
+      rejectionMessage: data.rejectionMessage.present
+          ? data.rejectionMessage.value
+          : this.rejectionMessage,
+      resolutionOperationId: data.resolutionOperationId.present
+          ? data.resolutionOperationId.value
+          : this.resolutionOperationId,
+      resolvedByUserId: data.resolvedByUserId.present
+          ? data.resolvedByUserId.value
+          : this.resolvedByUserId,
+      resolvedAt: data.resolvedAt.present
+          ? data.resolvedAt.value
+          : this.resolvedAt,
+      releasedByUserId: data.releasedByUserId.present
+          ? data.releasedByUserId.value
+          : this.releasedByUserId,
+      releasedAt: data.releasedAt.present
+          ? data.releasedAt.value
+          : this.releasedAt,
+      version: data.version.present ? data.version.value : this.version,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RegisterClaimRecord(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('requestedRegisterId: $requestedRegisterId, ')
+          ..write('resolvedRegisterId: $resolvedRegisterId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('claimedByUserId: $claimedByUserId, ')
+          ..write('status: $status, ')
+          ..write('rejectionCode: $rejectionCode, ')
+          ..write('rejectionMessage: $rejectionMessage, ')
+          ..write('resolutionOperationId: $resolutionOperationId, ')
+          ..write('resolvedByUserId: $resolvedByUserId, ')
+          ..write('resolvedAt: $resolvedAt, ')
+          ..write('releasedByUserId: $releasedByUserId, ')
+          ..write('releasedAt: $releasedAt, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    branchId,
+    requestedRegisterId,
+    resolvedRegisterId,
+    deviceId,
+    claimedByUserId,
+    status,
+    rejectionCode,
+    rejectionMessage,
+    resolutionOperationId,
+    resolvedByUserId,
+    resolvedAt,
+    releasedByUserId,
+    releasedAt,
+    version,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RegisterClaimRecord &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.branchId == this.branchId &&
+          other.requestedRegisterId == this.requestedRegisterId &&
+          other.resolvedRegisterId == this.resolvedRegisterId &&
+          other.deviceId == this.deviceId &&
+          other.claimedByUserId == this.claimedByUserId &&
+          other.status == this.status &&
+          other.rejectionCode == this.rejectionCode &&
+          other.rejectionMessage == this.rejectionMessage &&
+          other.resolutionOperationId == this.resolutionOperationId &&
+          other.resolvedByUserId == this.resolvedByUserId &&
+          other.resolvedAt == this.resolvedAt &&
+          other.releasedByUserId == this.releasedByUserId &&
+          other.releasedAt == this.releasedAt &&
+          other.version == this.version &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class RegisterClaimsCompanion extends UpdateCompanion<RegisterClaimRecord> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String> branchId;
+  final Value<String> requestedRegisterId;
+  final Value<String?> resolvedRegisterId;
+  final Value<String> deviceId;
+  final Value<String> claimedByUserId;
+  final Value<String> status;
+  final Value<String?> rejectionCode;
+  final Value<String?> rejectionMessage;
+  final Value<String?> resolutionOperationId;
+  final Value<String?> resolvedByUserId;
+  final Value<DateTime?> resolvedAt;
+  final Value<String?> releasedByUserId;
+  final Value<DateTime?> releasedAt;
+  final Value<int> version;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const RegisterClaimsCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.requestedRegisterId = const Value.absent(),
+    this.resolvedRegisterId = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.claimedByUserId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.rejectionCode = const Value.absent(),
+    this.rejectionMessage = const Value.absent(),
+    this.resolutionOperationId = const Value.absent(),
+    this.resolvedByUserId = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+    this.releasedByUserId = const Value.absent(),
+    this.releasedAt = const Value.absent(),
+    this.version = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RegisterClaimsCompanion.insert({
+    required String id,
+    required String organizationId,
+    required String branchId,
+    required String requestedRegisterId,
+    this.resolvedRegisterId = const Value.absent(),
+    required String deviceId,
+    required String claimedByUserId,
+    required String status,
+    this.rejectionCode = const Value.absent(),
+    this.rejectionMessage = const Value.absent(),
+    this.resolutionOperationId = const Value.absent(),
+    this.resolvedByUserId = const Value.absent(),
+    this.resolvedAt = const Value.absent(),
+    this.releasedByUserId = const Value.absent(),
+    this.releasedAt = const Value.absent(),
+    this.version = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       branchId = Value(branchId),
+       requestedRegisterId = Value(requestedRegisterId),
+       deviceId = Value(deviceId),
+       claimedByUserId = Value(claimedByUserId),
+       status = Value(status),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<RegisterClaimRecord> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? branchId,
+    Expression<String>? requestedRegisterId,
+    Expression<String>? resolvedRegisterId,
+    Expression<String>? deviceId,
+    Expression<String>? claimedByUserId,
+    Expression<String>? status,
+    Expression<String>? rejectionCode,
+    Expression<String>? rejectionMessage,
+    Expression<String>? resolutionOperationId,
+    Expression<String>? resolvedByUserId,
+    Expression<DateTime>? resolvedAt,
+    Expression<String>? releasedByUserId,
+    Expression<DateTime>? releasedAt,
+    Expression<int>? version,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (branchId != null) 'branch_id': branchId,
+      if (requestedRegisterId != null)
+        'requested_register_id': requestedRegisterId,
+      if (resolvedRegisterId != null)
+        'resolved_register_id': resolvedRegisterId,
+      if (deviceId != null) 'device_id': deviceId,
+      if (claimedByUserId != null) 'claimed_by_user_id': claimedByUserId,
+      if (status != null) 'status': status,
+      if (rejectionCode != null) 'rejection_code': rejectionCode,
+      if (rejectionMessage != null) 'rejection_message': rejectionMessage,
+      if (resolutionOperationId != null)
+        'resolution_operation_id': resolutionOperationId,
+      if (resolvedByUserId != null) 'resolved_by_user_id': resolvedByUserId,
+      if (resolvedAt != null) 'resolved_at': resolvedAt,
+      if (releasedByUserId != null) 'released_by_user_id': releasedByUserId,
+      if (releasedAt != null) 'released_at': releasedAt,
+      if (version != null) 'version': version,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RegisterClaimsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String>? branchId,
+    Value<String>? requestedRegisterId,
+    Value<String?>? resolvedRegisterId,
+    Value<String>? deviceId,
+    Value<String>? claimedByUserId,
+    Value<String>? status,
+    Value<String?>? rejectionCode,
+    Value<String?>? rejectionMessage,
+    Value<String?>? resolutionOperationId,
+    Value<String?>? resolvedByUserId,
+    Value<DateTime?>? resolvedAt,
+    Value<String?>? releasedByUserId,
+    Value<DateTime?>? releasedAt,
+    Value<int>? version,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return RegisterClaimsCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      branchId: branchId ?? this.branchId,
+      requestedRegisterId: requestedRegisterId ?? this.requestedRegisterId,
+      resolvedRegisterId: resolvedRegisterId ?? this.resolvedRegisterId,
+      deviceId: deviceId ?? this.deviceId,
+      claimedByUserId: claimedByUserId ?? this.claimedByUserId,
+      status: status ?? this.status,
+      rejectionCode: rejectionCode ?? this.rejectionCode,
+      rejectionMessage: rejectionMessage ?? this.rejectionMessage,
+      resolutionOperationId:
+          resolutionOperationId ?? this.resolutionOperationId,
+      resolvedByUserId: resolvedByUserId ?? this.resolvedByUserId,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      releasedByUserId: releasedByUserId ?? this.releasedByUserId,
+      releasedAt: releasedAt ?? this.releasedAt,
+      version: version ?? this.version,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (requestedRegisterId.present) {
+      map['requested_register_id'] = Variable<String>(
+        requestedRegisterId.value,
+      );
+    }
+    if (resolvedRegisterId.present) {
+      map['resolved_register_id'] = Variable<String>(resolvedRegisterId.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (claimedByUserId.present) {
+      map['claimed_by_user_id'] = Variable<String>(claimedByUserId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (rejectionCode.present) {
+      map['rejection_code'] = Variable<String>(rejectionCode.value);
+    }
+    if (rejectionMessage.present) {
+      map['rejection_message'] = Variable<String>(rejectionMessage.value);
+    }
+    if (resolutionOperationId.present) {
+      map['resolution_operation_id'] = Variable<String>(
+        resolutionOperationId.value,
+      );
+    }
+    if (resolvedByUserId.present) {
+      map['resolved_by_user_id'] = Variable<String>(resolvedByUserId.value);
+    }
+    if (resolvedAt.present) {
+      map['resolved_at'] = Variable<DateTime>(resolvedAt.value);
+    }
+    if (releasedByUserId.present) {
+      map['released_by_user_id'] = Variable<String>(releasedByUserId.value);
+    }
+    if (releasedAt.present) {
+      map['released_at'] = Variable<DateTime>(releasedAt.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RegisterClaimsCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('requestedRegisterId: $requestedRegisterId, ')
+          ..write('resolvedRegisterId: $resolvedRegisterId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('claimedByUserId: $claimedByUserId, ')
+          ..write('status: $status, ')
+          ..write('rejectionCode: $rejectionCode, ')
+          ..write('rejectionMessage: $rejectionMessage, ')
+          ..write('resolutionOperationId: $resolutionOperationId, ')
+          ..write('resolvedByUserId: $resolvedByUserId, ')
+          ..write('resolvedAt: $resolvedAt, ')
+          ..write('releasedByUserId: $releasedByUserId, ')
+          ..write('releasedAt: $releasedAt, ')
+          ..write('version: $version, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ShiftsTable extends Shifts with TableInfo<$ShiftsTable, Shift> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -19071,6 +21317,20 @@ class $ShiftsTable extends Shifts with TableInfo<$ShiftsTable, Shift> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _registerClaimIdMeta = const VerificationMeta(
+    'registerClaimId',
+  );
+  @override
+  late final GeneratedColumn<String> registerClaimId = GeneratedColumn<String>(
+    'register_claim_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES register_claims (id) ON DELETE RESTRICT',
+    ),
   );
   static const VerificationMeta _closeOperationIdMeta = const VerificationMeta(
     'closeOperationId',
@@ -19283,6 +21543,7 @@ class $ShiftsTable extends Shifts with TableInfo<$ShiftsTable, Shift> {
     registerId,
     deviceId,
     operationId,
+    registerClaimId,
     closeOperationId,
     status,
     openingCashMinor,
@@ -19364,6 +21625,15 @@ class $ShiftsTable extends Shifts with TableInfo<$ShiftsTable, Shift> {
       );
     } else if (isInserting) {
       context.missing(_operationIdMeta);
+    }
+    if (data.containsKey('register_claim_id')) {
+      context.handle(
+        _registerClaimIdMeta,
+        registerClaimId.isAcceptableOrUnknown(
+          data['register_claim_id']!,
+          _registerClaimIdMeta,
+        ),
+      );
     }
     if (data.containsKey('close_operation_id')) {
       context.handle(
@@ -19555,6 +21825,10 @@ class $ShiftsTable extends Shifts with TableInfo<$ShiftsTable, Shift> {
         DriftSqlType.string,
         data['${effectivePrefix}operation_id'],
       )!,
+      registerClaimId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_claim_id'],
+      ),
       closeOperationId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}close_operation_id'],
@@ -19643,6 +21917,7 @@ class Shift extends DataClass implements Insertable<Shift> {
   final String registerId;
   final String deviceId;
   final String operationId;
+  final String? registerClaimId;
   final String? closeOperationId;
   final String status;
   final int openingCashMinor;
@@ -19668,6 +21943,7 @@ class Shift extends DataClass implements Insertable<Shift> {
     required this.registerId,
     required this.deviceId,
     required this.operationId,
+    this.registerClaimId,
     this.closeOperationId,
     required this.status,
     required this.openingCashMinor,
@@ -19696,6 +21972,9 @@ class Shift extends DataClass implements Insertable<Shift> {
     map['register_id'] = Variable<String>(registerId);
     map['device_id'] = Variable<String>(deviceId);
     map['operation_id'] = Variable<String>(operationId);
+    if (!nullToAbsent || registerClaimId != null) {
+      map['register_claim_id'] = Variable<String>(registerClaimId);
+    }
     if (!nullToAbsent || closeOperationId != null) {
       map['close_operation_id'] = Variable<String>(closeOperationId);
     }
@@ -19747,6 +22026,9 @@ class Shift extends DataClass implements Insertable<Shift> {
       registerId: Value(registerId),
       deviceId: Value(deviceId),
       operationId: Value(operationId),
+      registerClaimId: registerClaimId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registerClaimId),
       closeOperationId: closeOperationId == null && nullToAbsent
           ? const Value.absent()
           : Value(closeOperationId),
@@ -19802,6 +22084,7 @@ class Shift extends DataClass implements Insertable<Shift> {
       registerId: serializer.fromJson<String>(json['registerId']),
       deviceId: serializer.fromJson<String>(json['deviceId']),
       operationId: serializer.fromJson<String>(json['operationId']),
+      registerClaimId: serializer.fromJson<String?>(json['registerClaimId']),
       closeOperationId: serializer.fromJson<String?>(json['closeOperationId']),
       status: serializer.fromJson<String>(json['status']),
       openingCashMinor: serializer.fromJson<int>(json['openingCashMinor']),
@@ -19832,6 +22115,7 @@ class Shift extends DataClass implements Insertable<Shift> {
       'registerId': serializer.toJson<String>(registerId),
       'deviceId': serializer.toJson<String>(deviceId),
       'operationId': serializer.toJson<String>(operationId),
+      'registerClaimId': serializer.toJson<String?>(registerClaimId),
       'closeOperationId': serializer.toJson<String?>(closeOperationId),
       'status': serializer.toJson<String>(status),
       'openingCashMinor': serializer.toJson<int>(openingCashMinor),
@@ -19860,6 +22144,7 @@ class Shift extends DataClass implements Insertable<Shift> {
     String? registerId,
     String? deviceId,
     String? operationId,
+    Value<String?> registerClaimId = const Value.absent(),
     Value<String?> closeOperationId = const Value.absent(),
     String? status,
     int? openingCashMinor,
@@ -19885,6 +22170,9 @@ class Shift extends DataClass implements Insertable<Shift> {
     registerId: registerId ?? this.registerId,
     deviceId: deviceId ?? this.deviceId,
     operationId: operationId ?? this.operationId,
+    registerClaimId: registerClaimId.present
+        ? registerClaimId.value
+        : this.registerClaimId,
     closeOperationId: closeOperationId.present
         ? closeOperationId.value
         : this.closeOperationId,
@@ -19932,6 +22220,9 @@ class Shift extends DataClass implements Insertable<Shift> {
       operationId: data.operationId.present
           ? data.operationId.value
           : this.operationId,
+      registerClaimId: data.registerClaimId.present
+          ? data.registerClaimId.value
+          : this.registerClaimId,
       closeOperationId: data.closeOperationId.present
           ? data.closeOperationId.value
           : this.closeOperationId,
@@ -19986,6 +22277,7 @@ class Shift extends DataClass implements Insertable<Shift> {
           ..write('registerId: $registerId, ')
           ..write('deviceId: $deviceId, ')
           ..write('operationId: $operationId, ')
+          ..write('registerClaimId: $registerClaimId, ')
           ..write('closeOperationId: $closeOperationId, ')
           ..write('status: $status, ')
           ..write('openingCashMinor: $openingCashMinor, ')
@@ -20016,6 +22308,7 @@ class Shift extends DataClass implements Insertable<Shift> {
     registerId,
     deviceId,
     operationId,
+    registerClaimId,
     closeOperationId,
     status,
     openingCashMinor,
@@ -20045,6 +22338,7 @@ class Shift extends DataClass implements Insertable<Shift> {
           other.registerId == this.registerId &&
           other.deviceId == this.deviceId &&
           other.operationId == this.operationId &&
+          other.registerClaimId == this.registerClaimId &&
           other.closeOperationId == this.closeOperationId &&
           other.status == this.status &&
           other.openingCashMinor == this.openingCashMinor &&
@@ -20072,6 +22366,7 @@ class ShiftsCompanion extends UpdateCompanion<Shift> {
   final Value<String> registerId;
   final Value<String> deviceId;
   final Value<String> operationId;
+  final Value<String?> registerClaimId;
   final Value<String?> closeOperationId;
   final Value<String> status;
   final Value<int> openingCashMinor;
@@ -20098,6 +22393,7 @@ class ShiftsCompanion extends UpdateCompanion<Shift> {
     this.registerId = const Value.absent(),
     this.deviceId = const Value.absent(),
     this.operationId = const Value.absent(),
+    this.registerClaimId = const Value.absent(),
     this.closeOperationId = const Value.absent(),
     this.status = const Value.absent(),
     this.openingCashMinor = const Value.absent(),
@@ -20125,6 +22421,7 @@ class ShiftsCompanion extends UpdateCompanion<Shift> {
     required String registerId,
     required String deviceId,
     required String operationId,
+    this.registerClaimId = const Value.absent(),
     this.closeOperationId = const Value.absent(),
     this.status = const Value.absent(),
     required int openingCashMinor,
@@ -20162,6 +22459,7 @@ class ShiftsCompanion extends UpdateCompanion<Shift> {
     Expression<String>? registerId,
     Expression<String>? deviceId,
     Expression<String>? operationId,
+    Expression<String>? registerClaimId,
     Expression<String>? closeOperationId,
     Expression<String>? status,
     Expression<int>? openingCashMinor,
@@ -20189,6 +22487,7 @@ class ShiftsCompanion extends UpdateCompanion<Shift> {
       if (registerId != null) 'register_id': registerId,
       if (deviceId != null) 'device_id': deviceId,
       if (operationId != null) 'operation_id': operationId,
+      if (registerClaimId != null) 'register_claim_id': registerClaimId,
       if (closeOperationId != null) 'close_operation_id': closeOperationId,
       if (status != null) 'status': status,
       if (openingCashMinor != null) 'opening_cash_minor': openingCashMinor,
@@ -20218,6 +22517,7 @@ class ShiftsCompanion extends UpdateCompanion<Shift> {
     Value<String>? registerId,
     Value<String>? deviceId,
     Value<String>? operationId,
+    Value<String?>? registerClaimId,
     Value<String?>? closeOperationId,
     Value<String>? status,
     Value<int>? openingCashMinor,
@@ -20245,6 +22545,7 @@ class ShiftsCompanion extends UpdateCompanion<Shift> {
       registerId: registerId ?? this.registerId,
       deviceId: deviceId ?? this.deviceId,
       operationId: operationId ?? this.operationId,
+      registerClaimId: registerClaimId ?? this.registerClaimId,
       closeOperationId: closeOperationId ?? this.closeOperationId,
       status: status ?? this.status,
       openingCashMinor: openingCashMinor ?? this.openingCashMinor,
@@ -20287,6 +22588,9 @@ class ShiftsCompanion extends UpdateCompanion<Shift> {
     }
     if (operationId.present) {
       map['operation_id'] = Variable<String>(operationId.value);
+    }
+    if (registerClaimId.present) {
+      map['register_claim_id'] = Variable<String>(registerClaimId.value);
     }
     if (closeOperationId.present) {
       map['close_operation_id'] = Variable<String>(closeOperationId.value);
@@ -20357,6 +22661,7 @@ class ShiftsCompanion extends UpdateCompanion<Shift> {
           ..write('registerId: $registerId, ')
           ..write('deviceId: $deviceId, ')
           ..write('operationId: $operationId, ')
+          ..write('registerClaimId: $registerClaimId, ')
           ..write('closeOperationId: $closeOperationId, ')
           ..write('status: $status, ')
           ..write('openingCashMinor: $openingCashMinor, ')
@@ -20463,6 +22768,20 @@ class $CashMovementsTable extends CashMovements
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _registerClaimIdMeta = const VerificationMeta(
+    'registerClaimId',
+  );
+  @override
+  late final GeneratedColumn<String> registerClaimId = GeneratedColumn<String>(
+    'register_claim_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES register_claims (id) ON DELETE RESTRICT',
+    ),
+  );
   static const VerificationMeta _movementTypeMeta = const VerificationMeta(
     'movementType',
   );
@@ -20557,6 +22876,7 @@ class $CashMovementsTable extends CashMovements
     registerId,
     shiftId,
     operationId,
+    registerClaimId,
     movementType,
     amountMinor,
     reason,
@@ -20628,6 +22948,15 @@ class $CashMovementsTable extends CashMovements
       );
     } else if (isInserting) {
       context.missing(_operationIdMeta);
+    }
+    if (data.containsKey('register_claim_id')) {
+      context.handle(
+        _registerClaimIdMeta,
+        registerClaimId.isAcceptableOrUnknown(
+          data['register_claim_id']!,
+          _registerClaimIdMeta,
+        ),
+      );
     }
     if (data.containsKey('movement_type')) {
       context.handle(
@@ -20738,6 +23067,10 @@ class $CashMovementsTable extends CashMovements
         DriftSqlType.string,
         data['${effectivePrefix}operation_id'],
       )!,
+      registerClaimId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_claim_id'],
+      ),
       movementType: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}movement_type'],
@@ -20786,6 +23119,7 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
   final String registerId;
   final String shiftId;
   final String operationId;
+  final String? registerClaimId;
   final String movementType;
   final int amountMinor;
   final String reason;
@@ -20801,6 +23135,7 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
     required this.registerId,
     required this.shiftId,
     required this.operationId,
+    this.registerClaimId,
     required this.movementType,
     required this.amountMinor,
     required this.reason,
@@ -20819,6 +23154,9 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
     map['register_id'] = Variable<String>(registerId);
     map['shift_id'] = Variable<String>(shiftId);
     map['operation_id'] = Variable<String>(operationId);
+    if (!nullToAbsent || registerClaimId != null) {
+      map['register_claim_id'] = Variable<String>(registerClaimId);
+    }
     map['movement_type'] = Variable<String>(movementType);
     map['amount_minor'] = Variable<int>(amountMinor);
     map['reason'] = Variable<String>(reason);
@@ -20842,6 +23180,9 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
       registerId: Value(registerId),
       shiftId: Value(shiftId),
       operationId: Value(operationId),
+      registerClaimId: registerClaimId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registerClaimId),
       movementType: Value(movementType),
       amountMinor: Value(amountMinor),
       reason: Value(reason),
@@ -20869,6 +23210,7 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
       registerId: serializer.fromJson<String>(json['registerId']),
       shiftId: serializer.fromJson<String>(json['shiftId']),
       operationId: serializer.fromJson<String>(json['operationId']),
+      registerClaimId: serializer.fromJson<String?>(json['registerClaimId']),
       movementType: serializer.fromJson<String>(json['movementType']),
       amountMinor: serializer.fromJson<int>(json['amountMinor']),
       reason: serializer.fromJson<String>(json['reason']),
@@ -20889,6 +23231,7 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
       'registerId': serializer.toJson<String>(registerId),
       'shiftId': serializer.toJson<String>(shiftId),
       'operationId': serializer.toJson<String>(operationId),
+      'registerClaimId': serializer.toJson<String?>(registerClaimId),
       'movementType': serializer.toJson<String>(movementType),
       'amountMinor': serializer.toJson<int>(amountMinor),
       'reason': serializer.toJson<String>(reason),
@@ -20907,6 +23250,7 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
     String? registerId,
     String? shiftId,
     String? operationId,
+    Value<String?> registerClaimId = const Value.absent(),
     String? movementType,
     int? amountMinor,
     String? reason,
@@ -20922,6 +23266,9 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
     registerId: registerId ?? this.registerId,
     shiftId: shiftId ?? this.shiftId,
     operationId: operationId ?? this.operationId,
+    registerClaimId: registerClaimId.present
+        ? registerClaimId.value
+        : this.registerClaimId,
     movementType: movementType ?? this.movementType,
     amountMinor: amountMinor ?? this.amountMinor,
     reason: reason ?? this.reason,
@@ -20947,6 +23294,9 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
       operationId: data.operationId.present
           ? data.operationId.value
           : this.operationId,
+      registerClaimId: data.registerClaimId.present
+          ? data.registerClaimId.value
+          : this.registerClaimId,
       movementType: data.movementType.present
           ? data.movementType.value
           : this.movementType,
@@ -20979,6 +23329,7 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
           ..write('registerId: $registerId, ')
           ..write('shiftId: $shiftId, ')
           ..write('operationId: $operationId, ')
+          ..write('registerClaimId: $registerClaimId, ')
           ..write('movementType: $movementType, ')
           ..write('amountMinor: $amountMinor, ')
           ..write('reason: $reason, ')
@@ -20999,6 +23350,7 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
     registerId,
     shiftId,
     operationId,
+    registerClaimId,
     movementType,
     amountMinor,
     reason,
@@ -21018,6 +23370,7 @@ class CashMovement extends DataClass implements Insertable<CashMovement> {
           other.registerId == this.registerId &&
           other.shiftId == this.shiftId &&
           other.operationId == this.operationId &&
+          other.registerClaimId == this.registerClaimId &&
           other.movementType == this.movementType &&
           other.amountMinor == this.amountMinor &&
           other.reason == this.reason &&
@@ -21035,6 +23388,7 @@ class CashMovementsCompanion extends UpdateCompanion<CashMovement> {
   final Value<String> registerId;
   final Value<String> shiftId;
   final Value<String> operationId;
+  final Value<String?> registerClaimId;
   final Value<String> movementType;
   final Value<int> amountMinor;
   final Value<String> reason;
@@ -21051,6 +23405,7 @@ class CashMovementsCompanion extends UpdateCompanion<CashMovement> {
     this.registerId = const Value.absent(),
     this.shiftId = const Value.absent(),
     this.operationId = const Value.absent(),
+    this.registerClaimId = const Value.absent(),
     this.movementType = const Value.absent(),
     this.amountMinor = const Value.absent(),
     this.reason = const Value.absent(),
@@ -21068,6 +23423,7 @@ class CashMovementsCompanion extends UpdateCompanion<CashMovement> {
     required String registerId,
     required String shiftId,
     required String operationId,
+    this.registerClaimId = const Value.absent(),
     required String movementType,
     required int amountMinor,
     required String reason,
@@ -21096,6 +23452,7 @@ class CashMovementsCompanion extends UpdateCompanion<CashMovement> {
     Expression<String>? registerId,
     Expression<String>? shiftId,
     Expression<String>? operationId,
+    Expression<String>? registerClaimId,
     Expression<String>? movementType,
     Expression<int>? amountMinor,
     Expression<String>? reason,
@@ -21113,6 +23470,7 @@ class CashMovementsCompanion extends UpdateCompanion<CashMovement> {
       if (registerId != null) 'register_id': registerId,
       if (shiftId != null) 'shift_id': shiftId,
       if (operationId != null) 'operation_id': operationId,
+      if (registerClaimId != null) 'register_claim_id': registerClaimId,
       if (movementType != null) 'movement_type': movementType,
       if (amountMinor != null) 'amount_minor': amountMinor,
       if (reason != null) 'reason': reason,
@@ -21132,6 +23490,7 @@ class CashMovementsCompanion extends UpdateCompanion<CashMovement> {
     Value<String>? registerId,
     Value<String>? shiftId,
     Value<String>? operationId,
+    Value<String?>? registerClaimId,
     Value<String>? movementType,
     Value<int>? amountMinor,
     Value<String>? reason,
@@ -21149,6 +23508,7 @@ class CashMovementsCompanion extends UpdateCompanion<CashMovement> {
       registerId: registerId ?? this.registerId,
       shiftId: shiftId ?? this.shiftId,
       operationId: operationId ?? this.operationId,
+      registerClaimId: registerClaimId ?? this.registerClaimId,
       movementType: movementType ?? this.movementType,
       amountMinor: amountMinor ?? this.amountMinor,
       reason: reason ?? this.reason,
@@ -21181,6 +23541,9 @@ class CashMovementsCompanion extends UpdateCompanion<CashMovement> {
     }
     if (operationId.present) {
       map['operation_id'] = Variable<String>(operationId.value);
+    }
+    if (registerClaimId.present) {
+      map['register_claim_id'] = Variable<String>(registerClaimId.value);
     }
     if (movementType.present) {
       map['movement_type'] = Variable<String>(movementType.value);
@@ -21221,6 +23584,7 @@ class CashMovementsCompanion extends UpdateCompanion<CashMovement> {
           ..write('registerId: $registerId, ')
           ..write('shiftId: $shiftId, ')
           ..write('operationId: $operationId, ')
+          ..write('registerClaimId: $registerClaimId, ')
           ..write('movementType: $movementType, ')
           ..write('amountMinor: $amountMinor, ')
           ..write('reason: $reason, ')
@@ -23104,6 +25468,20 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _registerClaimIdMeta = const VerificationMeta(
+    'registerClaimId',
+  );
+  @override
+  late final GeneratedColumn<String> registerClaimId = GeneratedColumn<String>(
+    'register_claim_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES register_claims (id) ON DELETE RESTRICT',
+    ),
+  );
   static const VerificationMeta _receiptNumberMeta = const VerificationMeta(
     'receiptNumber',
   );
@@ -23292,6 +25670,7 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
     inventoryTransactionId,
     customerId,
     operationId,
+    registerClaimId,
     receiptNumber,
     status,
     cashierUserId,
@@ -23383,6 +25762,15 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
       );
     } else if (isInserting) {
       context.missing(_operationIdMeta);
+    }
+    if (data.containsKey('register_claim_id')) {
+      context.handle(
+        _registerClaimIdMeta,
+        registerClaimId.isAcceptableOrUnknown(
+          data['register_claim_id']!,
+          _registerClaimIdMeta,
+        ),
+      );
     }
     if (data.containsKey('receipt_number')) {
       context.handle(
@@ -23554,6 +25942,10 @@ class $SalesTable extends Sales with TableInfo<$SalesTable, Sale> {
         DriftSqlType.string,
         data['${effectivePrefix}operation_id'],
       )!,
+      registerClaimId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_claim_id'],
+      ),
       receiptNumber: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}receipt_number'],
@@ -23632,6 +26024,7 @@ class Sale extends DataClass implements Insertable<Sale> {
   final String? inventoryTransactionId;
   final String? customerId;
   final String operationId;
+  final String? registerClaimId;
   final String? receiptNumber;
   final String status;
   final String cashierUserId;
@@ -23656,6 +26049,7 @@ class Sale extends DataClass implements Insertable<Sale> {
     this.inventoryTransactionId,
     this.customerId,
     required this.operationId,
+    this.registerClaimId,
     this.receiptNumber,
     required this.status,
     required this.cashierUserId,
@@ -23691,6 +26085,9 @@ class Sale extends DataClass implements Insertable<Sale> {
       map['customer_id'] = Variable<String>(customerId);
     }
     map['operation_id'] = Variable<String>(operationId);
+    if (!nullToAbsent || registerClaimId != null) {
+      map['register_claim_id'] = Variable<String>(registerClaimId);
+    }
     if (!nullToAbsent || receiptNumber != null) {
       map['receipt_number'] = Variable<String>(receiptNumber);
     }
@@ -23735,6 +26132,9 @@ class Sale extends DataClass implements Insertable<Sale> {
           ? const Value.absent()
           : Value(customerId),
       operationId: Value(operationId),
+      registerClaimId: registerClaimId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registerClaimId),
       receiptNumber: receiptNumber == null && nullToAbsent
           ? const Value.absent()
           : Value(receiptNumber),
@@ -23777,6 +26177,7 @@ class Sale extends DataClass implements Insertable<Sale> {
       ),
       customerId: serializer.fromJson<String?>(json['customerId']),
       operationId: serializer.fromJson<String>(json['operationId']),
+      registerClaimId: serializer.fromJson<String?>(json['registerClaimId']),
       receiptNumber: serializer.fromJson<String?>(json['receiptNumber']),
       status: serializer.fromJson<String>(json['status']),
       cashierUserId: serializer.fromJson<String>(json['cashierUserId']),
@@ -23812,6 +26213,7 @@ class Sale extends DataClass implements Insertable<Sale> {
       ),
       'customerId': serializer.toJson<String?>(customerId),
       'operationId': serializer.toJson<String>(operationId),
+      'registerClaimId': serializer.toJson<String?>(registerClaimId),
       'receiptNumber': serializer.toJson<String?>(receiptNumber),
       'status': serializer.toJson<String>(status),
       'cashierUserId': serializer.toJson<String>(cashierUserId),
@@ -23841,6 +26243,7 @@ class Sale extends DataClass implements Insertable<Sale> {
     Value<String?> inventoryTransactionId = const Value.absent(),
     Value<String?> customerId = const Value.absent(),
     String? operationId,
+    Value<String?> registerClaimId = const Value.absent(),
     Value<String?> receiptNumber = const Value.absent(),
     String? status,
     String? cashierUserId,
@@ -23867,6 +26270,9 @@ class Sale extends DataClass implements Insertable<Sale> {
         : this.inventoryTransactionId,
     customerId: customerId.present ? customerId.value : this.customerId,
     operationId: operationId ?? this.operationId,
+    registerClaimId: registerClaimId.present
+        ? registerClaimId.value
+        : this.registerClaimId,
     receiptNumber: receiptNumber.present
         ? receiptNumber.value
         : this.receiptNumber,
@@ -23909,6 +26315,9 @@ class Sale extends DataClass implements Insertable<Sale> {
       operationId: data.operationId.present
           ? data.operationId.value
           : this.operationId,
+      registerClaimId: data.registerClaimId.present
+          ? data.registerClaimId.value
+          : this.registerClaimId,
       receiptNumber: data.receiptNumber.present
           ? data.receiptNumber.value
           : this.receiptNumber,
@@ -23958,6 +26367,7 @@ class Sale extends DataClass implements Insertable<Sale> {
           ..write('inventoryTransactionId: $inventoryTransactionId, ')
           ..write('customerId: $customerId, ')
           ..write('operationId: $operationId, ')
+          ..write('registerClaimId: $registerClaimId, ')
           ..write('receiptNumber: $receiptNumber, ')
           ..write('status: $status, ')
           ..write('cashierUserId: $cashierUserId, ')
@@ -23987,6 +26397,7 @@ class Sale extends DataClass implements Insertable<Sale> {
     inventoryTransactionId,
     customerId,
     operationId,
+    registerClaimId,
     receiptNumber,
     status,
     cashierUserId,
@@ -24015,6 +26426,7 @@ class Sale extends DataClass implements Insertable<Sale> {
           other.inventoryTransactionId == this.inventoryTransactionId &&
           other.customerId == this.customerId &&
           other.operationId == this.operationId &&
+          other.registerClaimId == this.registerClaimId &&
           other.receiptNumber == this.receiptNumber &&
           other.status == this.status &&
           other.cashierUserId == this.cashierUserId &&
@@ -24041,6 +26453,7 @@ class SalesCompanion extends UpdateCompanion<Sale> {
   final Value<String?> inventoryTransactionId;
   final Value<String?> customerId;
   final Value<String> operationId;
+  final Value<String?> registerClaimId;
   final Value<String?> receiptNumber;
   final Value<String> status;
   final Value<String> cashierUserId;
@@ -24066,6 +26479,7 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     this.inventoryTransactionId = const Value.absent(),
     this.customerId = const Value.absent(),
     this.operationId = const Value.absent(),
+    this.registerClaimId = const Value.absent(),
     this.receiptNumber = const Value.absent(),
     this.status = const Value.absent(),
     this.cashierUserId = const Value.absent(),
@@ -24092,6 +26506,7 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     this.inventoryTransactionId = const Value.absent(),
     this.customerId = const Value.absent(),
     required String operationId,
+    this.registerClaimId = const Value.absent(),
     this.receiptNumber = const Value.absent(),
     this.status = const Value.absent(),
     required String cashierUserId,
@@ -24125,6 +26540,7 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     Expression<String>? inventoryTransactionId,
     Expression<String>? customerId,
     Expression<String>? operationId,
+    Expression<String>? registerClaimId,
     Expression<String>? receiptNumber,
     Expression<String>? status,
     Expression<String>? cashierUserId,
@@ -24152,6 +26568,7 @@ class SalesCompanion extends UpdateCompanion<Sale> {
         'inventory_transaction_id': inventoryTransactionId,
       if (customerId != null) 'customer_id': customerId,
       if (operationId != null) 'operation_id': operationId,
+      if (registerClaimId != null) 'register_claim_id': registerClaimId,
       if (receiptNumber != null) 'receipt_number': receiptNumber,
       if (status != null) 'status': status,
       if (cashierUserId != null) 'cashier_user_id': cashierUserId,
@@ -24182,6 +26599,7 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     Value<String?>? inventoryTransactionId,
     Value<String?>? customerId,
     Value<String>? operationId,
+    Value<String?>? registerClaimId,
     Value<String?>? receiptNumber,
     Value<String>? status,
     Value<String>? cashierUserId,
@@ -24209,6 +26627,7 @@ class SalesCompanion extends UpdateCompanion<Sale> {
           inventoryTransactionId ?? this.inventoryTransactionId,
       customerId: customerId ?? this.customerId,
       operationId: operationId ?? this.operationId,
+      registerClaimId: registerClaimId ?? this.registerClaimId,
       receiptNumber: receiptNumber ?? this.receiptNumber,
       status: status ?? this.status,
       cashierUserId: cashierUserId ?? this.cashierUserId,
@@ -24257,6 +26676,9 @@ class SalesCompanion extends UpdateCompanion<Sale> {
     }
     if (operationId.present) {
       map['operation_id'] = Variable<String>(operationId.value);
+    }
+    if (registerClaimId.present) {
+      map['register_claim_id'] = Variable<String>(registerClaimId.value);
     }
     if (receiptNumber.present) {
       map['receipt_number'] = Variable<String>(receiptNumber.value);
@@ -24324,6 +26746,7 @@ class SalesCompanion extends UpdateCompanion<Sale> {
           ..write('inventoryTransactionId: $inventoryTransactionId, ')
           ..write('customerId: $customerId, ')
           ..write('operationId: $operationId, ')
+          ..write('registerClaimId: $registerClaimId, ')
           ..write('receiptNumber: $receiptNumber, ')
           ..write('status: $status, ')
           ..write('cashierUserId: $cashierUserId, ')
@@ -24339,6 +26762,615 @@ class SalesCompanion extends UpdateCompanion<Sale> {
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SaleReceiptAliasesTable extends SaleReceiptAliases
+    with TableInfo<$SaleReceiptAliasesTable, SaleReceiptAliase> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SaleReceiptAliasesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
+  );
+  @override
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES branches (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _saleIdMeta = const VerificationMeta('saleId');
+  @override
+  late final GeneratedColumn<String> saleId = GeneratedColumn<String>(
+    'sale_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES sales (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _registerClaimIdMeta = const VerificationMeta(
+    'registerClaimId',
+  );
+  @override
+  late final GeneratedColumn<String> registerClaimId = GeneratedColumn<String>(
+    'register_claim_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES register_claims (id) ON DELETE RESTRICT',
+    ),
+  );
+  static const VerificationMeta _aliasReceiptNumberMeta =
+      const VerificationMeta('aliasReceiptNumber');
+  @override
+  late final GeneratedColumn<String> aliasReceiptNumber =
+      GeneratedColumn<String>(
+        'alias_receipt_number',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _canonicalReceiptNumberMeta =
+      const VerificationMeta('canonicalReceiptNumber');
+  @override
+  late final GeneratedColumn<String> canonicalReceiptNumber =
+      GeneratedColumn<String>(
+        'canonical_receipt_number',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _aliasKindMeta = const VerificationMeta(
+    'aliasKind',
+  );
+  @override
+  late final GeneratedColumn<String> aliasKind = GeneratedColumn<String>(
+    'alias_kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<String>('offline_printed'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    organizationId,
+    branchId,
+    saleId,
+    registerClaimId,
+    aliasReceiptNumber,
+    canonicalReceiptNumber,
+    aliasKind,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sale_receipt_aliases';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SaleReceiptAliase> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('organization_id')) {
+      context.handle(
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_organizationIdMeta);
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_branchIdMeta);
+    }
+    if (data.containsKey('sale_id')) {
+      context.handle(
+        _saleIdMeta,
+        saleId.isAcceptableOrUnknown(data['sale_id']!, _saleIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_saleIdMeta);
+    }
+    if (data.containsKey('register_claim_id')) {
+      context.handle(
+        _registerClaimIdMeta,
+        registerClaimId.isAcceptableOrUnknown(
+          data['register_claim_id']!,
+          _registerClaimIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('alias_receipt_number')) {
+      context.handle(
+        _aliasReceiptNumberMeta,
+        aliasReceiptNumber.isAcceptableOrUnknown(
+          data['alias_receipt_number']!,
+          _aliasReceiptNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_aliasReceiptNumberMeta);
+    }
+    if (data.containsKey('canonical_receipt_number')) {
+      context.handle(
+        _canonicalReceiptNumberMeta,
+        canonicalReceiptNumber.isAcceptableOrUnknown(
+          data['canonical_receipt_number']!,
+          _canonicalReceiptNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_canonicalReceiptNumberMeta);
+    }
+    if (data.containsKey('alias_kind')) {
+      context.handle(
+        _aliasKindMeta,
+        aliasKind.isAcceptableOrUnknown(data['alias_kind']!, _aliasKindMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {organizationId, branchId, aliasReceiptNumber},
+    {saleId, aliasReceiptNumber},
+  ];
+  @override
+  SaleReceiptAliase map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SaleReceiptAliase(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      organizationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}organization_id'],
+      )!,
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      )!,
+      saleId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sale_id'],
+      )!,
+      registerClaimId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_claim_id'],
+      ),
+      aliasReceiptNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}alias_receipt_number'],
+      )!,
+      canonicalReceiptNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}canonical_receipt_number'],
+      )!,
+      aliasKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}alias_kind'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SaleReceiptAliasesTable createAlias(String alias) {
+    return $SaleReceiptAliasesTable(attachedDatabase, alias);
+  }
+}
+
+class SaleReceiptAliase extends DataClass
+    implements Insertable<SaleReceiptAliase> {
+  final String id;
+  final String organizationId;
+  final String branchId;
+  final String saleId;
+  final String? registerClaimId;
+  final String aliasReceiptNumber;
+  final String canonicalReceiptNumber;
+  final String aliasKind;
+  final DateTime createdAt;
+  const SaleReceiptAliase({
+    required this.id,
+    required this.organizationId,
+    required this.branchId,
+    required this.saleId,
+    this.registerClaimId,
+    required this.aliasReceiptNumber,
+    required this.canonicalReceiptNumber,
+    required this.aliasKind,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['organization_id'] = Variable<String>(organizationId);
+    map['branch_id'] = Variable<String>(branchId);
+    map['sale_id'] = Variable<String>(saleId);
+    if (!nullToAbsent || registerClaimId != null) {
+      map['register_claim_id'] = Variable<String>(registerClaimId);
+    }
+    map['alias_receipt_number'] = Variable<String>(aliasReceiptNumber);
+    map['canonical_receipt_number'] = Variable<String>(canonicalReceiptNumber);
+    map['alias_kind'] = Variable<String>(aliasKind);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SaleReceiptAliasesCompanion toCompanion(bool nullToAbsent) {
+    return SaleReceiptAliasesCompanion(
+      id: Value(id),
+      organizationId: Value(organizationId),
+      branchId: Value(branchId),
+      saleId: Value(saleId),
+      registerClaimId: registerClaimId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registerClaimId),
+      aliasReceiptNumber: Value(aliasReceiptNumber),
+      canonicalReceiptNumber: Value(canonicalReceiptNumber),
+      aliasKind: Value(aliasKind),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SaleReceiptAliase.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SaleReceiptAliase(
+      id: serializer.fromJson<String>(json['id']),
+      organizationId: serializer.fromJson<String>(json['organizationId']),
+      branchId: serializer.fromJson<String>(json['branchId']),
+      saleId: serializer.fromJson<String>(json['saleId']),
+      registerClaimId: serializer.fromJson<String?>(json['registerClaimId']),
+      aliasReceiptNumber: serializer.fromJson<String>(
+        json['aliasReceiptNumber'],
+      ),
+      canonicalReceiptNumber: serializer.fromJson<String>(
+        json['canonicalReceiptNumber'],
+      ),
+      aliasKind: serializer.fromJson<String>(json['aliasKind']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'organizationId': serializer.toJson<String>(organizationId),
+      'branchId': serializer.toJson<String>(branchId),
+      'saleId': serializer.toJson<String>(saleId),
+      'registerClaimId': serializer.toJson<String?>(registerClaimId),
+      'aliasReceiptNumber': serializer.toJson<String>(aliasReceiptNumber),
+      'canonicalReceiptNumber': serializer.toJson<String>(
+        canonicalReceiptNumber,
+      ),
+      'aliasKind': serializer.toJson<String>(aliasKind),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SaleReceiptAliase copyWith({
+    String? id,
+    String? organizationId,
+    String? branchId,
+    String? saleId,
+    Value<String?> registerClaimId = const Value.absent(),
+    String? aliasReceiptNumber,
+    String? canonicalReceiptNumber,
+    String? aliasKind,
+    DateTime? createdAt,
+  }) => SaleReceiptAliase(
+    id: id ?? this.id,
+    organizationId: organizationId ?? this.organizationId,
+    branchId: branchId ?? this.branchId,
+    saleId: saleId ?? this.saleId,
+    registerClaimId: registerClaimId.present
+        ? registerClaimId.value
+        : this.registerClaimId,
+    aliasReceiptNumber: aliasReceiptNumber ?? this.aliasReceiptNumber,
+    canonicalReceiptNumber:
+        canonicalReceiptNumber ?? this.canonicalReceiptNumber,
+    aliasKind: aliasKind ?? this.aliasKind,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  SaleReceiptAliase copyWithCompanion(SaleReceiptAliasesCompanion data) {
+    return SaleReceiptAliase(
+      id: data.id.present ? data.id.value : this.id,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
+      saleId: data.saleId.present ? data.saleId.value : this.saleId,
+      registerClaimId: data.registerClaimId.present
+          ? data.registerClaimId.value
+          : this.registerClaimId,
+      aliasReceiptNumber: data.aliasReceiptNumber.present
+          ? data.aliasReceiptNumber.value
+          : this.aliasReceiptNumber,
+      canonicalReceiptNumber: data.canonicalReceiptNumber.present
+          ? data.canonicalReceiptNumber.value
+          : this.canonicalReceiptNumber,
+      aliasKind: data.aliasKind.present ? data.aliasKind.value : this.aliasKind,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SaleReceiptAliase(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('saleId: $saleId, ')
+          ..write('registerClaimId: $registerClaimId, ')
+          ..write('aliasReceiptNumber: $aliasReceiptNumber, ')
+          ..write('canonicalReceiptNumber: $canonicalReceiptNumber, ')
+          ..write('aliasKind: $aliasKind, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    branchId,
+    saleId,
+    registerClaimId,
+    aliasReceiptNumber,
+    canonicalReceiptNumber,
+    aliasKind,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SaleReceiptAliase &&
+          other.id == this.id &&
+          other.organizationId == this.organizationId &&
+          other.branchId == this.branchId &&
+          other.saleId == this.saleId &&
+          other.registerClaimId == this.registerClaimId &&
+          other.aliasReceiptNumber == this.aliasReceiptNumber &&
+          other.canonicalReceiptNumber == this.canonicalReceiptNumber &&
+          other.aliasKind == this.aliasKind &&
+          other.createdAt == this.createdAt);
+}
+
+class SaleReceiptAliasesCompanion extends UpdateCompanion<SaleReceiptAliase> {
+  final Value<String> id;
+  final Value<String> organizationId;
+  final Value<String> branchId;
+  final Value<String> saleId;
+  final Value<String?> registerClaimId;
+  final Value<String> aliasReceiptNumber;
+  final Value<String> canonicalReceiptNumber;
+  final Value<String> aliasKind;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const SaleReceiptAliasesCompanion({
+    this.id = const Value.absent(),
+    this.organizationId = const Value.absent(),
+    this.branchId = const Value.absent(),
+    this.saleId = const Value.absent(),
+    this.registerClaimId = const Value.absent(),
+    this.aliasReceiptNumber = const Value.absent(),
+    this.canonicalReceiptNumber = const Value.absent(),
+    this.aliasKind = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SaleReceiptAliasesCompanion.insert({
+    required String id,
+    required String organizationId,
+    required String branchId,
+    required String saleId,
+    this.registerClaimId = const Value.absent(),
+    required String aliasReceiptNumber,
+    required String canonicalReceiptNumber,
+    this.aliasKind = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       organizationId = Value(organizationId),
+       branchId = Value(branchId),
+       saleId = Value(saleId),
+       aliasReceiptNumber = Value(aliasReceiptNumber),
+       canonicalReceiptNumber = Value(canonicalReceiptNumber),
+       createdAt = Value(createdAt);
+  static Insertable<SaleReceiptAliase> custom({
+    Expression<String>? id,
+    Expression<String>? organizationId,
+    Expression<String>? branchId,
+    Expression<String>? saleId,
+    Expression<String>? registerClaimId,
+    Expression<String>? aliasReceiptNumber,
+    Expression<String>? canonicalReceiptNumber,
+    Expression<String>? aliasKind,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (organizationId != null) 'organization_id': organizationId,
+      if (branchId != null) 'branch_id': branchId,
+      if (saleId != null) 'sale_id': saleId,
+      if (registerClaimId != null) 'register_claim_id': registerClaimId,
+      if (aliasReceiptNumber != null)
+        'alias_receipt_number': aliasReceiptNumber,
+      if (canonicalReceiptNumber != null)
+        'canonical_receipt_number': canonicalReceiptNumber,
+      if (aliasKind != null) 'alias_kind': aliasKind,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SaleReceiptAliasesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? organizationId,
+    Value<String>? branchId,
+    Value<String>? saleId,
+    Value<String?>? registerClaimId,
+    Value<String>? aliasReceiptNumber,
+    Value<String>? canonicalReceiptNumber,
+    Value<String>? aliasKind,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return SaleReceiptAliasesCompanion(
+      id: id ?? this.id,
+      organizationId: organizationId ?? this.organizationId,
+      branchId: branchId ?? this.branchId,
+      saleId: saleId ?? this.saleId,
+      registerClaimId: registerClaimId ?? this.registerClaimId,
+      aliasReceiptNumber: aliasReceiptNumber ?? this.aliasReceiptNumber,
+      canonicalReceiptNumber:
+          canonicalReceiptNumber ?? this.canonicalReceiptNumber,
+      aliasKind: aliasKind ?? this.aliasKind,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
+    }
+    if (saleId.present) {
+      map['sale_id'] = Variable<String>(saleId.value);
+    }
+    if (registerClaimId.present) {
+      map['register_claim_id'] = Variable<String>(registerClaimId.value);
+    }
+    if (aliasReceiptNumber.present) {
+      map['alias_receipt_number'] = Variable<String>(aliasReceiptNumber.value);
+    }
+    if (canonicalReceiptNumber.present) {
+      map['canonical_receipt_number'] = Variable<String>(
+        canonicalReceiptNumber.value,
+      );
+    }
+    if (aliasKind.present) {
+      map['alias_kind'] = Variable<String>(aliasKind.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SaleReceiptAliasesCompanion(')
+          ..write('id: $id, ')
+          ..write('organizationId: $organizationId, ')
+          ..write('branchId: $branchId, ')
+          ..write('saleId: $saleId, ')
+          ..write('registerClaimId: $registerClaimId, ')
+          ..write('aliasReceiptNumber: $aliasReceiptNumber, ')
+          ..write('canonicalReceiptNumber: $canonicalReceiptNumber, ')
+          ..write('aliasKind: $aliasKind, ')
+          ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -27775,6 +30807,20 @@ class $ReceiptPrintJobsTable extends ReceiptPrintJobs
       'REFERENCES registers (id) ON DELETE RESTRICT',
     ),
   );
+  static const VerificationMeta _registerClaimIdMeta = const VerificationMeta(
+    'registerClaimId',
+  );
+  @override
+  late final GeneratedColumn<String> registerClaimId = GeneratedColumn<String>(
+    'register_claim_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES register_claims (id) ON DELETE RESTRICT',
+    ),
+  );
   static const VerificationMeta _saleIdMeta = const VerificationMeta('saleId');
   @override
   late final GeneratedColumn<String> saleId = GeneratedColumn<String>(
@@ -27924,6 +30970,7 @@ class $ReceiptPrintJobsTable extends ReceiptPrintJobs
     organizationId,
     branchId,
     registerId,
+    registerClaimId,
     saleId,
     deduplicationKey,
     copyType,
@@ -27980,6 +31027,15 @@ class $ReceiptPrintJobsTable extends ReceiptPrintJobs
       );
     } else if (isInserting) {
       context.missing(_registerIdMeta);
+    }
+    if (data.containsKey('register_claim_id')) {
+      context.handle(
+        _registerClaimIdMeta,
+        registerClaimId.isAcceptableOrUnknown(
+          data['register_claim_id']!,
+          _registerClaimIdMeta,
+        ),
+      );
     }
     if (data.containsKey('sale_id')) {
       context.handle(
@@ -28107,6 +31163,10 @@ class $ReceiptPrintJobsTable extends ReceiptPrintJobs
         DriftSqlType.string,
         data['${effectivePrefix}register_id'],
       )!,
+      registerClaimId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}register_claim_id'],
+      ),
       saleId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}sale_id'],
@@ -28169,6 +31229,7 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
   final String organizationId;
   final String branchId;
   final String registerId;
+  final String? registerClaimId;
   final String saleId;
   final String deduplicationKey;
   final String copyType;
@@ -28186,6 +31247,7 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
     required this.organizationId,
     required this.branchId,
     required this.registerId,
+    this.registerClaimId,
     required this.saleId,
     required this.deduplicationKey,
     required this.copyType,
@@ -28206,6 +31268,9 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
     map['organization_id'] = Variable<String>(organizationId);
     map['branch_id'] = Variable<String>(branchId);
     map['register_id'] = Variable<String>(registerId);
+    if (!nullToAbsent || registerClaimId != null) {
+      map['register_claim_id'] = Variable<String>(registerClaimId);
+    }
     map['sale_id'] = Variable<String>(saleId);
     map['deduplication_key'] = Variable<String>(deduplicationKey);
     map['copy_type'] = Variable<String>(copyType);
@@ -28233,6 +31298,9 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
       organizationId: Value(organizationId),
       branchId: Value(branchId),
       registerId: Value(registerId),
+      registerClaimId: registerClaimId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(registerClaimId),
       saleId: Value(saleId),
       deduplicationKey: Value(deduplicationKey),
       copyType: Value(copyType),
@@ -28264,6 +31332,7 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
       organizationId: serializer.fromJson<String>(json['organizationId']),
       branchId: serializer.fromJson<String>(json['branchId']),
       registerId: serializer.fromJson<String>(json['registerId']),
+      registerClaimId: serializer.fromJson<String?>(json['registerClaimId']),
       saleId: serializer.fromJson<String>(json['saleId']),
       deduplicationKey: serializer.fromJson<String>(json['deduplicationKey']),
       copyType: serializer.fromJson<String>(json['copyType']),
@@ -28286,6 +31355,7 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
       'organizationId': serializer.toJson<String>(organizationId),
       'branchId': serializer.toJson<String>(branchId),
       'registerId': serializer.toJson<String>(registerId),
+      'registerClaimId': serializer.toJson<String?>(registerClaimId),
       'saleId': serializer.toJson<String>(saleId),
       'deduplicationKey': serializer.toJson<String>(deduplicationKey),
       'copyType': serializer.toJson<String>(copyType),
@@ -28306,6 +31376,7 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
     String? organizationId,
     String? branchId,
     String? registerId,
+    Value<String?> registerClaimId = const Value.absent(),
     String? saleId,
     String? deduplicationKey,
     String? copyType,
@@ -28323,6 +31394,9 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
     organizationId: organizationId ?? this.organizationId,
     branchId: branchId ?? this.branchId,
     registerId: registerId ?? this.registerId,
+    registerClaimId: registerClaimId.present
+        ? registerClaimId.value
+        : this.registerClaimId,
     saleId: saleId ?? this.saleId,
     deduplicationKey: deduplicationKey ?? this.deduplicationKey,
     copyType: copyType ?? this.copyType,
@@ -28348,6 +31422,9 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
       registerId: data.registerId.present
           ? data.registerId.value
           : this.registerId,
+      registerClaimId: data.registerClaimId.present
+          ? data.registerClaimId.value
+          : this.registerClaimId,
       saleId: data.saleId.present ? data.saleId.value : this.saleId,
       deduplicationKey: data.deduplicationKey.present
           ? data.deduplicationKey.value
@@ -28380,6 +31457,7 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
           ..write('organizationId: $organizationId, ')
           ..write('branchId: $branchId, ')
           ..write('registerId: $registerId, ')
+          ..write('registerClaimId: $registerClaimId, ')
           ..write('saleId: $saleId, ')
           ..write('deduplicationKey: $deduplicationKey, ')
           ..write('copyType: $copyType, ')
@@ -28402,6 +31480,7 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
     organizationId,
     branchId,
     registerId,
+    registerClaimId,
     saleId,
     deduplicationKey,
     copyType,
@@ -28423,6 +31502,7 @@ class ReceiptPrintJob extends DataClass implements Insertable<ReceiptPrintJob> {
           other.organizationId == this.organizationId &&
           other.branchId == this.branchId &&
           other.registerId == this.registerId &&
+          other.registerClaimId == this.registerClaimId &&
           other.saleId == this.saleId &&
           other.deduplicationKey == this.deduplicationKey &&
           other.copyType == this.copyType &&
@@ -28442,6 +31522,7 @@ class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
   final Value<String> organizationId;
   final Value<String> branchId;
   final Value<String> registerId;
+  final Value<String?> registerClaimId;
   final Value<String> saleId;
   final Value<String> deduplicationKey;
   final Value<String> copyType;
@@ -28460,6 +31541,7 @@ class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
     this.organizationId = const Value.absent(),
     this.branchId = const Value.absent(),
     this.registerId = const Value.absent(),
+    this.registerClaimId = const Value.absent(),
     this.saleId = const Value.absent(),
     this.deduplicationKey = const Value.absent(),
     this.copyType = const Value.absent(),
@@ -28479,6 +31561,7 @@ class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
     required String organizationId,
     required String branchId,
     required String registerId,
+    this.registerClaimId = const Value.absent(),
     required String saleId,
     required String deduplicationKey,
     required String copyType,
@@ -28508,6 +31591,7 @@ class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
     Expression<String>? organizationId,
     Expression<String>? branchId,
     Expression<String>? registerId,
+    Expression<String>? registerClaimId,
     Expression<String>? saleId,
     Expression<String>? deduplicationKey,
     Expression<String>? copyType,
@@ -28527,6 +31611,7 @@ class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
       if (organizationId != null) 'organization_id': organizationId,
       if (branchId != null) 'branch_id': branchId,
       if (registerId != null) 'register_id': registerId,
+      if (registerClaimId != null) 'register_claim_id': registerClaimId,
       if (saleId != null) 'sale_id': saleId,
       if (deduplicationKey != null) 'deduplication_key': deduplicationKey,
       if (copyType != null) 'copy_type': copyType,
@@ -28548,6 +31633,7 @@ class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
     Value<String>? organizationId,
     Value<String>? branchId,
     Value<String>? registerId,
+    Value<String?>? registerClaimId,
     Value<String>? saleId,
     Value<String>? deduplicationKey,
     Value<String>? copyType,
@@ -28567,6 +31653,7 @@ class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
       organizationId: organizationId ?? this.organizationId,
       branchId: branchId ?? this.branchId,
       registerId: registerId ?? this.registerId,
+      registerClaimId: registerClaimId ?? this.registerClaimId,
       saleId: saleId ?? this.saleId,
       deduplicationKey: deduplicationKey ?? this.deduplicationKey,
       copyType: copyType ?? this.copyType,
@@ -28597,6 +31684,9 @@ class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
     }
     if (registerId.present) {
       map['register_id'] = Variable<String>(registerId.value);
+    }
+    if (registerClaimId.present) {
+      map['register_claim_id'] = Variable<String>(registerClaimId.value);
     }
     if (saleId.present) {
       map['sale_id'] = Variable<String>(saleId.value);
@@ -28647,6 +31737,7 @@ class ReceiptPrintJobsCompanion extends UpdateCompanion<ReceiptPrintJob> {
           ..write('organizationId: $organizationId, ')
           ..write('branchId: $branchId, ')
           ..write('registerId: $registerId, ')
+          ..write('registerClaimId: $registerClaimId, ')
           ..write('saleId: $saleId, ')
           ..write('deduplicationKey: $deduplicationKey, ')
           ..write('copyType: $copyType, ')
@@ -48123,6 +51214,17 @@ class $PosCartsTable extends PosCarts with TableInfo<$PosCartsTable, PosCart> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _ownerUserIdMeta = const VerificationMeta(
+    'ownerUserId',
+  );
+  @override
+  late final GeneratedColumn<String> ownerUserId = GeneratedColumn<String>(
+    'owner_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<String> status = GeneratedColumn<String>(
@@ -48267,6 +51369,7 @@ class $PosCartsTable extends PosCarts with TableInfo<$PosCartsTable, PosCart> {
     organizationId,
     branchId,
     deviceId,
+    ownerUserId,
     status,
     title,
     customerId,
@@ -48323,6 +51426,15 @@ class $PosCartsTable extends PosCarts with TableInfo<$PosCartsTable, PosCart> {
       );
     } else if (isInserting) {
       context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('owner_user_id')) {
+      context.handle(
+        _ownerUserIdMeta,
+        ownerUserId.isAcceptableOrUnknown(
+          data['owner_user_id']!,
+          _ownerUserIdMeta,
+        ),
+      );
     }
     if (data.containsKey('status')) {
       context.handle(
@@ -48448,6 +51560,10 @@ class $PosCartsTable extends PosCarts with TableInfo<$PosCartsTable, PosCart> {
         DriftSqlType.string,
         data['${effectivePrefix}device_id'],
       )!,
+      ownerUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_user_id'],
+      ),
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
@@ -48510,6 +51626,7 @@ class PosCart extends DataClass implements Insertable<PosCart> {
   final String organizationId;
   final String branchId;
   final String deviceId;
+  final String? ownerUserId;
   final String status;
   final String? title;
   final String? customerId;
@@ -48527,6 +51644,7 @@ class PosCart extends DataClass implements Insertable<PosCart> {
     required this.organizationId,
     required this.branchId,
     required this.deviceId,
+    this.ownerUserId,
     required this.status,
     this.title,
     this.customerId,
@@ -48547,6 +51665,9 @@ class PosCart extends DataClass implements Insertable<PosCart> {
     map['organization_id'] = Variable<String>(organizationId);
     map['branch_id'] = Variable<String>(branchId);
     map['device_id'] = Variable<String>(deviceId);
+    if (!nullToAbsent || ownerUserId != null) {
+      map['owner_user_id'] = Variable<String>(ownerUserId);
+    }
     map['status'] = Variable<String>(status);
     if (!nullToAbsent || title != null) {
       map['title'] = Variable<String>(title);
@@ -48582,6 +51703,9 @@ class PosCart extends DataClass implements Insertable<PosCart> {
       organizationId: Value(organizationId),
       branchId: Value(branchId),
       deviceId: Value(deviceId),
+      ownerUserId: ownerUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ownerUserId),
       status: Value(status),
       title: title == null && nullToAbsent
           ? const Value.absent()
@@ -48621,6 +51745,7 @@ class PosCart extends DataClass implements Insertable<PosCart> {
       organizationId: serializer.fromJson<String>(json['organizationId']),
       branchId: serializer.fromJson<String>(json['branchId']),
       deviceId: serializer.fromJson<String>(json['deviceId']),
+      ownerUserId: serializer.fromJson<String?>(json['ownerUserId']),
       status: serializer.fromJson<String>(json['status']),
       title: serializer.fromJson<String?>(json['title']),
       customerId: serializer.fromJson<String?>(json['customerId']),
@@ -48653,6 +51778,7 @@ class PosCart extends DataClass implements Insertable<PosCart> {
       'organizationId': serializer.toJson<String>(organizationId),
       'branchId': serializer.toJson<String>(branchId),
       'deviceId': serializer.toJson<String>(deviceId),
+      'ownerUserId': serializer.toJson<String?>(ownerUserId),
       'status': serializer.toJson<String>(status),
       'title': serializer.toJson<String?>(title),
       'customerId': serializer.toJson<String?>(customerId),
@@ -48675,6 +51801,7 @@ class PosCart extends DataClass implements Insertable<PosCart> {
     String? organizationId,
     String? branchId,
     String? deviceId,
+    Value<String?> ownerUserId = const Value.absent(),
     String? status,
     Value<String?> title = const Value.absent(),
     Value<String?> customerId = const Value.absent(),
@@ -48692,6 +51819,7 @@ class PosCart extends DataClass implements Insertable<PosCart> {
     organizationId: organizationId ?? this.organizationId,
     branchId: branchId ?? this.branchId,
     deviceId: deviceId ?? this.deviceId,
+    ownerUserId: ownerUserId.present ? ownerUserId.value : this.ownerUserId,
     status: status ?? this.status,
     title: title.present ? title.value : this.title,
     customerId: customerId.present ? customerId.value : this.customerId,
@@ -48722,6 +51850,9 @@ class PosCart extends DataClass implements Insertable<PosCart> {
           : this.organizationId,
       branchId: data.branchId.present ? data.branchId.value : this.branchId,
       deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      ownerUserId: data.ownerUserId.present
+          ? data.ownerUserId.value
+          : this.ownerUserId,
       status: data.status.present ? data.status.value : this.status,
       title: data.title.present ? data.title.value : this.title,
       customerId: data.customerId.present
@@ -48760,6 +51891,7 @@ class PosCart extends DataClass implements Insertable<PosCart> {
           ..write('organizationId: $organizationId, ')
           ..write('branchId: $branchId, ')
           ..write('deviceId: $deviceId, ')
+          ..write('ownerUserId: $ownerUserId, ')
           ..write('status: $status, ')
           ..write('title: $title, ')
           ..write('customerId: $customerId, ')
@@ -48782,6 +51914,7 @@ class PosCart extends DataClass implements Insertable<PosCart> {
     organizationId,
     branchId,
     deviceId,
+    ownerUserId,
     status,
     title,
     customerId,
@@ -48803,6 +51936,7 @@ class PosCart extends DataClass implements Insertable<PosCart> {
           other.organizationId == this.organizationId &&
           other.branchId == this.branchId &&
           other.deviceId == this.deviceId &&
+          other.ownerUserId == this.ownerUserId &&
           other.status == this.status &&
           other.title == this.title &&
           other.customerId == this.customerId &&
@@ -48822,6 +51956,7 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
   final Value<String> organizationId;
   final Value<String> branchId;
   final Value<String> deviceId;
+  final Value<String?> ownerUserId;
   final Value<String> status;
   final Value<String?> title;
   final Value<String?> customerId;
@@ -48840,6 +51975,7 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     this.organizationId = const Value.absent(),
     this.branchId = const Value.absent(),
     this.deviceId = const Value.absent(),
+    this.ownerUserId = const Value.absent(),
     this.status = const Value.absent(),
     this.title = const Value.absent(),
     this.customerId = const Value.absent(),
@@ -48859,6 +51995,7 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     required String organizationId,
     required String branchId,
     required String deviceId,
+    this.ownerUserId = const Value.absent(),
     required String status,
     this.title = const Value.absent(),
     this.customerId = const Value.absent(),
@@ -48884,6 +52021,7 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     Expression<String>? organizationId,
     Expression<String>? branchId,
     Expression<String>? deviceId,
+    Expression<String>? ownerUserId,
     Expression<String>? status,
     Expression<String>? title,
     Expression<String>? customerId,
@@ -48903,6 +52041,7 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
       if (organizationId != null) 'organization_id': organizationId,
       if (branchId != null) 'branch_id': branchId,
       if (deviceId != null) 'device_id': deviceId,
+      if (ownerUserId != null) 'owner_user_id': ownerUserId,
       if (status != null) 'status': status,
       if (title != null) 'title': title,
       if (customerId != null) 'customer_id': customerId,
@@ -48929,6 +52068,7 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     Value<String>? organizationId,
     Value<String>? branchId,
     Value<String>? deviceId,
+    Value<String?>? ownerUserId,
     Value<String>? status,
     Value<String?>? title,
     Value<String?>? customerId,
@@ -48948,6 +52088,7 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
       organizationId: organizationId ?? this.organizationId,
       branchId: branchId ?? this.branchId,
       deviceId: deviceId ?? this.deviceId,
+      ownerUserId: ownerUserId ?? this.ownerUserId,
       status: status ?? this.status,
       title: title ?? this.title,
       customerId: customerId ?? this.customerId,
@@ -48979,6 +52120,9 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
     }
     if (deviceId.present) {
       map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (ownerUserId.present) {
+      map['owner_user_id'] = Variable<String>(ownerUserId.value);
     }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
@@ -49037,6 +52181,7 @@ class PosCartsCompanion extends UpdateCompanion<PosCart> {
           ..write('organizationId: $organizationId, ')
           ..write('branchId: $branchId, ')
           ..write('deviceId: $deviceId, ')
+          ..write('ownerUserId: $ownerUserId, ')
           ..write('status: $status, ')
           ..write('title: $title, ')
           ..write('customerId: $customerId, ')
@@ -49749,7 +52894,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $LocalMetadataTable localMetadata = $LocalMetadataTable(this);
   late final $SyncOutboxEntriesTable syncOutboxEntries =
       $SyncOutboxEntriesTable(this);
+  late final $SyncOutboxDependenciesTable syncOutboxDependencies =
+      $SyncOutboxDependenciesTable(this);
   late final $SyncCursorsTable syncCursors = $SyncCursorsTable(this);
+  late final $SyncSnapshotStagingRecordsTable syncSnapshotStagingRecords =
+      $SyncSnapshotStagingRecordsTable(this);
   late final $SyncConflictsTable syncConflicts = $SyncConflictsTable(this);
   late final $SyncEntityVersionsTable syncEntityVersions =
       $SyncEntityVersionsTable(this);
@@ -49785,11 +52934,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $RegistersTable registers = $RegistersTable(this);
+  late final $RegisterClaimsTable registerClaims = $RegisterClaimsTable(this);
   late final $ShiftsTable shifts = $ShiftsTable(this);
   late final $CashMovementsTable cashMovements = $CashMovementsTable(this);
   late final $ShiftCountsTable shiftCounts = $ShiftCountsTable(this);
   late final $CustomersTable customers = $CustomersTable(this);
   late final $SalesTable sales = $SalesTable(this);
+  late final $SaleReceiptAliasesTable saleReceiptAliases =
+      $SaleReceiptAliasesTable(this);
   late final $SaleItemsTable saleItems = $SaleItemsTable(this);
   late final $PaymentsTable payments = $PaymentsTable(this);
   late final $SaleDiscountsTable saleDiscounts = $SaleDiscountsTable(this);
@@ -49844,6 +52996,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $FeatureFlagsTable featureFlags = $FeatureFlagsTable(this);
   late final $PosCartsTable posCarts = $PosCartsTable(this);
   late final $PosCartItemsTable posCartItems = $PosCartItemsTable(this);
+  late final Index syncSnapshotStagingScopeIdx = Index(
+    'sync_snapshot_staging_scope_idx',
+    'CREATE INDEX sync_snapshot_staging_scope_idx ON sync_snapshot_staging_records (organization_id, branch_id, snapshot_token, collection)',
+  );
   late final Index categoriesSearchIdx = Index(
     'categories_search_idx',
     'CREATE INDEX categories_search_idx ON categories (organization_id, normalized_name)',
@@ -49892,6 +53048,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'registers_branch_idx',
     'CREATE INDEX registers_branch_idx ON registers (organization_id, branch_id, is_active)',
   );
+  late final Index registerClaimsUnresolvedIdx = Index(
+    'register_claims_unresolved_idx',
+    'CREATE INDEX register_claims_unresolved_idx ON register_claims (organization_id, branch_id, status, created_at)',
+  );
+  late final Index registerClaimsDeviceIdx = Index(
+    'register_claims_device_idx',
+    'CREATE INDEX register_claims_device_idx ON register_claims (organization_id, device_id, status)',
+  );
   late final Index shiftsActiveIdx = Index(
     'shifts_active_idx',
     'CREATE INDEX shifts_active_idx ON shifts (organization_id, branch_id, status, opened_by_user_id)',
@@ -49903,6 +53067,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final Index salesHistoryIdx = Index(
     'sales_history_idx',
     'CREATE INDEX sales_history_idx ON sales (organization_id, branch_id, completed_at)',
+  );
+  late final Index saleReceiptAliasesLookupIdx = Index(
+    'sale_receipt_aliases_lookup_idx',
+    'CREATE INDEX sale_receipt_aliases_lookup_idx ON sale_receipt_aliases (organization_id, branch_id, alias_receipt_number)',
   );
   late final Index paymentsShiftIdx = Index(
     'payments_shift_idx',
@@ -49992,6 +53160,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'pos_carts_device_status_idx',
     'CREATE INDEX pos_carts_device_status_idx ON pos_carts (organization_id, branch_id, device_id, status, updated_at)',
   );
+  late final Index posCartsOwnerStatusIdx = Index(
+    'pos_carts_owner_status_idx',
+    'CREATE INDEX pos_carts_owner_status_idx ON pos_carts (organization_id, branch_id, device_id, owner_user_id, status)',
+  );
   late final MetadataDao metadataDao = MetadataDao(this as AppDatabase);
   late final OutboxDao outboxDao = OutboxDao(this as AppDatabase);
   late final SyncCursorDao syncCursorDao = SyncCursorDao(this as AppDatabase);
@@ -50009,7 +53181,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     localMetadata,
     syncOutboxEntries,
+    syncOutboxDependencies,
     syncCursors,
+    syncSnapshotStagingRecords,
     syncConflicts,
     syncEntityVersions,
     localAuditLogs,
@@ -50034,11 +53208,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     stockCounts,
     stockCountItems,
     registers,
+    registerClaims,
     shifts,
     cashMovements,
     shiftCounts,
     customers,
     sales,
+    saleReceiptAliases,
     saleItems,
     payments,
     saleDiscounts,
@@ -50070,6 +53246,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     featureFlags,
     posCarts,
     posCartItems,
+    syncSnapshotStagingScopeIdx,
     categoriesSearchIdx,
     productsNameSearchIdx,
     productsSkuSearchIdx,
@@ -50082,9 +53259,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     inventoryBalancesLowStockIdx,
     stockCountsStatusIdx,
     registersBranchIdx,
+    registerClaimsUnresolvedIdx,
+    registerClaimsDeviceIdx,
     shiftsActiveIdx,
     cashMovementsShiftIdx,
     salesHistoryIdx,
+    saleReceiptAliasesLookupIdx,
     paymentsShiftIdx,
     receiptPrintJobsDueIdx,
     receiptPrintJobsRegisterIdx,
@@ -50107,9 +53287,19 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     reasonCodesScopeIdx,
     featureFlagsScopeIdx,
     posCartsDeviceStatusIdx,
+    posCartsOwnerStatusIdx,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'sync_outbox',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('sync_outbox_dependencies', kind: UpdateKind.delete),
+      ],
+    ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'roles',
@@ -50151,6 +53341,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('product_images', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'sales',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('sale_receipt_aliases', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -50361,6 +53558,7 @@ typedef $$SyncOutboxEntriesTableCreateCompanionBuilder =
       required String commandType,
       required String aggregateType,
       required String aggregateId,
+      Value<String?> causalGroupId,
       Value<String?> dependsOnOperationId,
       required String payloadJson,
       required String status,
@@ -50380,6 +53578,7 @@ typedef $$SyncOutboxEntriesTableUpdateCompanionBuilder =
       Value<String> commandType,
       Value<String> aggregateType,
       Value<String> aggregateId,
+      Value<String?> causalGroupId,
       Value<String?> dependsOnOperationId,
       Value<String> payloadJson,
       Value<String> status,
@@ -50432,6 +53631,11 @@ class $$SyncOutboxEntriesTableFilterComposer
 
   ColumnFilters<String> get aggregateId => $composableBuilder(
     column: $table.aggregateId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get causalGroupId => $composableBuilder(
+    column: $table.causalGroupId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -50520,6 +53724,11 @@ class $$SyncOutboxEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get causalGroupId => $composableBuilder(
+    column: $table.causalGroupId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get dependsOnOperationId => $composableBuilder(
     column: $table.dependsOnOperationId,
     builder: (column) => ColumnOrderings(column),
@@ -50603,6 +53812,11 @@ class $$SyncOutboxEntriesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get causalGroupId => $composableBuilder(
+    column: $table.causalGroupId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get dependsOnOperationId => $composableBuilder(
     column: $table.dependsOnOperationId,
     builder: (column) => column,
@@ -50683,6 +53897,7 @@ class $$SyncOutboxEntriesTableTableManager
                 Value<String> commandType = const Value.absent(),
                 Value<String> aggregateType = const Value.absent(),
                 Value<String> aggregateId = const Value.absent(),
+                Value<String?> causalGroupId = const Value.absent(),
                 Value<String?> dependsOnOperationId = const Value.absent(),
                 Value<String> payloadJson = const Value.absent(),
                 Value<String> status = const Value.absent(),
@@ -50700,6 +53915,7 @@ class $$SyncOutboxEntriesTableTableManager
                 commandType: commandType,
                 aggregateType: aggregateType,
                 aggregateId: aggregateId,
+                causalGroupId: causalGroupId,
                 dependsOnOperationId: dependsOnOperationId,
                 payloadJson: payloadJson,
                 status: status,
@@ -50719,6 +53935,7 @@ class $$SyncOutboxEntriesTableTableManager
                 required String commandType,
                 required String aggregateType,
                 required String aggregateId,
+                Value<String?> causalGroupId = const Value.absent(),
                 Value<String?> dependsOnOperationId = const Value.absent(),
                 required String payloadJson,
                 required String status,
@@ -50736,6 +53953,7 @@ class $$SyncOutboxEntriesTableTableManager
                 commandType: commandType,
                 aggregateType: aggregateType,
                 aggregateId: aggregateId,
+                causalGroupId: causalGroupId,
                 dependsOnOperationId: dependsOnOperationId,
                 payloadJson: payloadJson,
                 status: status,
@@ -50771,12 +53989,420 @@ typedef $$SyncOutboxEntriesTableProcessedTableManager =
       SyncOutboxEntry,
       PrefetchHooks Function()
     >;
+typedef $$SyncOutboxDependenciesTableCreateCompanionBuilder =
+    SyncOutboxDependenciesCompanion Function({
+      required String operationId,
+      required String dependsOnOperationId,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$SyncOutboxDependenciesTableUpdateCompanionBuilder =
+    SyncOutboxDependenciesCompanion Function({
+      Value<String> operationId,
+      Value<String> dependsOnOperationId,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$SyncOutboxDependenciesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $SyncOutboxDependenciesTable,
+          SyncOutboxDependency
+        > {
+  $$SyncOutboxDependenciesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $SyncOutboxEntriesTable _operationIdTable(_$AppDatabase db) =>
+      db.syncOutboxEntries.createAlias(
+        $_aliasNameGenerator(
+          db.syncOutboxDependencies.operationId,
+          db.syncOutboxEntries.operationId,
+        ),
+      );
+
+  $$SyncOutboxEntriesTableProcessedTableManager get operationId {
+    final $_column = $_itemColumn<String>('operation_id')!;
+
+    final manager = $$SyncOutboxEntriesTableTableManager(
+      $_db,
+      $_db.syncOutboxEntries,
+    ).filter((f) => f.operationId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_operationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $SyncOutboxEntriesTable _dependsOnOperationIdTable(_$AppDatabase db) =>
+      db.syncOutboxEntries.createAlias(
+        $_aliasNameGenerator(
+          db.syncOutboxDependencies.dependsOnOperationId,
+          db.syncOutboxEntries.operationId,
+        ),
+      );
+
+  $$SyncOutboxEntriesTableProcessedTableManager get dependsOnOperationId {
+    final $_column = $_itemColumn<String>('depends_on_operation_id')!;
+
+    final manager = $$SyncOutboxEntriesTableTableManager(
+      $_db,
+      $_db.syncOutboxEntries,
+    ).filter((f) => f.operationId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(
+      _dependsOnOperationIdTable($_db),
+    );
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SyncOutboxDependenciesTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncOutboxDependenciesTable> {
+  $$SyncOutboxDependenciesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$SyncOutboxEntriesTableFilterComposer get operationId {
+    final $$SyncOutboxEntriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.operationId,
+      referencedTable: $db.syncOutboxEntries,
+      getReferencedColumn: (t) => t.operationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SyncOutboxEntriesTableFilterComposer(
+            $db: $db,
+            $table: $db.syncOutboxEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SyncOutboxEntriesTableFilterComposer get dependsOnOperationId {
+    final $$SyncOutboxEntriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.dependsOnOperationId,
+      referencedTable: $db.syncOutboxEntries,
+      getReferencedColumn: (t) => t.operationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SyncOutboxEntriesTableFilterComposer(
+            $db: $db,
+            $table: $db.syncOutboxEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SyncOutboxDependenciesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncOutboxDependenciesTable> {
+  $$SyncOutboxDependenciesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$SyncOutboxEntriesTableOrderingComposer get operationId {
+    final $$SyncOutboxEntriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.operationId,
+      referencedTable: $db.syncOutboxEntries,
+      getReferencedColumn: (t) => t.operationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SyncOutboxEntriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.syncOutboxEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SyncOutboxEntriesTableOrderingComposer get dependsOnOperationId {
+    final $$SyncOutboxEntriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.dependsOnOperationId,
+      referencedTable: $db.syncOutboxEntries,
+      getReferencedColumn: (t) => t.operationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SyncOutboxEntriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.syncOutboxEntries,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SyncOutboxDependenciesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncOutboxDependenciesTable> {
+  $$SyncOutboxDependenciesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$SyncOutboxEntriesTableAnnotationComposer get operationId {
+    final $$SyncOutboxEntriesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.operationId,
+          referencedTable: $db.syncOutboxEntries,
+          getReferencedColumn: (t) => t.operationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SyncOutboxEntriesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.syncOutboxEntries,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$SyncOutboxEntriesTableAnnotationComposer get dependsOnOperationId {
+    final $$SyncOutboxEntriesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.dependsOnOperationId,
+          referencedTable: $db.syncOutboxEntries,
+          getReferencedColumn: (t) => t.operationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SyncOutboxEntriesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.syncOutboxEntries,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$SyncOutboxDependenciesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncOutboxDependenciesTable,
+          SyncOutboxDependency,
+          $$SyncOutboxDependenciesTableFilterComposer,
+          $$SyncOutboxDependenciesTableOrderingComposer,
+          $$SyncOutboxDependenciesTableAnnotationComposer,
+          $$SyncOutboxDependenciesTableCreateCompanionBuilder,
+          $$SyncOutboxDependenciesTableUpdateCompanionBuilder,
+          (SyncOutboxDependency, $$SyncOutboxDependenciesTableReferences),
+          SyncOutboxDependency,
+          PrefetchHooks Function({bool operationId, bool dependsOnOperationId})
+        > {
+  $$SyncOutboxDependenciesTableTableManager(
+    _$AppDatabase db,
+    $SyncOutboxDependenciesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncOutboxDependenciesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SyncOutboxDependenciesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SyncOutboxDependenciesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> operationId = const Value.absent(),
+                Value<String> dependsOnOperationId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncOutboxDependenciesCompanion(
+                operationId: operationId,
+                dependsOnOperationId: dependsOnOperationId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String operationId,
+                required String dependsOnOperationId,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => SyncOutboxDependenciesCompanion.insert(
+                operationId: operationId,
+                dependsOnOperationId: dependsOnOperationId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SyncOutboxDependenciesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({operationId = false, dependsOnOperationId = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (operationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.operationId,
+                                    referencedTable:
+                                        $$SyncOutboxDependenciesTableReferences
+                                            ._operationIdTable(db),
+                                    referencedColumn:
+                                        $$SyncOutboxDependenciesTableReferences
+                                            ._operationIdTable(db)
+                                            .operationId,
+                                  )
+                                  as T;
+                        }
+                        if (dependsOnOperationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.dependsOnOperationId,
+                                    referencedTable:
+                                        $$SyncOutboxDependenciesTableReferences
+                                            ._dependsOnOperationIdTable(db),
+                                    referencedColumn:
+                                        $$SyncOutboxDependenciesTableReferences
+                                            ._dependsOnOperationIdTable(db)
+                                            .operationId,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$SyncOutboxDependenciesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncOutboxDependenciesTable,
+      SyncOutboxDependency,
+      $$SyncOutboxDependenciesTableFilterComposer,
+      $$SyncOutboxDependenciesTableOrderingComposer,
+      $$SyncOutboxDependenciesTableAnnotationComposer,
+      $$SyncOutboxDependenciesTableCreateCompanionBuilder,
+      $$SyncOutboxDependenciesTableUpdateCompanionBuilder,
+      (SyncOutboxDependency, $$SyncOutboxDependenciesTableReferences),
+      SyncOutboxDependency,
+      PrefetchHooks Function({bool operationId, bool dependsOnOperationId})
+    >;
 typedef $$SyncCursorsTableCreateCompanionBuilder =
     SyncCursorsCompanion Function({
       required String cursorKey,
       required String scope,
       Value<String?> organizationId,
       Value<String?> branchId,
+      Value<String?> projection,
+      Value<String?> permissionDigest,
+      Value<String?> actorUserId,
+      Value<String?> deviceId,
       Value<int> lastChangeSequence,
       Value<DateTime?> lastSyncedAt,
       Value<int> rowid,
@@ -50787,6 +54413,10 @@ typedef $$SyncCursorsTableUpdateCompanionBuilder =
       Value<String> scope,
       Value<String?> organizationId,
       Value<String?> branchId,
+      Value<String?> projection,
+      Value<String?> permissionDigest,
+      Value<String?> actorUserId,
+      Value<String?> deviceId,
       Value<int> lastChangeSequence,
       Value<DateTime?> lastSyncedAt,
       Value<int> rowid,
@@ -50818,6 +54448,26 @@ class $$SyncCursorsTableFilterComposer
 
   ColumnFilters<String> get branchId => $composableBuilder(
     column: $table.branchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projection => $composableBuilder(
+    column: $table.projection,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get permissionDigest => $composableBuilder(
+    column: $table.permissionDigest,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get actorUserId => $composableBuilder(
+    column: $table.actorUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -50861,6 +54511,26 @@ class $$SyncCursorsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get projection => $composableBuilder(
+    column: $table.projection,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get permissionDigest => $composableBuilder(
+    column: $table.permissionDigest,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get actorUserId => $composableBuilder(
+    column: $table.actorUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get lastChangeSequence => $composableBuilder(
     column: $table.lastChangeSequence,
     builder: (column) => ColumnOrderings(column),
@@ -50894,6 +54564,24 @@ class $$SyncCursorsTableAnnotationComposer
 
   GeneratedColumn<String> get branchId =>
       $composableBuilder(column: $table.branchId, builder: (column) => column);
+
+  GeneratedColumn<String> get projection => $composableBuilder(
+    column: $table.projection,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get permissionDigest => $composableBuilder(
+    column: $table.permissionDigest,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get actorUserId => $composableBuilder(
+    column: $table.actorUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
 
   GeneratedColumn<int> get lastChangeSequence => $composableBuilder(
     column: $table.lastChangeSequence,
@@ -50941,6 +54629,10 @@ class $$SyncCursorsTableTableManager
                 Value<String> scope = const Value.absent(),
                 Value<String?> organizationId = const Value.absent(),
                 Value<String?> branchId = const Value.absent(),
+                Value<String?> projection = const Value.absent(),
+                Value<String?> permissionDigest = const Value.absent(),
+                Value<String?> actorUserId = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
                 Value<int> lastChangeSequence = const Value.absent(),
                 Value<DateTime?> lastSyncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -50949,6 +54641,10 @@ class $$SyncCursorsTableTableManager
                 scope: scope,
                 organizationId: organizationId,
                 branchId: branchId,
+                projection: projection,
+                permissionDigest: permissionDigest,
+                actorUserId: actorUserId,
+                deviceId: deviceId,
                 lastChangeSequence: lastChangeSequence,
                 lastSyncedAt: lastSyncedAt,
                 rowid: rowid,
@@ -50959,6 +54655,10 @@ class $$SyncCursorsTableTableManager
                 required String scope,
                 Value<String?> organizationId = const Value.absent(),
                 Value<String?> branchId = const Value.absent(),
+                Value<String?> projection = const Value.absent(),
+                Value<String?> permissionDigest = const Value.absent(),
+                Value<String?> actorUserId = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
                 Value<int> lastChangeSequence = const Value.absent(),
                 Value<DateTime?> lastSyncedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -50967,6 +54667,10 @@ class $$SyncCursorsTableTableManager
                 scope: scope,
                 organizationId: organizationId,
                 branchId: branchId,
+                projection: projection,
+                permissionDigest: permissionDigest,
+                actorUserId: actorUserId,
+                deviceId: deviceId,
                 lastChangeSequence: lastChangeSequence,
                 lastSyncedAt: lastSyncedAt,
                 rowid: rowid,
@@ -50994,6 +54698,311 @@ typedef $$SyncCursorsTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursor>,
       ),
       SyncCursor,
+      PrefetchHooks Function()
+    >;
+typedef $$SyncSnapshotStagingRecordsTableCreateCompanionBuilder =
+    SyncSnapshotStagingRecordsCompanion Function({
+      required String snapshotToken,
+      required String organizationId,
+      required String branchId,
+      required String collection,
+      required String recordId,
+      required String payloadJson,
+      required String pageChecksum,
+      required int watermark,
+      required DateTime stagedAt,
+      Value<int> rowid,
+    });
+typedef $$SyncSnapshotStagingRecordsTableUpdateCompanionBuilder =
+    SyncSnapshotStagingRecordsCompanion Function({
+      Value<String> snapshotToken,
+      Value<String> organizationId,
+      Value<String> branchId,
+      Value<String> collection,
+      Value<String> recordId,
+      Value<String> payloadJson,
+      Value<String> pageChecksum,
+      Value<int> watermark,
+      Value<DateTime> stagedAt,
+      Value<int> rowid,
+    });
+
+class $$SyncSnapshotStagingRecordsTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncSnapshotStagingRecordsTable> {
+  $$SyncSnapshotStagingRecordsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get snapshotToken => $composableBuilder(
+    column: $table.snapshotToken,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get organizationId => $composableBuilder(
+    column: $table.organizationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get collection => $composableBuilder(
+    column: $table.collection,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pageChecksum => $composableBuilder(
+    column: $table.pageChecksum,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get watermark => $composableBuilder(
+    column: $table.watermark,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get stagedAt => $composableBuilder(
+    column: $table.stagedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncSnapshotStagingRecordsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncSnapshotStagingRecordsTable> {
+  $$SyncSnapshotStagingRecordsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get snapshotToken => $composableBuilder(
+    column: $table.snapshotToken,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get organizationId => $composableBuilder(
+    column: $table.organizationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branchId => $composableBuilder(
+    column: $table.branchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get collection => $composableBuilder(
+    column: $table.collection,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recordId => $composableBuilder(
+    column: $table.recordId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pageChecksum => $composableBuilder(
+    column: $table.pageChecksum,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get watermark => $composableBuilder(
+    column: $table.watermark,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get stagedAt => $composableBuilder(
+    column: $table.stagedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncSnapshotStagingRecordsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncSnapshotStagingRecordsTable> {
+  $$SyncSnapshotStagingRecordsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get snapshotToken => $composableBuilder(
+    column: $table.snapshotToken,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get organizationId => $composableBuilder(
+    column: $table.organizationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get branchId =>
+      $composableBuilder(column: $table.branchId, builder: (column) => column);
+
+  GeneratedColumn<String> get collection => $composableBuilder(
+    column: $table.collection,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get recordId =>
+      $composableBuilder(column: $table.recordId, builder: (column) => column);
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pageChecksum => $composableBuilder(
+    column: $table.pageChecksum,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get watermark =>
+      $composableBuilder(column: $table.watermark, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get stagedAt =>
+      $composableBuilder(column: $table.stagedAt, builder: (column) => column);
+}
+
+class $$SyncSnapshotStagingRecordsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncSnapshotStagingRecordsTable,
+          SyncSnapshotStagingRecord,
+          $$SyncSnapshotStagingRecordsTableFilterComposer,
+          $$SyncSnapshotStagingRecordsTableOrderingComposer,
+          $$SyncSnapshotStagingRecordsTableAnnotationComposer,
+          $$SyncSnapshotStagingRecordsTableCreateCompanionBuilder,
+          $$SyncSnapshotStagingRecordsTableUpdateCompanionBuilder,
+          (
+            SyncSnapshotStagingRecord,
+            BaseReferences<
+              _$AppDatabase,
+              $SyncSnapshotStagingRecordsTable,
+              SyncSnapshotStagingRecord
+            >,
+          ),
+          SyncSnapshotStagingRecord,
+          PrefetchHooks Function()
+        > {
+  $$SyncSnapshotStagingRecordsTableTableManager(
+    _$AppDatabase db,
+    $SyncSnapshotStagingRecordsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncSnapshotStagingRecordsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$SyncSnapshotStagingRecordsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SyncSnapshotStagingRecordsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> snapshotToken = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> collection = const Value.absent(),
+                Value<String> recordId = const Value.absent(),
+                Value<String> payloadJson = const Value.absent(),
+                Value<String> pageChecksum = const Value.absent(),
+                Value<int> watermark = const Value.absent(),
+                Value<DateTime> stagedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncSnapshotStagingRecordsCompanion(
+                snapshotToken: snapshotToken,
+                organizationId: organizationId,
+                branchId: branchId,
+                collection: collection,
+                recordId: recordId,
+                payloadJson: payloadJson,
+                pageChecksum: pageChecksum,
+                watermark: watermark,
+                stagedAt: stagedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String snapshotToken,
+                required String organizationId,
+                required String branchId,
+                required String collection,
+                required String recordId,
+                required String payloadJson,
+                required String pageChecksum,
+                required int watermark,
+                required DateTime stagedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => SyncSnapshotStagingRecordsCompanion.insert(
+                snapshotToken: snapshotToken,
+                organizationId: organizationId,
+                branchId: branchId,
+                collection: collection,
+                recordId: recordId,
+                payloadJson: payloadJson,
+                pageChecksum: pageChecksum,
+                watermark: watermark,
+                stagedAt: stagedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncSnapshotStagingRecordsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncSnapshotStagingRecordsTable,
+      SyncSnapshotStagingRecord,
+      $$SyncSnapshotStagingRecordsTableFilterComposer,
+      $$SyncSnapshotStagingRecordsTableOrderingComposer,
+      $$SyncSnapshotStagingRecordsTableAnnotationComposer,
+      $$SyncSnapshotStagingRecordsTableCreateCompanionBuilder,
+      $$SyncSnapshotStagingRecordsTableUpdateCompanionBuilder,
+      (
+        SyncSnapshotStagingRecord,
+        BaseReferences<
+          _$AppDatabase,
+          $SyncSnapshotStagingRecordsTable,
+          SyncSnapshotStagingRecord
+        >,
+      ),
+      SyncSnapshotStagingRecord,
       PrefetchHooks Function()
     >;
 typedef $$SyncConflictsTableCreateCompanionBuilder =
@@ -52413,6 +56422,27 @@ final class $$OrganizationsTableReferences
     );
   }
 
+  static MultiTypedResultKey<$RegisterClaimsTable, List<RegisterClaimRecord>>
+  _registerClaimsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.registerClaims,
+    aliasName: $_aliasNameGenerator(
+      db.organizations.id,
+      db.registerClaims.organizationId,
+    ),
+  );
+
+  $$RegisterClaimsTableProcessedTableManager get registerClaimsRefs {
+    final manager = $$RegisterClaimsTableTableManager(
+      $_db,
+      $_db.registerClaims,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_registerClaimsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$ShiftsTable, List<Shift>> _shiftsRefsTable(
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
@@ -52515,6 +56545,30 @@ final class $$OrganizationsTableReferences
     ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_salesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SaleReceiptAliasesTable, List<SaleReceiptAliase>>
+  _saleReceiptAliasesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.saleReceiptAliases,
+        aliasName: $_aliasNameGenerator(
+          db.organizations.id,
+          db.saleReceiptAliases.organizationId,
+        ),
+      );
+
+  $$SaleReceiptAliasesTableProcessedTableManager get saleReceiptAliasesRefs {
+    final manager = $$SaleReceiptAliasesTableTableManager(
+      $_db,
+      $_db.saleReceiptAliases,
+    ).filter((f) => f.organizationId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _saleReceiptAliasesRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -53702,6 +57756,31 @@ class $$OrganizationsTableFilterComposer
     return f(composer);
   }
 
+  Expression<bool> registerClaimsRefs(
+    Expression<bool> Function($$RegisterClaimsTableFilterComposer f) f,
+  ) {
+    final $$RegisterClaimsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableFilterComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<bool> shiftsRefs(
     Expression<bool> Function($$ShiftsTableFilterComposer f) f,
   ) {
@@ -53818,6 +57897,31 @@ class $$OrganizationsTableFilterComposer
           }) => $$SalesTableFilterComposer(
             $db: $db,
             $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> saleReceiptAliasesRefs(
+    Expression<bool> Function($$SaleReceiptAliasesTableFilterComposer f) f,
+  ) {
+    final $$SaleReceiptAliasesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.saleReceiptAliases,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SaleReceiptAliasesTableFilterComposer(
+            $db: $db,
+            $table: $db.saleReceiptAliases,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -55115,6 +59219,31 @@ class $$OrganizationsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> registerClaimsRefs<T extends Object>(
+    Expression<T> Function($$RegisterClaimsTableAnnotationComposer a) f,
+  ) {
+    final $$RegisterClaimsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.organizationId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> shiftsRefs<T extends Object>(
     Expression<T> Function($$ShiftsTableAnnotationComposer a) f,
   ) {
@@ -55237,6 +59366,32 @@ class $$OrganizationsTableAnnotationComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<T> saleReceiptAliasesRefs<T extends Object>(
+    Expression<T> Function($$SaleReceiptAliasesTableAnnotationComposer a) f,
+  ) {
+    final $$SaleReceiptAliasesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.saleReceiptAliases,
+          getReferencedColumn: (t) => t.organizationId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SaleReceiptAliasesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.saleReceiptAliases,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 
@@ -56030,11 +60185,13 @@ class $$OrganizationsTableTableManager
             bool stockCountsRefs,
             bool stockCountItemsRefs,
             bool registersRefs,
+            bool registerClaimsRefs,
             bool shiftsRefs,
             bool cashMovementsRefs,
             bool shiftCountsRefs,
             bool customersRefs,
             bool salesRefs,
+            bool saleReceiptAliasesRefs,
             bool saleItemsRefs,
             bool paymentsRefs,
             bool saleDiscountsRefs,
@@ -56150,11 +60307,13 @@ class $$OrganizationsTableTableManager
                 stockCountsRefs = false,
                 stockCountItemsRefs = false,
                 registersRefs = false,
+                registerClaimsRefs = false,
                 shiftsRefs = false,
                 cashMovementsRefs = false,
                 shiftCountsRefs = false,
                 customersRefs = false,
                 salesRefs = false,
+                saleReceiptAliasesRefs = false,
                 saleItemsRefs = false,
                 paymentsRefs = false,
                 saleDiscountsRefs = false,
@@ -56207,11 +60366,13 @@ class $$OrganizationsTableTableManager
                     if (stockCountsRefs) db.stockCounts,
                     if (stockCountItemsRefs) db.stockCountItems,
                     if (registersRefs) db.registers,
+                    if (registerClaimsRefs) db.registerClaims,
                     if (shiftsRefs) db.shifts,
                     if (cashMovementsRefs) db.cashMovements,
                     if (shiftCountsRefs) db.shiftCounts,
                     if (customersRefs) db.customers,
                     if (salesRefs) db.sales,
+                    if (saleReceiptAliasesRefs) db.saleReceiptAliases,
                     if (saleItemsRefs) db.saleItems,
                     if (paymentsRefs) db.payments,
                     if (saleDiscountsRefs) db.saleDiscounts,
@@ -56624,6 +60785,27 @@ class $$OrganizationsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (registerClaimsRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          RegisterClaimRecord
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._registerClaimsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).registerClaimsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (shiftsRefs)
                         await $_getPrefetchedData<
                           Organization,
@@ -56723,6 +60905,27 @@ class $$OrganizationsTableTableManager
                                 table,
                                 p0,
                               ).salesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.organizationId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (saleReceiptAliasesRefs)
+                        await $_getPrefetchedData<
+                          Organization,
+                          $OrganizationsTable,
+                          SaleReceiptAliase
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableReferences
+                              ._saleReceiptAliasesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).saleReceiptAliasesRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.organizationId == item.id,
@@ -57398,11 +61601,13 @@ typedef $$OrganizationsTableProcessedTableManager =
         bool stockCountsRefs,
         bool stockCountItemsRefs,
         bool registersRefs,
+        bool registerClaimsRefs,
         bool shiftsRefs,
         bool cashMovementsRefs,
         bool shiftCountsRefs,
         bool customersRefs,
         bool salesRefs,
+        bool saleReceiptAliasesRefs,
         bool saleItemsRefs,
         bool paymentsRefs,
         bool saleDiscountsRefs,
@@ -57700,6 +61905,24 @@ final class $$BranchesTableReferences
     );
   }
 
+  static MultiTypedResultKey<$RegisterClaimsTable, List<RegisterClaimRecord>>
+  _registerClaimsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.registerClaims,
+    aliasName: $_aliasNameGenerator(db.branches.id, db.registerClaims.branchId),
+  );
+
+  $$RegisterClaimsTableProcessedTableManager get registerClaimsRefs {
+    final manager = $$RegisterClaimsTableTableManager(
+      $_db,
+      $_db.registerClaims,
+    ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_registerClaimsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$ShiftsTable, List<Shift>> _shiftsRefsTable(
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
@@ -57769,6 +61992,30 @@ final class $$BranchesTableReferences
     ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_salesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SaleReceiptAliasesTable, List<SaleReceiptAliase>>
+  _saleReceiptAliasesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.saleReceiptAliases,
+        aliasName: $_aliasNameGenerator(
+          db.branches.id,
+          db.saleReceiptAliases.branchId,
+        ),
+      );
+
+  $$SaleReceiptAliasesTableProcessedTableManager get saleReceiptAliasesRefs {
+    final manager = $$SaleReceiptAliasesTableTableManager(
+      $_db,
+      $_db.saleReceiptAliases,
+    ).filter((f) => f.branchId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _saleReceiptAliasesRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -58526,6 +62773,31 @@ class $$BranchesTableFilterComposer
     return f(composer);
   }
 
+  Expression<bool> registerClaimsRefs(
+    Expression<bool> Function($$RegisterClaimsTableFilterComposer f) f,
+  ) {
+    final $$RegisterClaimsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableFilterComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<bool> shiftsRefs(
     Expression<bool> Function($$ShiftsTableFilterComposer f) f,
   ) {
@@ -58617,6 +62889,31 @@ class $$BranchesTableFilterComposer
           }) => $$SalesTableFilterComposer(
             $db: $db,
             $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> saleReceiptAliasesRefs(
+    Expression<bool> Function($$SaleReceiptAliasesTableFilterComposer f) f,
+  ) {
+    final $$SaleReceiptAliasesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.saleReceiptAliases,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SaleReceiptAliasesTableFilterComposer(
+            $db: $db,
+            $table: $db.saleReceiptAliases,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -59613,6 +63910,31 @@ class $$BranchesTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> registerClaimsRefs<T extends Object>(
+    Expression<T> Function($$RegisterClaimsTableAnnotationComposer a) f,
+  ) {
+    final $$RegisterClaimsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.branchId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> shiftsRefs<T extends Object>(
     Expression<T> Function($$ShiftsTableAnnotationComposer a) f,
   ) {
@@ -59710,6 +64032,32 @@ class $$BranchesTableAnnotationComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<T> saleReceiptAliasesRefs<T extends Object>(
+    Expression<T> Function($$SaleReceiptAliasesTableAnnotationComposer a) f,
+  ) {
+    final $$SaleReceiptAliasesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.saleReceiptAliases,
+          getReferencedColumn: (t) => t.branchId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SaleReceiptAliasesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.saleReceiptAliases,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 
@@ -60214,10 +64562,12 @@ class $$BranchesTableTableManager
             bool inventoryBalancesRefs,
             bool stockCountsRefs,
             bool registersRefs,
+            bool registerClaimsRefs,
             bool shiftsRefs,
             bool cashMovementsRefs,
             bool shiftCountsRefs,
             bool salesRefs,
+            bool saleReceiptAliasesRefs,
             bool saleItemsRefs,
             bool paymentsRefs,
             bool saleDiscountsRefs,
@@ -60405,10 +64755,12 @@ class $$BranchesTableTableManager
                 inventoryBalancesRefs = false,
                 stockCountsRefs = false,
                 registersRefs = false,
+                registerClaimsRefs = false,
                 shiftsRefs = false,
                 cashMovementsRefs = false,
                 shiftCountsRefs = false,
                 salesRefs = false,
+                saleReceiptAliasesRefs = false,
                 saleItemsRefs = false,
                 paymentsRefs = false,
                 saleDiscountsRefs = false,
@@ -60440,10 +64792,12 @@ class $$BranchesTableTableManager
                     if (inventoryBalancesRefs) db.inventoryBalances,
                     if (stockCountsRefs) db.stockCounts,
                     if (registersRefs) db.registers,
+                    if (registerClaimsRefs) db.registerClaims,
                     if (shiftsRefs) db.shifts,
                     if (cashMovementsRefs) db.cashMovements,
                     if (shiftCountsRefs) db.shiftCounts,
                     if (salesRefs) db.sales,
+                    if (saleReceiptAliasesRefs) db.saleReceiptAliases,
                     if (saleItemsRefs) db.saleItems,
                     if (paymentsRefs) db.payments,
                     if (saleDiscountsRefs) db.saleDiscounts,
@@ -60666,6 +65020,27 @@ class $$BranchesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (registerClaimsRefs)
+                        await $_getPrefetchedData<
+                          Branche,
+                          $BranchesTable,
+                          RegisterClaimRecord
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BranchesTableReferences
+                              ._registerClaimsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BranchesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).registerClaimsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.branchId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (shiftsRefs)
                         await $_getPrefetchedData<
                           Branche,
@@ -60744,6 +65119,27 @@ class $$BranchesTableTableManager
                                 table,
                                 p0,
                               ).salesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.branchId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (saleReceiptAliasesRefs)
+                        await $_getPrefetchedData<
+                          Branche,
+                          $BranchesTable,
+                          SaleReceiptAliase
+                        >(
+                          currentTable: table,
+                          referencedTable: $$BranchesTableReferences
+                              ._saleReceiptAliasesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$BranchesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).saleReceiptAliasesRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.branchId == item.id,
@@ -61179,10 +65575,12 @@ typedef $$BranchesTableProcessedTableManager =
         bool inventoryBalancesRefs,
         bool stockCountsRefs,
         bool registersRefs,
+        bool registerClaimsRefs,
         bool shiftsRefs,
         bool cashMovementsRefs,
         bool shiftCountsRefs,
         bool salesRefs,
+        bool saleReceiptAliasesRefs,
         bool saleItemsRefs,
         bool paymentsRefs,
         bool saleDiscountsRefs,
@@ -76346,6 +80744,1387 @@ typedef $$RegistersTableProcessedTableManager =
         bool receiptPrintJobsRefs,
       })
     >;
+typedef $$RegisterClaimsTableCreateCompanionBuilder =
+    RegisterClaimsCompanion Function({
+      required String id,
+      required String organizationId,
+      required String branchId,
+      required String requestedRegisterId,
+      Value<String?> resolvedRegisterId,
+      required String deviceId,
+      required String claimedByUserId,
+      required String status,
+      Value<String?> rejectionCode,
+      Value<String?> rejectionMessage,
+      Value<String?> resolutionOperationId,
+      Value<String?> resolvedByUserId,
+      Value<DateTime?> resolvedAt,
+      Value<String?> releasedByUserId,
+      Value<DateTime?> releasedAt,
+      Value<int> version,
+      required DateTime createdAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$RegisterClaimsTableUpdateCompanionBuilder =
+    RegisterClaimsCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String> branchId,
+      Value<String> requestedRegisterId,
+      Value<String?> resolvedRegisterId,
+      Value<String> deviceId,
+      Value<String> claimedByUserId,
+      Value<String> status,
+      Value<String?> rejectionCode,
+      Value<String?> rejectionMessage,
+      Value<String?> resolutionOperationId,
+      Value<String?> resolvedByUserId,
+      Value<DateTime?> resolvedAt,
+      Value<String?> releasedByUserId,
+      Value<DateTime?> releasedAt,
+      Value<int> version,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$RegisterClaimsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $RegisterClaimsTable,
+          RegisterClaimRecord
+        > {
+  $$RegisterClaimsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.registerClaims.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BranchesTable _branchIdTable(_$AppDatabase db) =>
+      db.branches.createAlias(
+        $_aliasNameGenerator(db.registerClaims.branchId, db.branches.id),
+      );
+
+  $$BranchesTableProcessedTableManager get branchId {
+    final $_column = $_itemColumn<String>('branch_id')!;
+
+    final manager = $$BranchesTableTableManager(
+      $_db,
+      $_db.branches,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegistersTable _requestedRegisterIdTable(_$AppDatabase db) =>
+      db.registers.createAlias(
+        $_aliasNameGenerator(
+          db.registerClaims.requestedRegisterId,
+          db.registers.id,
+        ),
+      );
+
+  $$RegistersTableProcessedTableManager get requestedRegisterId {
+    final $_column = $_itemColumn<String>('requested_register_id')!;
+
+    final manager = $$RegistersTableTableManager(
+      $_db,
+      $_db.registers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_requestedRegisterIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegistersTable _resolvedRegisterIdTable(_$AppDatabase db) =>
+      db.registers.createAlias(
+        $_aliasNameGenerator(
+          db.registerClaims.resolvedRegisterId,
+          db.registers.id,
+        ),
+      );
+
+  $$RegistersTableProcessedTableManager? get resolvedRegisterId {
+    final $_column = $_itemColumn<String>('resolved_register_id');
+    if ($_column == null) return null;
+    final manager = $$RegistersTableTableManager(
+      $_db,
+      $_db.registers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_resolvedRegisterIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$ShiftsTable, List<Shift>> _shiftsRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.shifts,
+    aliasName: $_aliasNameGenerator(
+      db.registerClaims.id,
+      db.shifts.registerClaimId,
+    ),
+  );
+
+  $$ShiftsTableProcessedTableManager get shiftsRefs {
+    final manager = $$ShiftsTableTableManager($_db, $_db.shifts).filter(
+      (f) => f.registerClaimId.id.sqlEquals($_itemColumn<String>('id')!),
+    );
+
+    final cache = $_typedResult.readTableOrNull(_shiftsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$CashMovementsTable, List<CashMovement>>
+  _cashMovementsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.cashMovements,
+    aliasName: $_aliasNameGenerator(
+      db.registerClaims.id,
+      db.cashMovements.registerClaimId,
+    ),
+  );
+
+  $$CashMovementsTableProcessedTableManager get cashMovementsRefs {
+    final manager = $$CashMovementsTableTableManager($_db, $_db.cashMovements)
+        .filter(
+          (f) => f.registerClaimId.id.sqlEquals($_itemColumn<String>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(_cashMovementsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SalesTable, List<Sale>> _salesRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.sales,
+    aliasName: $_aliasNameGenerator(
+      db.registerClaims.id,
+      db.sales.registerClaimId,
+    ),
+  );
+
+  $$SalesTableProcessedTableManager get salesRefs {
+    final manager = $$SalesTableTableManager($_db, $_db.sales).filter(
+      (f) => f.registerClaimId.id.sqlEquals($_itemColumn<String>('id')!),
+    );
+
+    final cache = $_typedResult.readTableOrNull(_salesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SaleReceiptAliasesTable, List<SaleReceiptAliase>>
+  _saleReceiptAliasesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.saleReceiptAliases,
+        aliasName: $_aliasNameGenerator(
+          db.registerClaims.id,
+          db.saleReceiptAliases.registerClaimId,
+        ),
+      );
+
+  $$SaleReceiptAliasesTableProcessedTableManager get saleReceiptAliasesRefs {
+    final manager =
+        $$SaleReceiptAliasesTableTableManager(
+          $_db,
+          $_db.saleReceiptAliases,
+        ).filter(
+          (f) => f.registerClaimId.id.sqlEquals($_itemColumn<String>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _saleReceiptAliasesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ReceiptPrintJobsTable, List<ReceiptPrintJob>>
+  _receiptPrintJobsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.receiptPrintJobs,
+    aliasName: $_aliasNameGenerator(
+      db.registerClaims.id,
+      db.receiptPrintJobs.registerClaimId,
+    ),
+  );
+
+  $$ReceiptPrintJobsTableProcessedTableManager get receiptPrintJobsRefs {
+    final manager =
+        $$ReceiptPrintJobsTableTableManager($_db, $_db.receiptPrintJobs).filter(
+          (f) => f.registerClaimId.id.sqlEquals($_itemColumn<String>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _receiptPrintJobsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$RegisterClaimsTableFilterComposer
+    extends Composer<_$AppDatabase, $RegisterClaimsTable> {
+  $$RegisterClaimsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get claimedByUserId => $composableBuilder(
+    column: $table.claimedByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rejectionCode => $composableBuilder(
+    column: $table.rejectionCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rejectionMessage => $composableBuilder(
+    column: $table.rejectionMessage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resolutionOperationId => $composableBuilder(
+    column: $table.resolutionOperationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get resolvedByUserId => $composableBuilder(
+    column: $table.resolvedByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get releasedByUserId => $composableBuilder(
+    column: $table.releasedByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get releasedAt => $composableBuilder(
+    column: $table.releasedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistersTableFilterComposer get requestedRegisterId {
+    final $$RegistersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.requestedRegisterId,
+      referencedTable: $db.registers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistersTableFilterComposer(
+            $db: $db,
+            $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistersTableFilterComposer get resolvedRegisterId {
+    final $$RegistersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.resolvedRegisterId,
+      referencedTable: $db.registers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistersTableFilterComposer(
+            $db: $db,
+            $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> shiftsRefs(
+    Expression<bool> Function($$ShiftsTableFilterComposer f) f,
+  ) {
+    final $$ShiftsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.shifts,
+      getReferencedColumn: (t) => t.registerClaimId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftsTableFilterComposer(
+            $db: $db,
+            $table: $db.shifts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> cashMovementsRefs(
+    Expression<bool> Function($$CashMovementsTableFilterComposer f) f,
+  ) {
+    final $$CashMovementsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.cashMovements,
+      getReferencedColumn: (t) => t.registerClaimId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CashMovementsTableFilterComposer(
+            $db: $db,
+            $table: $db.cashMovements,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> salesRefs(
+    Expression<bool> Function($$SalesTableFilterComposer f) f,
+  ) {
+    final $$SalesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.registerClaimId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableFilterComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> saleReceiptAliasesRefs(
+    Expression<bool> Function($$SaleReceiptAliasesTableFilterComposer f) f,
+  ) {
+    final $$SaleReceiptAliasesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.saleReceiptAliases,
+      getReferencedColumn: (t) => t.registerClaimId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SaleReceiptAliasesTableFilterComposer(
+            $db: $db,
+            $table: $db.saleReceiptAliases,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> receiptPrintJobsRefs(
+    Expression<bool> Function($$ReceiptPrintJobsTableFilterComposer f) f,
+  ) {
+    final $$ReceiptPrintJobsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.registerClaimId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableFilterComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$RegisterClaimsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RegisterClaimsTable> {
+  $$RegisterClaimsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get claimedByUserId => $composableBuilder(
+    column: $table.claimedByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rejectionCode => $composableBuilder(
+    column: $table.rejectionCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rejectionMessage => $composableBuilder(
+    column: $table.rejectionMessage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resolutionOperationId => $composableBuilder(
+    column: $table.resolutionOperationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get resolvedByUserId => $composableBuilder(
+    column: $table.resolvedByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get releasedByUserId => $composableBuilder(
+    column: $table.releasedByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get releasedAt => $composableBuilder(
+    column: $table.releasedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableOrderingComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistersTableOrderingComposer get requestedRegisterId {
+    final $$RegistersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.requestedRegisterId,
+      referencedTable: $db.registers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistersTableOrderingComposer(
+            $db: $db,
+            $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistersTableOrderingComposer get resolvedRegisterId {
+    final $$RegistersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.resolvedRegisterId,
+      referencedTable: $db.registers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistersTableOrderingComposer(
+            $db: $db,
+            $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RegisterClaimsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RegisterClaimsTable> {
+  $$RegisterClaimsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get claimedByUserId => $composableBuilder(
+    column: $table.claimedByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get rejectionCode => $composableBuilder(
+    column: $table.rejectionCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get rejectionMessage => $composableBuilder(
+    column: $table.rejectionMessage,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resolutionOperationId => $composableBuilder(
+    column: $table.resolutionOperationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get resolvedByUserId => $composableBuilder(
+    column: $table.resolvedByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get resolvedAt => $composableBuilder(
+    column: $table.resolvedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get releasedByUserId => $composableBuilder(
+    column: $table.releasedByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get releasedAt => $composableBuilder(
+    column: $table.releasedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistersTableAnnotationComposer get requestedRegisterId {
+    final $$RegistersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.requestedRegisterId,
+      referencedTable: $db.registers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegistersTableAnnotationComposer get resolvedRegisterId {
+    final $$RegistersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.resolvedRegisterId,
+      referencedTable: $db.registers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegistersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> shiftsRefs<T extends Object>(
+    Expression<T> Function($$ShiftsTableAnnotationComposer a) f,
+  ) {
+    final $$ShiftsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.shifts,
+      getReferencedColumn: (t) => t.registerClaimId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ShiftsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.shifts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> cashMovementsRefs<T extends Object>(
+    Expression<T> Function($$CashMovementsTableAnnotationComposer a) f,
+  ) {
+    final $$CashMovementsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.cashMovements,
+      getReferencedColumn: (t) => t.registerClaimId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CashMovementsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.cashMovements,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> salesRefs<T extends Object>(
+    Expression<T> Function($$SalesTableAnnotationComposer a) f,
+  ) {
+    final $$SalesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.registerClaimId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> saleReceiptAliasesRefs<T extends Object>(
+    Expression<T> Function($$SaleReceiptAliasesTableAnnotationComposer a) f,
+  ) {
+    final $$SaleReceiptAliasesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.saleReceiptAliases,
+          getReferencedColumn: (t) => t.registerClaimId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SaleReceiptAliasesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.saleReceiptAliases,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> receiptPrintJobsRefs<T extends Object>(
+    Expression<T> Function($$ReceiptPrintJobsTableAnnotationComposer a) f,
+  ) {
+    final $$ReceiptPrintJobsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.receiptPrintJobs,
+      getReferencedColumn: (t) => t.registerClaimId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ReceiptPrintJobsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.receiptPrintJobs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$RegisterClaimsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RegisterClaimsTable,
+          RegisterClaimRecord,
+          $$RegisterClaimsTableFilterComposer,
+          $$RegisterClaimsTableOrderingComposer,
+          $$RegisterClaimsTableAnnotationComposer,
+          $$RegisterClaimsTableCreateCompanionBuilder,
+          $$RegisterClaimsTableUpdateCompanionBuilder,
+          (RegisterClaimRecord, $$RegisterClaimsTableReferences),
+          RegisterClaimRecord,
+          PrefetchHooks Function({
+            bool organizationId,
+            bool branchId,
+            bool requestedRegisterId,
+            bool resolvedRegisterId,
+            bool shiftsRefs,
+            bool cashMovementsRefs,
+            bool salesRefs,
+            bool saleReceiptAliasesRefs,
+            bool receiptPrintJobsRefs,
+          })
+        > {
+  $$RegisterClaimsTableTableManager(
+    _$AppDatabase db,
+    $RegisterClaimsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RegisterClaimsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RegisterClaimsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RegisterClaimsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> requestedRegisterId = const Value.absent(),
+                Value<String?> resolvedRegisterId = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<String> claimedByUserId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String?> rejectionCode = const Value.absent(),
+                Value<String?> rejectionMessage = const Value.absent(),
+                Value<String?> resolutionOperationId = const Value.absent(),
+                Value<String?> resolvedByUserId = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+                Value<String?> releasedByUserId = const Value.absent(),
+                Value<DateTime?> releasedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RegisterClaimsCompanion(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                requestedRegisterId: requestedRegisterId,
+                resolvedRegisterId: resolvedRegisterId,
+                deviceId: deviceId,
+                claimedByUserId: claimedByUserId,
+                status: status,
+                rejectionCode: rejectionCode,
+                rejectionMessage: rejectionMessage,
+                resolutionOperationId: resolutionOperationId,
+                resolvedByUserId: resolvedByUserId,
+                resolvedAt: resolvedAt,
+                releasedByUserId: releasedByUserId,
+                releasedAt: releasedAt,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                required String branchId,
+                required String requestedRegisterId,
+                Value<String?> resolvedRegisterId = const Value.absent(),
+                required String deviceId,
+                required String claimedByUserId,
+                required String status,
+                Value<String?> rejectionCode = const Value.absent(),
+                Value<String?> rejectionMessage = const Value.absent(),
+                Value<String?> resolutionOperationId = const Value.absent(),
+                Value<String?> resolvedByUserId = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+                Value<String?> releasedByUserId = const Value.absent(),
+                Value<DateTime?> releasedAt = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                required DateTime createdAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RegisterClaimsCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                requestedRegisterId: requestedRegisterId,
+                resolvedRegisterId: resolvedRegisterId,
+                deviceId: deviceId,
+                claimedByUserId: claimedByUserId,
+                status: status,
+                rejectionCode: rejectionCode,
+                rejectionMessage: rejectionMessage,
+                resolutionOperationId: resolutionOperationId,
+                resolvedByUserId: resolvedByUserId,
+                resolvedAt: resolvedAt,
+                releasedByUserId: releasedByUserId,
+                releasedAt: releasedAt,
+                version: version,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$RegisterClaimsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                organizationId = false,
+                branchId = false,
+                requestedRegisterId = false,
+                resolvedRegisterId = false,
+                shiftsRefs = false,
+                cashMovementsRefs = false,
+                salesRefs = false,
+                saleReceiptAliasesRefs = false,
+                receiptPrintJobsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (shiftsRefs) db.shifts,
+                    if (cashMovementsRefs) db.cashMovements,
+                    if (salesRefs) db.sales,
+                    if (saleReceiptAliasesRefs) db.saleReceiptAliases,
+                    if (receiptPrintJobsRefs) db.receiptPrintJobs,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (organizationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.organizationId,
+                                    referencedTable:
+                                        $$RegisterClaimsTableReferences
+                                            ._organizationIdTable(db),
+                                    referencedColumn:
+                                        $$RegisterClaimsTableReferences
+                                            ._organizationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (branchId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.branchId,
+                                    referencedTable:
+                                        $$RegisterClaimsTableReferences
+                                            ._branchIdTable(db),
+                                    referencedColumn:
+                                        $$RegisterClaimsTableReferences
+                                            ._branchIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (requestedRegisterId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.requestedRegisterId,
+                                    referencedTable:
+                                        $$RegisterClaimsTableReferences
+                                            ._requestedRegisterIdTable(db),
+                                    referencedColumn:
+                                        $$RegisterClaimsTableReferences
+                                            ._requestedRegisterIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (resolvedRegisterId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.resolvedRegisterId,
+                                    referencedTable:
+                                        $$RegisterClaimsTableReferences
+                                            ._resolvedRegisterIdTable(db),
+                                    referencedColumn:
+                                        $$RegisterClaimsTableReferences
+                                            ._resolvedRegisterIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (shiftsRefs)
+                        await $_getPrefetchedData<
+                          RegisterClaimRecord,
+                          $RegisterClaimsTable,
+                          Shift
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RegisterClaimsTableReferences
+                              ._shiftsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RegisterClaimsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).shiftsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.registerClaimId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (cashMovementsRefs)
+                        await $_getPrefetchedData<
+                          RegisterClaimRecord,
+                          $RegisterClaimsTable,
+                          CashMovement
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RegisterClaimsTableReferences
+                              ._cashMovementsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RegisterClaimsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).cashMovementsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.registerClaimId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (salesRefs)
+                        await $_getPrefetchedData<
+                          RegisterClaimRecord,
+                          $RegisterClaimsTable,
+                          Sale
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RegisterClaimsTableReferences
+                              ._salesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RegisterClaimsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).salesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.registerClaimId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (saleReceiptAliasesRefs)
+                        await $_getPrefetchedData<
+                          RegisterClaimRecord,
+                          $RegisterClaimsTable,
+                          SaleReceiptAliase
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RegisterClaimsTableReferences
+                              ._saleReceiptAliasesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RegisterClaimsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).saleReceiptAliasesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.registerClaimId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (receiptPrintJobsRefs)
+                        await $_getPrefetchedData<
+                          RegisterClaimRecord,
+                          $RegisterClaimsTable,
+                          ReceiptPrintJob
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RegisterClaimsTableReferences
+                              ._receiptPrintJobsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RegisterClaimsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).receiptPrintJobsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.registerClaimId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$RegisterClaimsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RegisterClaimsTable,
+      RegisterClaimRecord,
+      $$RegisterClaimsTableFilterComposer,
+      $$RegisterClaimsTableOrderingComposer,
+      $$RegisterClaimsTableAnnotationComposer,
+      $$RegisterClaimsTableCreateCompanionBuilder,
+      $$RegisterClaimsTableUpdateCompanionBuilder,
+      (RegisterClaimRecord, $$RegisterClaimsTableReferences),
+      RegisterClaimRecord,
+      PrefetchHooks Function({
+        bool organizationId,
+        bool branchId,
+        bool requestedRegisterId,
+        bool resolvedRegisterId,
+        bool shiftsRefs,
+        bool cashMovementsRefs,
+        bool salesRefs,
+        bool saleReceiptAliasesRefs,
+        bool receiptPrintJobsRefs,
+      })
+    >;
 typedef $$ShiftsTableCreateCompanionBuilder =
     ShiftsCompanion Function({
       required String id,
@@ -76354,6 +82133,7 @@ typedef $$ShiftsTableCreateCompanionBuilder =
       required String registerId,
       required String deviceId,
       required String operationId,
+      Value<String?> registerClaimId,
       Value<String?> closeOperationId,
       Value<String> status,
       required int openingCashMinor,
@@ -76382,6 +82162,7 @@ typedef $$ShiftsTableUpdateCompanionBuilder =
       Value<String> registerId,
       Value<String> deviceId,
       Value<String> operationId,
+      Value<String?> registerClaimId,
       Value<String?> closeOperationId,
       Value<String> status,
       Value<int> openingCashMinor,
@@ -76454,6 +82235,25 @@ final class $$ShiftsTableReferences
       $_db.registers,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_registerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegisterClaimsTable _registerClaimIdTable(_$AppDatabase db) =>
+      db.registerClaims.createAlias(
+        $_aliasNameGenerator(db.shifts.registerClaimId, db.registerClaims.id),
+      );
+
+  $$RegisterClaimsTableProcessedTableManager? get registerClaimId {
+    final $_column = $_itemColumn<String>('register_claim_id');
+    if ($_column == null) return null;
+    final manager = $$RegisterClaimsTableTableManager(
+      $_db,
+      $_db.registerClaims,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_registerClaimIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -76727,6 +82527,29 @@ class $$ShiftsTableFilterComposer
           }) => $$RegistersTableFilterComposer(
             $db: $db,
             $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegisterClaimsTableFilterComposer get registerClaimId {
+    final $$RegisterClaimsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableFilterComposer(
+            $db: $db,
+            $table: $db.registerClaims,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -77044,6 +82867,29 @@ class $$ShiftsTableOrderingComposer
     );
     return composer;
   }
+
+  $$RegisterClaimsTableOrderingComposer get registerClaimId {
+    final $$RegisterClaimsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableOrderingComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$ShiftsTableAnnotationComposer
@@ -77213,6 +83059,29 @@ class $$ShiftsTableAnnotationComposer
     return composer;
   }
 
+  $$RegisterClaimsTableAnnotationComposer get registerClaimId {
+    final $$RegisterClaimsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   Expression<T> cashMovementsRefs<T extends Object>(
     Expression<T> Function($$CashMovementsTableAnnotationComposer a) f,
   ) {
@@ -77356,6 +83225,7 @@ class $$ShiftsTableTableManager
             bool organizationId,
             bool branchId,
             bool registerId,
+            bool registerClaimId,
             bool cashMovementsRefs,
             bool shiftCountsRefs,
             bool salesRefs,
@@ -77382,6 +83252,7 @@ class $$ShiftsTableTableManager
                 Value<String> registerId = const Value.absent(),
                 Value<String> deviceId = const Value.absent(),
                 Value<String> operationId = const Value.absent(),
+                Value<String?> registerClaimId = const Value.absent(),
                 Value<String?> closeOperationId = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<int> openingCashMinor = const Value.absent(),
@@ -77408,6 +83279,7 @@ class $$ShiftsTableTableManager
                 registerId: registerId,
                 deviceId: deviceId,
                 operationId: operationId,
+                registerClaimId: registerClaimId,
                 closeOperationId: closeOperationId,
                 status: status,
                 openingCashMinor: openingCashMinor,
@@ -77436,6 +83308,7 @@ class $$ShiftsTableTableManager
                 required String registerId,
                 required String deviceId,
                 required String operationId,
+                Value<String?> registerClaimId = const Value.absent(),
                 Value<String?> closeOperationId = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 required int openingCashMinor,
@@ -77462,6 +83335,7 @@ class $$ShiftsTableTableManager
                 registerId: registerId,
                 deviceId: deviceId,
                 operationId: operationId,
+                registerClaimId: registerClaimId,
                 closeOperationId: closeOperationId,
                 status: status,
                 openingCashMinor: openingCashMinor,
@@ -77493,6 +83367,7 @@ class $$ShiftsTableTableManager
                 organizationId = false,
                 branchId = false,
                 registerId = false,
+                registerClaimId = false,
                 cashMovementsRefs = false,
                 shiftCountsRefs = false,
                 salesRefs = false,
@@ -77559,6 +83434,19 @@ class $$ShiftsTableTableManager
                                         ._registerIdTable(db),
                                     referencedColumn: $$ShiftsTableReferences
                                         ._registerIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
+                        if (registerClaimId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.registerClaimId,
+                                    referencedTable: $$ShiftsTableReferences
+                                        ._registerClaimIdTable(db),
+                                    referencedColumn: $$ShiftsTableReferences
+                                        ._registerClaimIdTable(db)
                                         .id,
                                   )
                                   as T;
@@ -77685,6 +83573,7 @@ typedef $$ShiftsTableProcessedTableManager =
         bool organizationId,
         bool branchId,
         bool registerId,
+        bool registerClaimId,
         bool cashMovementsRefs,
         bool shiftCountsRefs,
         bool salesRefs,
@@ -77700,6 +83589,7 @@ typedef $$CashMovementsTableCreateCompanionBuilder =
       required String registerId,
       required String shiftId,
       required String operationId,
+      Value<String?> registerClaimId,
       required String movementType,
       required int amountMinor,
       required String reason,
@@ -77718,6 +83608,7 @@ typedef $$CashMovementsTableUpdateCompanionBuilder =
       Value<String> registerId,
       Value<String> shiftId,
       Value<String> operationId,
+      Value<String?> registerClaimId,
       Value<String> movementType,
       Value<int> amountMinor,
       Value<String> reason,
@@ -77809,6 +83700,28 @@ final class $$CashMovementsTableReferences
       $_db.shifts,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_shiftIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegisterClaimsTable _registerClaimIdTable(_$AppDatabase db) =>
+      db.registerClaims.createAlias(
+        $_aliasNameGenerator(
+          db.cashMovements.registerClaimId,
+          db.registerClaims.id,
+        ),
+      );
+
+  $$RegisterClaimsTableProcessedTableManager? get registerClaimId {
+    final $_column = $_itemColumn<String>('register_claim_id');
+    if ($_column == null) return null;
+    final manager = $$RegisterClaimsTableTableManager(
+      $_db,
+      $_db.registerClaims,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_registerClaimIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -77979,6 +83892,29 @@ class $$CashMovementsTableFilterComposer
           }) => $$ShiftsTableFilterComposer(
             $db: $db,
             $table: $db.shifts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegisterClaimsTableFilterComposer get registerClaimId {
+    final $$RegisterClaimsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableFilterComposer(
+            $db: $db,
+            $table: $db.registerClaims,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -78164,6 +84100,29 @@ class $$CashMovementsTableOrderingComposer
     );
     return composer;
   }
+
+  $$RegisterClaimsTableOrderingComposer get registerClaimId {
+    final $$RegisterClaimsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableOrderingComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$CashMovementsTableAnnotationComposer
@@ -78311,6 +84270,29 @@ class $$CashMovementsTableAnnotationComposer
     return composer;
   }
 
+  $$RegisterClaimsTableAnnotationComposer get registerClaimId {
+    final $$RegisterClaimsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   Expression<T> refundPaymentsRefs<T extends Object>(
     Expression<T> Function($$RefundPaymentsTableAnnotationComposer a) f,
   ) {
@@ -78355,6 +84337,7 @@ class $$CashMovementsTableTableManager
             bool branchId,
             bool registerId,
             bool shiftId,
+            bool registerClaimId,
             bool refundPaymentsRefs,
           })
         > {
@@ -78377,6 +84360,7 @@ class $$CashMovementsTableTableManager
                 Value<String> registerId = const Value.absent(),
                 Value<String> shiftId = const Value.absent(),
                 Value<String> operationId = const Value.absent(),
+                Value<String?> registerClaimId = const Value.absent(),
                 Value<String> movementType = const Value.absent(),
                 Value<int> amountMinor = const Value.absent(),
                 Value<String> reason = const Value.absent(),
@@ -78393,6 +84377,7 @@ class $$CashMovementsTableTableManager
                 registerId: registerId,
                 shiftId: shiftId,
                 operationId: operationId,
+                registerClaimId: registerClaimId,
                 movementType: movementType,
                 amountMinor: amountMinor,
                 reason: reason,
@@ -78411,6 +84396,7 @@ class $$CashMovementsTableTableManager
                 required String registerId,
                 required String shiftId,
                 required String operationId,
+                Value<String?> registerClaimId = const Value.absent(),
                 required String movementType,
                 required int amountMinor,
                 required String reason,
@@ -78427,6 +84413,7 @@ class $$CashMovementsTableTableManager
                 registerId: registerId,
                 shiftId: shiftId,
                 operationId: operationId,
+                registerClaimId: registerClaimId,
                 movementType: movementType,
                 amountMinor: amountMinor,
                 reason: reason,
@@ -78451,6 +84438,7 @@ class $$CashMovementsTableTableManager
                 branchId = false,
                 registerId = false,
                 shiftId = false,
+                registerClaimId = false,
                 refundPaymentsRefs = false,
               }) {
                 return PrefetchHooks(
@@ -78534,6 +84522,21 @@ class $$CashMovementsTableTableManager
                                   )
                                   as T;
                         }
+                        if (registerClaimId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.registerClaimId,
+                                    referencedTable:
+                                        $$CashMovementsTableReferences
+                                            ._registerClaimIdTable(db),
+                                    referencedColumn:
+                                        $$CashMovementsTableReferences
+                                            ._registerClaimIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
 
                         return state;
                       },
@@ -78585,6 +84588,7 @@ typedef $$CashMovementsTableProcessedTableManager =
         bool branchId,
         bool registerId,
         bool shiftId,
+        bool registerClaimId,
         bool refundPaymentsRefs,
       })
     >;
@@ -80308,6 +86312,7 @@ typedef $$SalesTableCreateCompanionBuilder =
       Value<String?> inventoryTransactionId,
       Value<String?> customerId,
       required String operationId,
+      Value<String?> registerClaimId,
       Value<String?> receiptNumber,
       Value<String> status,
       required String cashierUserId,
@@ -80335,6 +86340,7 @@ typedef $$SalesTableUpdateCompanionBuilder =
       Value<String?> inventoryTransactionId,
       Value<String?> customerId,
       Value<String> operationId,
+      Value<String?> registerClaimId,
       Value<String?> receiptNumber,
       Value<String> status,
       Value<String> cashierUserId,
@@ -80468,6 +86474,49 @@ final class $$SalesTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegisterClaimsTable _registerClaimIdTable(_$AppDatabase db) =>
+      db.registerClaims.createAlias(
+        $_aliasNameGenerator(db.sales.registerClaimId, db.registerClaims.id),
+      );
+
+  $$RegisterClaimsTableProcessedTableManager? get registerClaimId {
+    final $_column = $_itemColumn<String>('register_claim_id');
+    if ($_column == null) return null;
+    final manager = $$RegisterClaimsTableTableManager(
+      $_db,
+      $_db.registerClaims,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_registerClaimIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$SaleReceiptAliasesTable, List<SaleReceiptAliase>>
+  _saleReceiptAliasesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.saleReceiptAliases,
+        aliasName: $_aliasNameGenerator(
+          db.sales.id,
+          db.saleReceiptAliases.saleId,
+        ),
+      );
+
+  $$SaleReceiptAliasesTableProcessedTableManager get saleReceiptAliasesRefs {
+    final manager = $$SaleReceiptAliasesTableTableManager(
+      $_db,
+      $_db.saleReceiptAliases,
+    ).filter((f) => f.saleId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _saleReceiptAliasesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 
@@ -80823,6 +86872,54 @@ class $$SalesTableFilterComposer extends Composer<_$AppDatabase, $SalesTable> {
           ),
     );
     return composer;
+  }
+
+  $$RegisterClaimsTableFilterComposer get registerClaimId {
+    final $$RegisterClaimsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableFilterComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> saleReceiptAliasesRefs(
+    Expression<bool> Function($$SaleReceiptAliasesTableFilterComposer f) f,
+  ) {
+    final $$SaleReceiptAliasesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.saleReceiptAliases,
+      getReferencedColumn: (t) => t.saleId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SaleReceiptAliasesTableFilterComposer(
+            $db: $db,
+            $table: $db.saleReceiptAliases,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
   }
 
   Expression<bool> saleItemsRefs(
@@ -81208,6 +87305,29 @@ class $$SalesTableOrderingComposer
     );
     return composer;
   }
+
+  $$RegisterClaimsTableOrderingComposer get registerClaimId {
+    final $$RegisterClaimsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableOrderingComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$SalesTableAnnotationComposer
@@ -81431,6 +87551,55 @@ class $$SalesTableAnnotationComposer
     return composer;
   }
 
+  $$RegisterClaimsTableAnnotationComposer get registerClaimId {
+    final $$RegisterClaimsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> saleReceiptAliasesRefs<T extends Object>(
+    Expression<T> Function($$SaleReceiptAliasesTableAnnotationComposer a) f,
+  ) {
+    final $$SaleReceiptAliasesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.saleReceiptAliases,
+          getReferencedColumn: (t) => t.saleId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SaleReceiptAliasesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.saleReceiptAliases,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> saleItemsRefs<T extends Object>(
     Expression<T> Function($$SaleItemsTableAnnotationComposer a) f,
   ) {
@@ -81603,6 +87772,8 @@ class $$SalesTableTableManager
             bool shiftId,
             bool inventoryTransactionId,
             bool customerId,
+            bool registerClaimId,
+            bool saleReceiptAliasesRefs,
             bool saleItemsRefs,
             bool paymentsRefs,
             bool saleDiscountsRefs,
@@ -81632,6 +87803,7 @@ class $$SalesTableTableManager
                 Value<String?> inventoryTransactionId = const Value.absent(),
                 Value<String?> customerId = const Value.absent(),
                 Value<String> operationId = const Value.absent(),
+                Value<String?> registerClaimId = const Value.absent(),
                 Value<String?> receiptNumber = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String> cashierUserId = const Value.absent(),
@@ -81657,6 +87829,7 @@ class $$SalesTableTableManager
                 inventoryTransactionId: inventoryTransactionId,
                 customerId: customerId,
                 operationId: operationId,
+                registerClaimId: registerClaimId,
                 receiptNumber: receiptNumber,
                 status: status,
                 cashierUserId: cashierUserId,
@@ -81684,6 +87857,7 @@ class $$SalesTableTableManager
                 Value<String?> inventoryTransactionId = const Value.absent(),
                 Value<String?> customerId = const Value.absent(),
                 required String operationId,
+                Value<String?> registerClaimId = const Value.absent(),
                 Value<String?> receiptNumber = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 required String cashierUserId,
@@ -81709,6 +87883,7 @@ class $$SalesTableTableManager
                 inventoryTransactionId: inventoryTransactionId,
                 customerId: customerId,
                 operationId: operationId,
+                registerClaimId: registerClaimId,
                 receiptNumber: receiptNumber,
                 status: status,
                 cashierUserId: cashierUserId,
@@ -81740,6 +87915,8 @@ class $$SalesTableTableManager
                 shiftId = false,
                 inventoryTransactionId = false,
                 customerId = false,
+                registerClaimId = false,
+                saleReceiptAliasesRefs = false,
                 saleItemsRefs = false,
                 paymentsRefs = false,
                 saleDiscountsRefs = false,
@@ -81750,6 +87927,7 @@ class $$SalesTableTableManager
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
+                    if (saleReceiptAliasesRefs) db.saleReceiptAliases,
                     if (saleItemsRefs) db.saleItems,
                     if (paymentsRefs) db.payments,
                     if (saleDiscountsRefs) db.saleDiscounts,
@@ -81851,11 +88029,45 @@ class $$SalesTableTableManager
                                   )
                                   as T;
                         }
+                        if (registerClaimId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.registerClaimId,
+                                    referencedTable: $$SalesTableReferences
+                                        ._registerClaimIdTable(db),
+                                    referencedColumn: $$SalesTableReferences
+                                        ._registerClaimIdTable(db)
+                                        .id,
+                                  )
+                                  as T;
+                        }
 
                         return state;
                       },
                   getPrefetchedDataCallback: (items) async {
                     return [
+                      if (saleReceiptAliasesRefs)
+                        await $_getPrefetchedData<
+                          Sale,
+                          $SalesTable,
+                          SaleReceiptAliase
+                        >(
+                          currentTable: table,
+                          referencedTable: $$SalesTableReferences
+                              ._saleReceiptAliasesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$SalesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).saleReceiptAliasesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.saleId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (saleItemsRefs)
                         await $_getPrefetchedData<Sale, $SalesTable, SaleItem>(
                           currentTable: table,
@@ -82001,12 +88213,720 @@ typedef $$SalesTableProcessedTableManager =
         bool shiftId,
         bool inventoryTransactionId,
         bool customerId,
+        bool registerClaimId,
+        bool saleReceiptAliasesRefs,
         bool saleItemsRefs,
         bool paymentsRefs,
         bool saleDiscountsRefs,
         bool receiptPrintJobsRefs,
         bool saleReturnsRefs,
         bool loyaltyLedgerEntriesRefs,
+      })
+    >;
+typedef $$SaleReceiptAliasesTableCreateCompanionBuilder =
+    SaleReceiptAliasesCompanion Function({
+      required String id,
+      required String organizationId,
+      required String branchId,
+      required String saleId,
+      Value<String?> registerClaimId,
+      required String aliasReceiptNumber,
+      required String canonicalReceiptNumber,
+      Value<String> aliasKind,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$SaleReceiptAliasesTableUpdateCompanionBuilder =
+    SaleReceiptAliasesCompanion Function({
+      Value<String> id,
+      Value<String> organizationId,
+      Value<String> branchId,
+      Value<String> saleId,
+      Value<String?> registerClaimId,
+      Value<String> aliasReceiptNumber,
+      Value<String> canonicalReceiptNumber,
+      Value<String> aliasKind,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+final class $$SaleReceiptAliasesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $SaleReceiptAliasesTable,
+          SaleReceiptAliase
+        > {
+  $$SaleReceiptAliasesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTable _organizationIdTable(_$AppDatabase db) =>
+      db.organizations.createAlias(
+        $_aliasNameGenerator(
+          db.saleReceiptAliases.organizationId,
+          db.organizations.id,
+        ),
+      );
+
+  $$OrganizationsTableProcessedTableManager get organizationId {
+    final $_column = $_itemColumn<String>('organization_id')!;
+
+    final manager = $$OrganizationsTableTableManager(
+      $_db,
+      $_db.organizations,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_organizationIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $BranchesTable _branchIdTable(_$AppDatabase db) =>
+      db.branches.createAlias(
+        $_aliasNameGenerator(db.saleReceiptAliases.branchId, db.branches.id),
+      );
+
+  $$BranchesTableProcessedTableManager get branchId {
+    final $_column = $_itemColumn<String>('branch_id')!;
+
+    final manager = $$BranchesTableTableManager(
+      $_db,
+      $_db.branches,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_branchIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $SalesTable _saleIdTable(_$AppDatabase db) => db.sales.createAlias(
+    $_aliasNameGenerator(db.saleReceiptAliases.saleId, db.sales.id),
+  );
+
+  $$SalesTableProcessedTableManager get saleId {
+    final $_column = $_itemColumn<String>('sale_id')!;
+
+    final manager = $$SalesTableTableManager(
+      $_db,
+      $_db.sales,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_saleIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegisterClaimsTable _registerClaimIdTable(_$AppDatabase db) =>
+      db.registerClaims.createAlias(
+        $_aliasNameGenerator(
+          db.saleReceiptAliases.registerClaimId,
+          db.registerClaims.id,
+        ),
+      );
+
+  $$RegisterClaimsTableProcessedTableManager? get registerClaimId {
+    final $_column = $_itemColumn<String>('register_claim_id');
+    if ($_column == null) return null;
+    final manager = $$RegisterClaimsTableTableManager(
+      $_db,
+      $_db.registerClaims,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_registerClaimIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SaleReceiptAliasesTableFilterComposer
+    extends Composer<_$AppDatabase, $SaleReceiptAliasesTable> {
+  $$SaleReceiptAliasesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aliasReceiptNumber => $composableBuilder(
+    column: $table.aliasReceiptNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get canonicalReceiptNumber => $composableBuilder(
+    column: $table.canonicalReceiptNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aliasKind => $composableBuilder(
+    column: $table.aliasKind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$OrganizationsTableFilterComposer get organizationId {
+    final $$OrganizationsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableFilterComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableFilterComposer get branchId {
+    final $$BranchesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableFilterComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SalesTableFilterComposer get saleId {
+    final $$SalesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleId,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableFilterComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegisterClaimsTableFilterComposer get registerClaimId {
+    final $$RegisterClaimsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableFilterComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SaleReceiptAliasesTableOrderingComposer
+    extends Composer<_$AppDatabase, $SaleReceiptAliasesTable> {
+  $$SaleReceiptAliasesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aliasReceiptNumber => $composableBuilder(
+    column: $table.aliasReceiptNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get canonicalReceiptNumber => $composableBuilder(
+    column: $table.canonicalReceiptNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aliasKind => $composableBuilder(
+    column: $table.aliasKind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableOrderingComposer get organizationId {
+    final $$OrganizationsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableOrderingComposer get branchId {
+    final $$BranchesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableOrderingComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SalesTableOrderingComposer get saleId {
+    final $$SalesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleId,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableOrderingComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegisterClaimsTableOrderingComposer get registerClaimId {
+    final $$RegisterClaimsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableOrderingComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SaleReceiptAliasesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SaleReceiptAliasesTable> {
+  $$SaleReceiptAliasesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get aliasReceiptNumber => $composableBuilder(
+    column: $table.aliasReceiptNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get canonicalReceiptNumber => $composableBuilder(
+    column: $table.canonicalReceiptNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aliasKind =>
+      $composableBuilder(column: $table.aliasKind, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$OrganizationsTableAnnotationComposer get organizationId {
+    final $$OrganizationsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.organizationId,
+      referencedTable: $db.organizations,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.organizations,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$BranchesTableAnnotationComposer get branchId {
+    final $$BranchesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.branchId,
+      referencedTable: $db.branches,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$BranchesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.branches,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$SalesTableAnnotationComposer get saleId {
+    final $$SalesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.saleId,
+      referencedTable: $db.sales,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SalesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sales,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegisterClaimsTableAnnotationComposer get registerClaimId {
+    final $$RegisterClaimsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SaleReceiptAliasesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SaleReceiptAliasesTable,
+          SaleReceiptAliase,
+          $$SaleReceiptAliasesTableFilterComposer,
+          $$SaleReceiptAliasesTableOrderingComposer,
+          $$SaleReceiptAliasesTableAnnotationComposer,
+          $$SaleReceiptAliasesTableCreateCompanionBuilder,
+          $$SaleReceiptAliasesTableUpdateCompanionBuilder,
+          (SaleReceiptAliase, $$SaleReceiptAliasesTableReferences),
+          SaleReceiptAliase,
+          PrefetchHooks Function({
+            bool organizationId,
+            bool branchId,
+            bool saleId,
+            bool registerClaimId,
+          })
+        > {
+  $$SaleReceiptAliasesTableTableManager(
+    _$AppDatabase db,
+    $SaleReceiptAliasesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SaleReceiptAliasesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SaleReceiptAliasesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SaleReceiptAliasesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> organizationId = const Value.absent(),
+                Value<String> branchId = const Value.absent(),
+                Value<String> saleId = const Value.absent(),
+                Value<String?> registerClaimId = const Value.absent(),
+                Value<String> aliasReceiptNumber = const Value.absent(),
+                Value<String> canonicalReceiptNumber = const Value.absent(),
+                Value<String> aliasKind = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SaleReceiptAliasesCompanion(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                saleId: saleId,
+                registerClaimId: registerClaimId,
+                aliasReceiptNumber: aliasReceiptNumber,
+                canonicalReceiptNumber: canonicalReceiptNumber,
+                aliasKind: aliasKind,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String organizationId,
+                required String branchId,
+                required String saleId,
+                Value<String?> registerClaimId = const Value.absent(),
+                required String aliasReceiptNumber,
+                required String canonicalReceiptNumber,
+                Value<String> aliasKind = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => SaleReceiptAliasesCompanion.insert(
+                id: id,
+                organizationId: organizationId,
+                branchId: branchId,
+                saleId: saleId,
+                registerClaimId: registerClaimId,
+                aliasReceiptNumber: aliasReceiptNumber,
+                canonicalReceiptNumber: canonicalReceiptNumber,
+                aliasKind: aliasKind,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SaleReceiptAliasesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                organizationId = false,
+                branchId = false,
+                saleId = false,
+                registerClaimId = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (organizationId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.organizationId,
+                                    referencedTable:
+                                        $$SaleReceiptAliasesTableReferences
+                                            ._organizationIdTable(db),
+                                    referencedColumn:
+                                        $$SaleReceiptAliasesTableReferences
+                                            ._organizationIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (branchId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.branchId,
+                                    referencedTable:
+                                        $$SaleReceiptAliasesTableReferences
+                                            ._branchIdTable(db),
+                                    referencedColumn:
+                                        $$SaleReceiptAliasesTableReferences
+                                            ._branchIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (saleId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.saleId,
+                                    referencedTable:
+                                        $$SaleReceiptAliasesTableReferences
+                                            ._saleIdTable(db),
+                                    referencedColumn:
+                                        $$SaleReceiptAliasesTableReferences
+                                            ._saleIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (registerClaimId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.registerClaimId,
+                                    referencedTable:
+                                        $$SaleReceiptAliasesTableReferences
+                                            ._registerClaimIdTable(db),
+                                    referencedColumn:
+                                        $$SaleReceiptAliasesTableReferences
+                                            ._registerClaimIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$SaleReceiptAliasesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SaleReceiptAliasesTable,
+      SaleReceiptAliase,
+      $$SaleReceiptAliasesTableFilterComposer,
+      $$SaleReceiptAliasesTableOrderingComposer,
+      $$SaleReceiptAliasesTableAnnotationComposer,
+      $$SaleReceiptAliasesTableCreateCompanionBuilder,
+      $$SaleReceiptAliasesTableUpdateCompanionBuilder,
+      (SaleReceiptAliase, $$SaleReceiptAliasesTableReferences),
+      SaleReceiptAliase,
+      PrefetchHooks Function({
+        bool organizationId,
+        bool branchId,
+        bool saleId,
+        bool registerClaimId,
       })
     >;
 typedef $$SaleItemsTableCreateCompanionBuilder =
@@ -85327,6 +92247,7 @@ typedef $$ReceiptPrintJobsTableCreateCompanionBuilder =
       required String organizationId,
       required String branchId,
       required String registerId,
+      Value<String?> registerClaimId,
       required String saleId,
       required String deduplicationKey,
       required String copyType,
@@ -85347,6 +92268,7 @@ typedef $$ReceiptPrintJobsTableUpdateCompanionBuilder =
       Value<String> organizationId,
       Value<String> branchId,
       Value<String> registerId,
+      Value<String?> registerClaimId,
       Value<String> saleId,
       Value<String> deduplicationKey,
       Value<String> copyType,
@@ -85425,6 +92347,28 @@ final class $$ReceiptPrintJobsTableReferences
       $_db.registers,
     ).filter((f) => f.id.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_registerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RegisterClaimsTable _registerClaimIdTable(_$AppDatabase db) =>
+      db.registerClaims.createAlias(
+        $_aliasNameGenerator(
+          db.receiptPrintJobs.registerClaimId,
+          db.registerClaims.id,
+        ),
+      );
+
+  $$RegisterClaimsTableProcessedTableManager? get registerClaimId {
+    final $_column = $_itemColumn<String>('register_claim_id');
+    if ($_column == null) return null;
+    final manager = $$RegisterClaimsTableTableManager(
+      $_db,
+      $_db.registerClaims,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_registerClaimIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
@@ -85579,6 +92523,29 @@ class $$ReceiptPrintJobsTableFilterComposer
           }) => $$RegistersTableFilterComposer(
             $db: $db,
             $table: $db.registers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RegisterClaimsTableFilterComposer get registerClaimId {
+    final $$RegisterClaimsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableFilterComposer(
+            $db: $db,
+            $table: $db.registerClaims,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -85750,6 +92717,29 @@ class $$ReceiptPrintJobsTableOrderingComposer
     return composer;
   }
 
+  $$RegisterClaimsTableOrderingComposer get registerClaimId {
+    final $$RegisterClaimsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableOrderingComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   $$SalesTableOrderingComposer get saleId {
     final $$SalesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -85898,6 +92888,29 @@ class $$ReceiptPrintJobsTableAnnotationComposer
     return composer;
   }
 
+  $$RegisterClaimsTableAnnotationComposer get registerClaimId {
+    final $$RegisterClaimsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.registerClaimId,
+      referencedTable: $db.registerClaims,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RegisterClaimsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.registerClaims,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
   $$SalesTableAnnotationComposer get saleId {
     final $$SalesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -85939,6 +92952,7 @@ class $$ReceiptPrintJobsTableTableManager
             bool organizationId,
             bool branchId,
             bool registerId,
+            bool registerClaimId,
             bool saleId,
           })
         > {
@@ -85961,6 +92975,7 @@ class $$ReceiptPrintJobsTableTableManager
                 Value<String> organizationId = const Value.absent(),
                 Value<String> branchId = const Value.absent(),
                 Value<String> registerId = const Value.absent(),
+                Value<String?> registerClaimId = const Value.absent(),
                 Value<String> saleId = const Value.absent(),
                 Value<String> deduplicationKey = const Value.absent(),
                 Value<String> copyType = const Value.absent(),
@@ -85979,6 +92994,7 @@ class $$ReceiptPrintJobsTableTableManager
                 organizationId: organizationId,
                 branchId: branchId,
                 registerId: registerId,
+                registerClaimId: registerClaimId,
                 saleId: saleId,
                 deduplicationKey: deduplicationKey,
                 copyType: copyType,
@@ -85999,6 +93015,7 @@ class $$ReceiptPrintJobsTableTableManager
                 required String organizationId,
                 required String branchId,
                 required String registerId,
+                Value<String?> registerClaimId = const Value.absent(),
                 required String saleId,
                 required String deduplicationKey,
                 required String copyType,
@@ -86017,6 +93034,7 @@ class $$ReceiptPrintJobsTableTableManager
                 organizationId: organizationId,
                 branchId: branchId,
                 registerId: registerId,
+                registerClaimId: registerClaimId,
                 saleId: saleId,
                 deduplicationKey: deduplicationKey,
                 copyType: copyType,
@@ -86044,6 +93062,7 @@ class $$ReceiptPrintJobsTableTableManager
                 organizationId = false,
                 branchId = false,
                 registerId = false,
+                registerClaimId = false,
                 saleId = false,
               }) {
                 return PrefetchHooks(
@@ -86110,6 +93129,21 @@ class $$ReceiptPrintJobsTableTableManager
                                   )
                                   as T;
                         }
+                        if (registerClaimId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.registerClaimId,
+                                    referencedTable:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._registerClaimIdTable(db),
+                                    referencedColumn:
+                                        $$ReceiptPrintJobsTableReferences
+                                            ._registerClaimIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
                         if (saleId) {
                           state =
                               state.withJoin(
@@ -86153,6 +93187,7 @@ typedef $$ReceiptPrintJobsTableProcessedTableManager =
         bool organizationId,
         bool branchId,
         bool registerId,
+        bool registerClaimId,
         bool saleId,
       })
     >;
@@ -104604,6 +111639,7 @@ typedef $$PosCartsTableCreateCompanionBuilder =
       required String organizationId,
       required String branchId,
       required String deviceId,
+      Value<String?> ownerUserId,
       required String status,
       Value<String?> title,
       Value<String?> customerId,
@@ -104624,6 +111660,7 @@ typedef $$PosCartsTableUpdateCompanionBuilder =
       Value<String> organizationId,
       Value<String> branchId,
       Value<String> deviceId,
+      Value<String?> ownerUserId,
       Value<String> status,
       Value<String?> title,
       Value<String?> customerId,
@@ -104733,6 +111770,11 @@ class $$PosCartsTableFilterComposer
 
   ColumnFilters<String> get deviceId => $composableBuilder(
     column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ownerUserId => $composableBuilder(
+    column: $table.ownerUserId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -104905,6 +111947,11 @@ class $$PosCartsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get ownerUserId => $composableBuilder(
+    column: $table.ownerUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
@@ -105044,6 +112091,11 @@ class $$PosCartsTableAnnotationComposer
 
   GeneratedColumn<String> get deviceId =>
       $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerUserId => $composableBuilder(
+    column: $table.ownerUserId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
@@ -105224,6 +112276,7 @@ class $$PosCartsTableTableManager
                 Value<String> organizationId = const Value.absent(),
                 Value<String> branchId = const Value.absent(),
                 Value<String> deviceId = const Value.absent(),
+                Value<String?> ownerUserId = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<String?> title = const Value.absent(),
                 Value<String?> customerId = const Value.absent(),
@@ -105242,6 +112295,7 @@ class $$PosCartsTableTableManager
                 organizationId: organizationId,
                 branchId: branchId,
                 deviceId: deviceId,
+                ownerUserId: ownerUserId,
                 status: status,
                 title: title,
                 customerId: customerId,
@@ -105262,6 +112316,7 @@ class $$PosCartsTableTableManager
                 required String organizationId,
                 required String branchId,
                 required String deviceId,
+                Value<String?> ownerUserId = const Value.absent(),
                 required String status,
                 Value<String?> title = const Value.absent(),
                 Value<String?> customerId = const Value.absent(),
@@ -105280,6 +112335,7 @@ class $$PosCartsTableTableManager
                 organizationId: organizationId,
                 branchId: branchId,
                 deviceId: deviceId,
+                ownerUserId: ownerUserId,
                 status: status,
                 title: title,
                 customerId: customerId,
@@ -105873,8 +112929,19 @@ class $AppDatabaseManager {
       $$LocalMetadataTableTableManager(_db, _db.localMetadata);
   $$SyncOutboxEntriesTableTableManager get syncOutboxEntries =>
       $$SyncOutboxEntriesTableTableManager(_db, _db.syncOutboxEntries);
+  $$SyncOutboxDependenciesTableTableManager get syncOutboxDependencies =>
+      $$SyncOutboxDependenciesTableTableManager(
+        _db,
+        _db.syncOutboxDependencies,
+      );
   $$SyncCursorsTableTableManager get syncCursors =>
       $$SyncCursorsTableTableManager(_db, _db.syncCursors);
+  $$SyncSnapshotStagingRecordsTableTableManager
+  get syncSnapshotStagingRecords =>
+      $$SyncSnapshotStagingRecordsTableTableManager(
+        _db,
+        _db.syncSnapshotStagingRecords,
+      );
   $$SyncConflictsTableTableManager get syncConflicts =>
       $$SyncConflictsTableTableManager(_db, _db.syncConflicts);
   $$SyncEntityVersionsTableTableManager get syncEntityVersions =>
@@ -105926,6 +112993,8 @@ class $AppDatabaseManager {
       $$StockCountItemsTableTableManager(_db, _db.stockCountItems);
   $$RegistersTableTableManager get registers =>
       $$RegistersTableTableManager(_db, _db.registers);
+  $$RegisterClaimsTableTableManager get registerClaims =>
+      $$RegisterClaimsTableTableManager(_db, _db.registerClaims);
   $$ShiftsTableTableManager get shifts =>
       $$ShiftsTableTableManager(_db, _db.shifts);
   $$CashMovementsTableTableManager get cashMovements =>
@@ -105936,6 +113005,8 @@ class $AppDatabaseManager {
       $$CustomersTableTableManager(_db, _db.customers);
   $$SalesTableTableManager get sales =>
       $$SalesTableTableManager(_db, _db.sales);
+  $$SaleReceiptAliasesTableTableManager get saleReceiptAliases =>
+      $$SaleReceiptAliasesTableTableManager(_db, _db.saleReceiptAliases);
   $$SaleItemsTableTableManager get saleItems =>
       $$SaleItemsTableTableManager(_db, _db.saleItems);
   $$PaymentsTableTableManager get payments =>

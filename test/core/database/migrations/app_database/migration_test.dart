@@ -118,4 +118,61 @@ void main() {
       schema.close();
     }
   });
+
+  test('schema 18 migrates carts and legacy dependencies to schema 19', () async {
+    final verifier = SchemaVerifier(GeneratedHelper());
+    final schema = await verifier.schemaAt(18);
+    const stamp = '2026-09-10T00:00:00.000Z';
+    schema.rawDatabase.execute(
+      '''INSERT INTO organizations (id, code, name, created_at, updated_at)
+VALUES ('o', 'ORG', 'Org', '$stamp', '$stamp')''',
+    );
+    schema.rawDatabase.execute(
+      '''INSERT INTO branches (id, organization_id, code, name, created_at, updated_at)
+VALUES ('b', 'o', 'MAIN', 'Main', '$stamp', '$stamp')''',
+    );
+    schema.rawDatabase.execute(
+      '''INSERT INTO sync_outbox (operation_id, organization_id, branch_id,
+actor_user_id, command_type, aggregate_type, aggregate_id, payload_json,
+status, attempt_count, created_at, updated_at) VALUES
+('claim', 'o', 'b', 'cashier', 'register.claim', 'register_claim',
+'claim', '{}', 'succeeded', 1, '$stamp', '$stamp')''',
+    );
+    schema.rawDatabase.execute(
+      '''INSERT INTO sync_outbox (operation_id, organization_id, branch_id,
+actor_user_id, command_type, aggregate_type, aggregate_id,
+depends_on_operation_id, payload_json, status, attempt_count, created_at,
+updated_at) VALUES ('sale', 'o', 'b', 'cashier', 'sale.complete',
+'sale', 'sale', 'claim', '{}', 'pending', 0, '$stamp', '$stamp')''',
+    );
+    schema.rawDatabase.execute(
+      '''INSERT INTO pos_carts (id, organization_id, branch_id, device_id,
+status, active_scope, created_at, updated_at) VALUES
+('cart', 'o', 'b', 'device', 'active', 'o|b|device', '$stamp', '$stamp')''',
+    );
+    final database = AppDatabase.forTesting(schema.newConnection());
+    try {
+      await verifier.migrateAndValidate(
+        database,
+        AppDatabase.currentSchemaVersion,
+      );
+      final cart = await database.select(database.posCarts).getSingle();
+      expect(cart.id, 'cart');
+      expect(cart.ownerUserId, isNull);
+      final dependency = await database
+          .select(database.syncOutboxDependencies)
+          .getSingle();
+      expect(dependency.operationId, 'sale');
+      expect(dependency.dependsOnOperationId, 'claim');
+      expect(await database.select(database.registerClaims).get(), isEmpty);
+      expect(
+        await database.select(database.syncSnapshotStagingRecords).get(),
+        isEmpty,
+      );
+      expect(await database.select(database.saleReceiptAliases).get(), isEmpty);
+    } finally {
+      await database.close();
+      schema.close();
+    }
+  });
 }

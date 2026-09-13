@@ -167,6 +167,7 @@ final Map<String, List<AppPermission>> _groups = {
     AppPermission.manageUsers,
     AppPermission.manageRoles,
     AppPermission.manageRegisters,
+    AppPermission.claimRegisters,
     AppPermission.manageSettings,
   ],
   'Catalog & stock': [

@@ -89,6 +89,7 @@ class SaleRecord {
     this.customerId,
     this.customerDisplayName,
     this.discountApprovedByUserId,
+    this.receiptAliases = const [],
     this.corrections = const [],
   });
 
@@ -112,6 +113,7 @@ class SaleRecord {
   final List<SaleItem> items;
   final List<SalePayment> payments;
   final String? discountApprovedByUserId;
+  final List<String> receiptAliases;
   final List<SaleCorrectionRecord> corrections;
 }
 

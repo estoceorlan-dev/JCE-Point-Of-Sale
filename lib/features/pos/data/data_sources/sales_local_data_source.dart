@@ -286,10 +286,13 @@ LIMIT 100
   Stream<List<domain.SaleRecord>> watchRecentSales({
     required String organizationId,
     required String branchId,
+    String search = '',
   }) {
     final sales = _database.sales;
     final registers = _database.registers;
     final returns = _database.saleReturns;
+    final aliases = _database.saleReceiptAliases;
+    final normalizedSearch = search.trim();
     final query =
         _database.select(sales).join([
             innerJoin(
@@ -299,11 +302,18 @@ LIMIT 100
                   registers.branchId.equalsExp(sales.branchId),
             ),
             leftOuterJoin(returns, returns.saleId.equalsExp(sales.id)),
+            leftOuterJoin(aliases, aliases.saleId.equalsExp(sales.id)),
           ])
           ..where(
             sales.organizationId.equals(organizationId) &
                 sales.branchId.equals(branchId) &
-                sales.status.equals('draft').not(),
+                sales.status.equals('draft').not() &
+                (normalizedSearch.isEmpty
+                    ? const Constant(true)
+                    : sales.receiptNumber.contains(normalizedSearch) |
+                          aliases.aliasReceiptNumber.contains(
+                            normalizedSearch,
+                          )),
           )
           ..groupBy([sales.id])
           ..orderBy([OrderingTerm.desc(sales.completedAt)])
@@ -365,6 +375,11 @@ LIMIT 100
         await (_database.select(_database.saleReturns)
               ..where((row) => row.saleId.equals(sale.id))
               ..orderBy([(row) => OrderingTerm.asc(row.completedAt)]))
+            .get();
+    final receiptAliases =
+        await (_database.select(_database.saleReceiptAliases)
+              ..where((row) => row.saleId.equals(sale.id))
+              ..orderBy([(row) => OrderingTerm.asc(row.createdAt)]))
             .get();
     final corrections = <domain.SaleCorrectionRecord>[];
     final returnedByItem = <String, int>{};
@@ -441,6 +456,9 @@ LIMIT 100
       changeMinor: sale.changeMinor,
       completedAt: sale.completedAt ?? sale.createdAt,
       discountApprovedByUserId: sale.discountApprovedByUserId,
+      receiptAliases: receiptAliases
+          .map((alias) => alias.aliasReceiptNumber)
+          .toList(growable: false),
       items: itemRows
           .map(
             (item) => domain.SaleItem(

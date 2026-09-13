@@ -111,6 +111,71 @@ void main() {
     expect(second.map((entry) => entry.operationId), ['return-operation']);
   });
 
+  test('every dependency in a claim chain must succeed', () async {
+    final now = DateTime.utc(2026, 1, 1, 12);
+    await database.outboxDao.enqueue(_command('claim', now));
+    await database.outboxDao.enqueue(
+      _command('shift', now.add(const Duration(seconds: 1))),
+    );
+    await database.outboxDao.enqueue(
+      _command(
+        'sale',
+        now.add(const Duration(seconds: 2)),
+        dependencyOperationIds: const ['claim', 'shift'],
+      ),
+    );
+
+    final heads = await database.outboxDao.claimEligibleBatch(now: now);
+    expect(heads.map((entry) => entry.operationId), ['claim', 'shift']);
+    await database.outboxDao.markSucceeded(operationId: 'claim', now: now);
+    expect(
+      await database.outboxDao.claimEligibleBatch(
+        now: now.add(const Duration(seconds: 3)),
+      ),
+      isEmpty,
+    );
+    await database.outboxDao.markSucceeded(operationId: 'shift', now: now);
+
+    final sale = await database.outboxDao.claimEligibleBatch(
+      now: now.add(const Duration(seconds: 4)),
+    );
+    expect(sale.map((entry) => entry.operationId), ['sale']);
+  });
+
+  test(
+    'claim resolution can run while the rejected claim stays conflicted',
+    () async {
+      final now = DateTime.utc(2026, 1, 1, 12);
+      await database.outboxDao.enqueue(
+        _command(
+          'claim',
+          now,
+          aggregateType: 'register_claim',
+          aggregateId: 'claim',
+        ),
+      );
+      await database.outboxDao.markConflict(
+        operationId: 'claim',
+        error: 'First accepted claim wins.',
+        now: now,
+      );
+      await database.outboxDao.enqueue(
+        _command(
+          'resolve',
+          now.add(const Duration(seconds: 1)),
+          commandType: 'register.claim.resolve',
+          aggregateType: 'register_claim',
+          aggregateId: 'claim',
+        ),
+      );
+
+      final eligible = await database.outboxDao.claimEligibleBatch(
+        now: now.add(const Duration(seconds: 2)),
+      );
+      expect(eligible.map((entry) => entry.operationId), ['resolve']);
+    },
+  );
+
   test('stale processing commands are returned to pending', () async {
     final startedAt = DateTime.utc(2026, 1, 1, 12);
     await database.outboxDao.enqueue(_command('operation-1', startedAt));
@@ -154,15 +219,20 @@ OutboxCommand _command(
   String operationId,
   DateTime createdAt, {
   String? dependsOnOperationId,
+  List<String> dependencyOperationIds = const [],
+  String commandType = 'test_command',
+  String aggregateType = 'test',
+  String? aggregateId,
 }) {
   return OutboxCommand(
     operationId: operationId,
     organizationId: 'org-1',
     branchId: 'branch-1',
-    commandType: 'test_command',
-    aggregateType: 'test',
-    aggregateId: operationId,
+    commandType: commandType,
+    aggregateType: aggregateType,
+    aggregateId: aggregateId ?? operationId,
     dependsOnOperationId: dependsOnOperationId,
+    dependencyOperationIds: dependencyOperationIds,
     payload: const {'test': true},
     createdAt: createdAt,
   );

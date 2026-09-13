@@ -7,6 +7,7 @@ import 'package:jce_pos/core/error/failures.dart';
 import 'package:jce_pos/core/utils/app_clock.dart';
 import 'package:jce_pos/features/auth/data/datasources/access_local_data_source.dart';
 import 'package:jce_pos/features/auth/data/repositories/drift_active_context_repository.dart';
+import 'package:jce_pos/features/auth/data/repositories/cached_operational_access_policy.dart';
 import 'package:jce_pos/features/auth/domain/entities/auth_session.dart';
 import 'package:jce_pos/features/auth/domain/usecases/require_permission_usecase.dart';
 import 'package:jce_pos/shared/models/access_role.dart';
@@ -253,6 +254,43 @@ void main() {
     );
     expect(result.isSuccess, isTrue);
   });
+
+  test(
+    'offline operations are allowed through the seven-day boundary',
+    () async {
+      final verifiedAt = DateTime.utc(2026, 9, 1, 8);
+      final session = AuthSession(
+        user: _profile(),
+        activeOrganizationId: 'org-a',
+        activeBranchId: 'branch-a',
+      );
+      await database.metadataDao.writeValue(
+        key: 'auth.access_verified_at.firebase-user',
+        value: verifiedAt.toIso8601String(),
+        updatedAt: verifiedAt,
+      );
+      final atBoundary = CachedOperationalAccessPolicy(
+        metadataDao: database.metadataDao,
+        clock: FixedAppClock(verifiedAt.add(const Duration(days: 7))),
+        maxOfflineAge: const Duration(days: 7),
+      );
+      expect((await atBoundary.verifyCanStart(session)).isSuccess, isTrue);
+
+      final expired = CachedOperationalAccessPolicy(
+        metadataDao: database.metadataDao,
+        clock: FixedAppClock(
+          verifiedAt.add(const Duration(days: 7, microseconds: 1)),
+        ),
+        maxOfflineAge: const Duration(days: 7),
+      );
+      final result = await expired.verifyCanStart(session);
+      expect(result.failureOrNull, isA<AuthorizationFailure>());
+      expect(
+        (result.failureOrNull as AuthorizationFailure).code,
+        'online-verification-required',
+      );
+    },
+  );
 }
 
 model.AppUser _profile({bool includeBranchB = true}) {

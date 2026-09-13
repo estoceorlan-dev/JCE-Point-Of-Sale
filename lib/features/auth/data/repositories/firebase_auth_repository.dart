@@ -170,17 +170,27 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<Result<void, Failure>> signOut() async {
+    final firebaseUid =
+        _firebaseAuth.currentUser?.uid ?? _currentSession?.user.firebaseUid;
     _pendingSignOutFailure = null;
     _currentSession = null;
     _stopRefreshTimer();
     try {
       await _firebaseAuth.signOut();
-      return const Result<void, Failure>.success(null);
     } catch (error, stackTrace) {
       return Result<void, Failure>.failure(
         FailureMapper.fromException(error, stackTrace),
       );
     }
+    if (firebaseUid != null) {
+      try {
+        await _activeContextRepository.clear(firebaseUid);
+      } catch (_) {
+        // Firebase credentials are already cleared. A stale branch preference
+        // must not turn a completed sign-out into a failed sign-out.
+      }
+    }
+    return const Result<void, Failure>.success(null);
   }
 
   Future<Result<AuthSession, Failure>> _resolve(
@@ -308,6 +318,12 @@ class FirebaseAuthRepository implements AuthRepository {
       final result = await _resolve(firebaseUser, forceRefresh: true);
       if (result case SuccessResult<AuthSession, Failure>(:final value)) {
         await _activate(value, emit: true);
+      } else if (result.failureOrNull is NetworkFailure &&
+          _currentSession != null) {
+        // Keep the verified local session so recovery and shift closure remain
+        // available. New shifts and sales are independently gated by the
+        // configured offline verification window.
+        return;
       } else {
         await _signOutForFailure(firebaseUser.uid, result.failureOrNull!);
       }

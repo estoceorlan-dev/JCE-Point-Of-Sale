@@ -16,10 +16,14 @@ class SignOutUseCase {
   final AuthAuditRepository _auditRepository;
 
   Future<Result<void, Failure>> call(AuthSession? session) async {
-    try {
-      if (session != null) {
+    if (session != null) {
+      try {
         await _auditRepository.recordLogout(session);
+      } catch (_) {
+        // A best-effort audit write must never retain an authenticated session.
       }
+    }
+    try {
       return _authRepository.signOut();
     } catch (error, stackTrace) {
       return Result<void, Failure>.failure(
