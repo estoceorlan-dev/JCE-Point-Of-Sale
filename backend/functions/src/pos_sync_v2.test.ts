@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import type {PoolClient} from "pg";
 
+import {getPosBootstrapPageForUser} from "./pos_bootstrap.js";
 import {pullAuthorizedChangesForUser} from "./pull_authorized_changes.js";
 
 const migrationPath = path.resolve(
@@ -93,3 +94,68 @@ test("authorized pulls advance past unreadable changes without exposing them", a
   );
   assert.doesNotMatch(JSON.stringify(page), /private-user|secret/);
 });
+
+test("organization bootstrap pages use contiguous typed parameters", async () => {
+  const pageQuery = await captureBootstrapPageQuery("organization");
+
+  assert.match(pageQuery.text, /t\.id = \$1/);
+  assert.match(
+    pageQuery.text,
+    /\(\$2::text IS NULL OR t\.id > \$2::text\)/,
+  );
+  assert.match(pageQuery.text, /t\.updated_at <= \$3::timestamptz/);
+  assert.match(pageQuery.text, /LIMIT \$4::integer/);
+  assert.deepEqual(pageQuery.values.slice(0, 2), [organizationId, null]);
+  assert.equal(pageQuery.values.length, 4);
+});
+
+test("branch bootstrap pages retain their branch scope before paging parameters", async () => {
+  const pageQuery = await captureBootstrapPageQuery("registers");
+
+  assert.match(pageQuery.text, /t\.organization_id = \$1/);
+  assert.match(pageQuery.text, /t\.branch_id = \$2/);
+  assert.match(
+    pageQuery.text,
+    /\(\$3::text IS NULL OR t\.id > \$3::text\)/,
+  );
+  assert.match(pageQuery.text, /t\.updated_at <= \$4::timestamptz/);
+  assert.match(pageQuery.text, /LIMIT \$5::integer/);
+  assert.deepEqual(pageQuery.values.slice(0, 3), [
+    organizationId,
+    branchId,
+    null,
+  ]);
+  assert.equal(pageQuery.values.length, 5);
+});
+
+const organizationId = "11111111-1111-4111-8111-111111111111";
+const branchId = "22222222-2222-4222-8222-222222222222";
+
+async function captureBootstrapPageQuery(collection: string): Promise<{
+  text: string;
+  values: readonly unknown[];
+}> {
+  const captured: Array<{text: string; values: readonly unknown[]}> = [];
+  const client = {
+    query: async (text: string, values: readonly unknown[] = []) => {
+      if (text.includes("FROM app_users")) {
+        return {rowCount: 1, rows: [{exists: 1}]};
+      }
+      if (text.includes("FROM change_feed")) {
+        return {rowCount: 1, rows: [{watermark: "0"}]};
+      }
+      captured.push({text, values});
+      return {rowCount: 0, rows: []};
+    },
+  } as unknown as PoolClient;
+
+  await getPosBootstrapPageForUser(client, {
+    firebaseUid: "firebase-user",
+    organizationId,
+    branchId,
+    collection,
+  });
+
+  assert.equal(captured.length, 1);
+  return captured[0];
+}

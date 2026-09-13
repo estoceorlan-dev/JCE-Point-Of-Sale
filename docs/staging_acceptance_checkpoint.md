@@ -16,7 +16,18 @@ Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 - All 12 Functions are active in `asia-southeast1`. The three added callables
   are `getPosBootstrapPage`, `pullAuthorizedChangesV2`, and
   `authorizeRegisterClaimResolution`; deployed source hash:
-  `fbc570457afb3dcbc2910836ea33eb963762ad07`.
+  `db4ab13873064b8abd4ec847824fcecfbeac1fa5`.
+- The 2026-09-14 bootstrap hotfix removes PostgreSQL parameter gaps for
+  organization-scoped collections, treats the first cursor as nullable text to
+  match the deployed schema, and renews Cloud SQL IAM-backed connection pools
+  before their one-hour credentials expire. A failed initial pool connection is
+  retried only for PostgreSQL authentication error `28000`, before any business
+  operation executes.
+- An authenticated Administrator session successfully paged all 15 POS
+  bootstrap collections for Sweetland Branch under one snapshot token. The
+  check completed without errors or business writes; organization, branch,
+  registers, categories, and units returned the expected staging rows, while
+  valid empty collections completed normally.
 - Twenty-four unauthenticated probes across all callables were rejected with
   HTTP 401/`UNAUTHENTICATED`. This verifies the public authentication boundary,
   not the remaining signed-in multi-terminal workflow acceptance.
@@ -209,6 +220,8 @@ and existing application credentials; never print secret values.
 - `staging-callable-check.js`: unauthenticated probes for all 12 callables.
 - `staging-pos-sync-v2-check.js`: validates migration 0014, runtime privileges,
   required indexes, permission grants and active-claim uniqueness.
+- `staging-pos-bootstrap-check.js`: signs in with the private staging test
+  account and reads every paged bootstrap collection without business writes.
 - `staging-auth-permissions.js`: preview; `--apply` configures the exact Auth
   role/binding. Requires JCE_FUNCTIONS_SERVICE_ACCOUNT and JCE_AUTH_ROLE_ID.
 - `staging-admin-permissions.js`: preview; `--apply` provisions approved IDs

@@ -21,6 +21,24 @@ async function main() {
   }
   const backups = await client.request({url: `${base}/backupRuns`, params: {maxResults: 5}});
   const users = await client.request({url: `${base}/users`});
+  const runtimeServiceAccount = process.env.JCE_FUNCTIONS_SERVICE_ACCOUNT;
+  let runtimeServiceAccountRoles = [];
+  if (runtimeServiceAccount) {
+    const policyUrl =
+      `https://cloudresourcemanager.googleapis.com/v1/projects/${project}:getIamPolicy`;
+    const {data: policy} = await client.request({
+      url: policyUrl,
+      method: "POST",
+      data: {options: {requestedPolicyVersion: 3}},
+    });
+    const member = `serviceAccount:${runtimeServiceAccount}`;
+    runtimeServiceAccountRoles = (policy.bindings || [])
+      .filter((binding) => (binding.members || []).includes(member))
+      .map((binding) => ({
+        role: binding.role,
+        condition: binding.condition || null,
+      }));
+  }
   console.log(JSON.stringify({
     project, instance: data.name, state: data.state,
     connectionName: data.connectionName,
@@ -29,6 +47,8 @@ async function main() {
       id: item.id, status: item.status, endTime: item.endTime, type: item.type,
     })),
     databaseUsers: (users.data.items || []).map((item) => ({name: item.name, type: item.type})),
+    runtimeServiceAccount,
+    runtimeServiceAccountRoles,
   }, null, 2));
 }
 

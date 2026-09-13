@@ -34,48 +34,59 @@ type BootstrapToken = {
 type BootstrapQuery = {
   table: string;
   where: string;
+  branchScoped: boolean;
 };
 
 const queryByCollection: Record<BootstrapCollection, BootstrapQuery> = {
   organization: {
     table: "organizations",
     where: "t.id = $1 AND t.is_active = true AND t.deleted_at IS NULL",
+    branchScoped: false,
   },
   branch: {
     table: "branches",
     where: "t.organization_id = $1 AND t.id = $2 AND t.is_active = true AND t.deleted_at IS NULL",
+    branchScoped: true,
   },
   registers: {
     table: "registers",
     where: "t.organization_id = $1 AND t.branch_id = $2 AND t.deleted_at IS NULL",
+    branchScoped: true,
   },
   categories: {
     table: "categories",
     where: "t.organization_id = $1 AND t.deleted_at IS NULL",
+    branchScoped: false,
   },
   units: {
     table: "units",
     where: "t.organization_id = $1 AND t.deleted_at IS NULL",
+    branchScoped: false,
   },
   taxCategories: {
     table: "tax_categories",
     where: "t.organization_id = $1 AND t.deleted_at IS NULL",
+    branchScoped: false,
   },
   products: {
     table: "products",
     where: "t.organization_id = $1 AND t.deleted_at IS NULL",
+    branchScoped: false,
   },
   productBarcodes: {
     table: "product_barcodes",
     where: "t.organization_id = $1 AND t.deleted_at IS NULL",
+    branchScoped: false,
   },
   productPrices: {
     table: "product_prices",
     where: "t.organization_id = $1 AND (t.branch_id IS NULL OR t.branch_id = $2)",
+    branchScoped: true,
   },
   stockLocations: {
     table: "stock_locations",
     where: "t.organization_id = $1 AND t.branch_id = $2 AND t.is_default = true AND t.deleted_at IS NULL",
+    branchScoped: true,
   },
   inventoryBalances: {
     table: "inventory_balances",
@@ -85,22 +96,27 @@ const queryByCollection: Record<BootstrapCollection, BootstrapQuery> = {
         AND sl.branch_id = t.branch_id AND sl.is_default = true
         AND sl.is_active = true AND sl.deleted_at IS NULL
     )`,
+    branchScoped: true,
   },
   organizationSettings: {
     table: "organization_settings",
     where: "t.organization_id = $1",
+    branchScoped: false,
   },
   branchSettings: {
     table: "branch_settings",
     where: "t.organization_id = $1 AND t.branch_id = $2",
+    branchScoped: true,
   },
   reasonCodes: {
     table: "reason_codes",
     where: "t.organization_id = $1 AND (t.branch_id IS NULL OR t.branch_id = $2) AND t.deleted_at IS NULL",
+    branchScoped: true,
   },
   featureFlags: {
     table: "feature_flags",
     where: "t.organization_id = $1 AND (t.branch_id IS NULL OR t.branch_id = $2)",
+    branchScoped: true,
   },
 };
 
@@ -128,15 +144,21 @@ export async function getPosBootstrapPageForUser(
   const pageSize = Math.min(Math.max(input.pageSize ?? 250, 1), 500);
   const cursor = input.cursor ?? "";
   const query = queryByCollection[collection];
+  const scopeValues = query.branchScoped ?
+    [input.organizationId, input.branchId] :
+    [input.organizationId];
+  const cursorParameter = scopeValues.length + 1;
+  const snapshotParameter = cursorParameter + 1;
+  const limitParameter = snapshotParameter + 1;
   const result = await client.query<{id: string; row_json: Record<string, unknown>}>(
     `SELECT t.id, to_jsonb(t) AS row_json
      FROM ${query.table} t
      WHERE ${query.where}
-       AND t.id > $3
-       AND t.updated_at <= $4::timestamptz
+       AND ($${cursorParameter}::text IS NULL OR t.id > $${cursorParameter}::text)
+       AND t.updated_at <= $${snapshotParameter}::timestamptz
      ORDER BY t.id
-     LIMIT $5`,
-    [input.organizationId, input.branchId, cursor, token.createdAt, pageSize + 1],
+     LIMIT $${limitParameter}::integer`,
+    [...scopeValues, cursor === "" ? null : cursor, token.createdAt, pageSize + 1],
   );
   const hasMore = result.rows.length > pageSize;
   const page = result.rows.slice(0, pageSize);
