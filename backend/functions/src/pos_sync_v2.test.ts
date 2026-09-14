@@ -11,6 +11,10 @@ const migrationPath = path.resolve(
   __dirname,
   "../../sql/migrations/0014_pos_sync_v2.sql",
 );
+const feedScopeMigrationPath = path.resolve(
+  __dirname,
+  "../../sql/migrations/0015_register_change_feed_scope.sql",
+);
 
 test("POS sync migration installs installation-owned claims and receipt aliases", async () => {
   const sql = await readFile(migrationPath, "utf8");
@@ -32,10 +36,22 @@ test("POS sync migration installs installation-owned claims and receipt aliases"
   );
 });
 
+test("register feed repair backfills the owning branch", async () => {
+  const sql = await readFile(feedScopeMigrationPath, "utf8");
+  assert.match(sql, /UPDATE\s+change_feed\s+AS\s+feed/i);
+  assert.match(sql, /SET\s+branch_id\s*=\s*register_row\.branch_id/i);
+  assert.match(sql, /feed\.aggregate_type\s*=\s*'register'/i);
+  assert.match(
+    sql,
+    /feed\.organization_id\s*=\s*register_row\.organization_id/i,
+  );
+});
+
 test("authorized pulls advance past unreadable changes without exposing them", async () => {
   let queryNumber = 0;
+  let changeQuery = "";
   const client = {
-    query: async () => {
+    query: async (text: string) => {
       queryNumber += 1;
       if (queryNumber === 1) {
         return {
@@ -43,6 +59,7 @@ test("authorized pulls advance past unreadable changes without exposing them", a
           rows: [{permission_codes: ["sales.process"]}],
         };
       }
+      changeQuery = text;
       return {
         rowCount: 2,
         rows: [
@@ -86,6 +103,11 @@ test("authorized pulls advance past unreadable changes without exposing them", a
 
   assert.equal(page.nextCursor, 11);
   assert.equal(page.hasMore, false);
+  assert.match(changeQuery, /ORDER BY\s+cf\.sequence/i);
+  assert.match(
+    changeQuery,
+    /cf\.aggregate_type\s*=\s*'register'\s+AND\s+r\.branch_id\s*=\s*\$3/i,
+  );
   assert.deepEqual(
     (page.changes as Array<{aggregateId: string}>).map(
       (change) => change.aggregateId,

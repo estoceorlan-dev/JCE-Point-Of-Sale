@@ -312,7 +312,33 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       deviceId: deviceId,
     );
     var key = cursorKey();
-    var cursor = (await _cursorDao.read(key))?.lastChangeSequence ?? 0;
+    final storedCursor = await _cursorDao.read(key);
+    var cursor = storedCursor?.lastChangeSequence ?? 0;
+    if (storedCursor == null &&
+        !await _cursorDao.existsForScope(
+          scope: _cursorScope,
+          organizationId: context.organizationId,
+          branchId: context.branchId,
+          projection: 'pos_sync_v2',
+          actorUserId: context.actorUserId,
+          deviceId: deviceId,
+        )) {
+      final bootstrapWatermark = int.tryParse(
+        await _database.metadataDao.readValue(
+              'pos_bootstrap_watermark:${context.organizationId}:'
+              '${context.branchId}',
+            ) ??
+            '',
+      );
+      if (bootstrapWatermark != null && bootstrapWatermark >= 0) {
+        cursor = bootstrapWatermark;
+        await _cursorDao.save(
+          key: key,
+          lastChangeSequence: cursor,
+          lastSyncedAt: _clock.nowUtc(),
+        );
+      }
+    }
     var applied = 0;
     for (
       var batchNumber = 0;
@@ -343,14 +369,31 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       }
       if (page.permissionDigest != null &&
           page.permissionDigest != permissionDigest) {
+        final previousKey = key;
+        final previousCursor = cursor;
         permissionDigest = page.permissionDigest;
-        await _database.metadataDao.writeValue(
-          key: digestMetadataKey,
-          value: permissionDigest!,
-          updatedAt: _clock.nowUtc(),
-        );
         key = cursorKey();
-        cursor = (await _cursorDao.read(key))?.lastChangeSequence ?? 0;
+        final permissionCursor = await _cursorDao.read(key);
+        final adoptBootstrapCursor =
+            permissionCursor == null && previousKey.permissionDigest == null;
+        final now = _clock.nowUtc();
+        await _database.transaction(() async {
+          await _database.metadataDao.writeValue(
+            key: digestMetadataKey,
+            value: permissionDigest!,
+            updatedAt: now,
+          );
+          if (adoptBootstrapCursor) {
+            await _cursorDao.save(
+              key: key,
+              lastChangeSequence: previousCursor,
+              lastSyncedAt: now,
+            );
+          }
+        });
+        cursor =
+            permissionCursor?.lastChangeSequence ??
+            (adoptBootstrapCursor ? previousCursor : 0);
         // The page was requested with another permission scope. Pull it again
         // from the independently scoped cursor before applying anything.
         continue;

@@ -250,7 +250,7 @@ function resultVersion(result: CommandResult): number {
   return 0;
 }
 
-function changeFeedBranchId(command: AuthorizedCommand): string | null {
+export function changeFeedBranchId(command: AuthorizedCommand): string | null {
   if (command.commandType === "customer.note.add") return command.branchId;
   if (command.aggregateType === "organization_setting") return null;
   if (command.aggregateType === "reason_code" ||
@@ -261,7 +261,7 @@ function changeFeedBranchId(command: AuthorizedCommand): string | null {
       command.aggregateType === "supplier" ||
       command.aggregateType === "customer" ||
       command.aggregateType === "loyalty_account") return null;
-  if (["branch", "app_user", "role", "user_role_assignment", "register"]
+  if (["branch", "app_user", "role", "user_role_assignment"]
     .includes(command.aggregateType)) return null;
   if (["product", "category", "unit", "tax_category", "product_image"].includes(command.aggregateType)) {
     return null;

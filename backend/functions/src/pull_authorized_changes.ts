@@ -63,13 +63,25 @@ export async function pullAuthorizedChangesForUser(
   const readableTypes = allAggregateTypes.filter((type) =>
     canRead(type, permissions, input.projection));
   const rows = await client.query<ChangeRow>(
-    `SELECT sequence::text, organization_id, branch_id, aggregate_type,
-       aggregate_id, operation_id, change_type, version, payload_json,
-       occurred_at
-     FROM change_feed
-     WHERE organization_id = $1 AND sequence > $2
-       AND (branch_id IS NULL OR branch_id = $3)
-     ORDER BY sequence
+    `SELECT cf.sequence::text, cf.organization_id,
+       CASE WHEN cf.aggregate_type = 'register'
+         THEN COALESCE(cf.branch_id, r.branch_id)
+         ELSE cf.branch_id
+       END AS branch_id,
+       cf.aggregate_type, cf.aggregate_id, cf.operation_id, cf.change_type,
+       cf.version, cf.payload_json, cf.occurred_at
+     FROM change_feed cf
+     LEFT JOIN registers r
+       ON cf.aggregate_type = 'register'
+       AND r.id = cf.aggregate_id
+       AND r.organization_id = cf.organization_id
+     WHERE cf.organization_id = $1 AND cf.sequence > $2
+       AND (
+         cf.branch_id = $3
+         OR (cf.branch_id IS NULL AND cf.aggregate_type <> 'register')
+         OR (cf.aggregate_type = 'register' AND r.branch_id = $3)
+       )
+     ORDER BY cf.sequence
      LIMIT $4`,
     [
       input.organizationId,

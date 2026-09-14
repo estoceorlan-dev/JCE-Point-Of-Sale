@@ -6,6 +6,7 @@ import 'package:drift/drift.dart';
 
 import '../../shared/models/business_context.dart';
 import '../database/app_database.dart';
+import '../database/models/sync_cursor_key.dart';
 import '../error/failure.dart';
 import '../error/failure_mapper.dart';
 import '../error/result.dart';
@@ -286,6 +287,14 @@ class DriftPosBootstrapRepository implements PosBootstrapRepository {
     if (!await _allCollectionsComplete(context)) {
       throw const FormatException('The staged POS snapshot is incomplete.');
     }
+    final watermarks = staged.map((row) => row.watermark).toSet();
+    if (watermarks.length != 1) {
+      throw const FormatException(
+        'The staged POS snapshot has inconsistent watermarks.',
+      );
+    }
+    final watermark = watermarks.single;
+    final deviceId = await _database.metadataDao.readValue('device.id');
     final now = DateTime.now().toUtc();
     final preserveOperationalProjection = await _hasPendingOperationalChanges(
       context,
@@ -314,8 +323,20 @@ class DriftPosBootstrapRepository implements PosBootstrapRepository {
       );
       await _database.metadataDao.writeValue(
         key: 'pos_bootstrap_watermark:${_scope(context)}',
-        value: staged.isEmpty ? '0' : staged.first.watermark.toString(),
+        value: watermark.toString(),
         updatedAt: now,
+      );
+      await _database.syncCursorDao.save(
+        key: SyncCursorKey(
+          scope: 'remote-change-feed',
+          organizationId: context.organizationId,
+          branchId: context.branchId,
+          projection: 'pos_sync_v2',
+          actorUserId: context.actorUserId,
+          deviceId: deviceId,
+        ),
+        lastChangeSequence: watermark,
+        lastSyncedAt: now,
       );
       await (_database.delete(_database.syncSnapshotStagingRecords)..where(
             (row) =>

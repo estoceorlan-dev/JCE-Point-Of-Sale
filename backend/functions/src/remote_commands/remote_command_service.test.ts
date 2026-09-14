@@ -4,6 +4,7 @@ import {PoolClient} from "pg";
 
 import {RemoteCommandError, RemoteCommandInput} from "./command_types";
 import {
+  changeFeedBranchId,
   processRemoteCommand,
   sanitizeAuditMetadata,
 } from "./remote_command_service";
@@ -169,6 +170,24 @@ test("remote audit records retain device identity and redact secrets", async () 
       password: "[REDACTED]",
       nested: {accessToken: "[REDACTED]"},
     },
+  );
+});
+
+test("register feed entries retain their branch scope", () => {
+  const authorized = {
+    ...command({
+      commandType: "register.assign_device",
+      aggregateType: "register",
+      aggregateId: "register-1",
+    }),
+    actorUserId: "user-1",
+    permissions: new Set(["registers.manage"]),
+  };
+
+  assert.equal(changeFeedBranchId(authorized), "branch-1");
+  assert.equal(
+    changeFeedBranchId({...authorized, aggregateType: "branch"}),
+    null,
   );
 });
 

@@ -132,6 +132,78 @@ void main() {
     expect(cursor?.lastChangeSequence, 100);
   });
 
+  test('an existing bootstrap watermark prevents historical replay', () async {
+    await database.metadataDao.writeValue(
+      key: 'device.id',
+      value: 'device',
+      updatedAt: initialTime,
+    );
+    await database.metadataDao.writeValue(
+      key: 'pos_sync_permission_digest:org:branch:user:device',
+      value: 'permission-digest',
+      updatedAt: initialTime,
+    );
+    await database.metadataDao.writeValue(
+      key: 'pos_bootstrap_watermark:org:branch',
+      value: '42',
+      updatedAt: initialTime,
+    );
+    final pagedRemote = _PagedRemote();
+
+    await service(remoteOverride: pagedRemote).synchronize(context: context);
+
+    expect(pagedRemote.requestedCursors, [42, 42]);
+    final cursor = await database.syncCursorDao.read(
+      const SyncCursorKey(
+        scope: 'remote-change-feed',
+        organizationId: 'org',
+        branchId: 'branch',
+        projection: 'pos_sync_v2',
+        permissionDigest: 'permission-digest',
+        actorUserId: 'user',
+        deviceId: 'device',
+      ),
+    );
+    expect(cursor?.lastChangeSequence, 42);
+  });
+
+  test('the first permission digest inherits the bootstrap cursor', () async {
+    await database.metadataDao.writeValue(
+      key: 'device.id',
+      value: 'device',
+      updatedAt: initialTime,
+    );
+    await database.syncCursorDao.save(
+      key: const SyncCursorKey(
+        scope: 'remote-change-feed',
+        organizationId: 'org',
+        branchId: 'branch',
+        projection: 'pos_sync_v2',
+        actorUserId: 'user',
+        deviceId: 'device',
+      ),
+      lastChangeSequence: 42,
+      lastSyncedAt: initialTime,
+    );
+    final pagedRemote = _PagedRemote();
+
+    await service(remoteOverride: pagedRemote).synchronize(context: context);
+
+    expect(pagedRemote.requestedCursors, [42, 42, 42]);
+    final cursor = await database.syncCursorDao.read(
+      const SyncCursorKey(
+        scope: 'remote-change-feed',
+        organizationId: 'org',
+        branchId: 'branch',
+        projection: 'pos_sync_v2',
+        permissionDigest: 'permission-digest',
+        actorUserId: 'user',
+        deviceId: 'device',
+      ),
+    );
+    expect(cursor?.lastChangeSequence, 42);
+  });
+
   test(
     'same-aggregate commands preserve order while all heads drain',
     () async {

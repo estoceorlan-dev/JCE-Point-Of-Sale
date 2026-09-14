@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jce_pos/core/database/app_database.dart';
+import 'package:jce_pos/core/database/models/sync_cursor_key.dart';
 import 'package:jce_pos/core/remote/pos_bootstrap_remote_data_source.dart';
 import 'package:jce_pos/core/sync/drift_pos_bootstrap_repository.dart';
 import 'package:jce_pos/shared/models/business_context.dart';
@@ -103,6 +104,16 @@ void main() {
       await database.select(database.syncSnapshotStagingRecords).get(),
       isEmpty,
     );
+    final cursor = await database.syncCursorDao.read(
+      const SyncCursorKey(
+        scope: 'remote-change-feed',
+        organizationId: 'organization',
+        branchId: 'branch',
+        projection: 'pos_sync_v2',
+        actorUserId: 'cashier',
+      ),
+    );
+    expect(cursor?.lastChangeSequence, 42);
   });
 }
 

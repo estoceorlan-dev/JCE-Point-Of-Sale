@@ -25,6 +25,30 @@ class SyncCursorDao extends DatabaseAccessor<AppDatabase>
         .watchSingleOrNull();
   }
 
+  Future<bool> existsForScope({
+    required String scope,
+    required String organizationId,
+    required String branchId,
+    required String projection,
+    required String actorUserId,
+    required String? deviceId,
+  }) async {
+    final row =
+        await (select(syncCursors)
+              ..where(
+                (value) =>
+                    value.scope.equals(scope) &
+                    value.organizationId.equals(organizationId) &
+                    value.branchId.equals(branchId) &
+                    value.projection.equals(projection) &
+                    value.actorUserId.equals(actorUserId) &
+                    value.deviceId.equalsNullable(deviceId),
+              )
+              ..limit(1))
+            .getSingleOrNull();
+    return row != null;
+  }
+
   Future<void> save({
     required SyncCursorKey key,
     required int lastChangeSequence,

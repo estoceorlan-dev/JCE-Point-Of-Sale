@@ -3,6 +3,36 @@
 Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 `jce-pos-instance`, database `jce-pos-database`. Production was not touched.
 
+## Automatic sync repair — 2026-09-14
+
+- A fresh logical backup was restored locally and migration 0015 was rehearsed
+  before the live change. Backup:
+  `C:/JCE/.backups/staging-mDbprf/public.dump`, 371,471 bytes, SHA-256
+  `bed2c8bcf10ede6de341f86482e3ddccd14313a814190d4a5db16354e42a7d2b`.
+- Migration `0015_register_change_feed_scope.sql` is applied. All 15 migration
+  checksums match, all 63 public tables remain owned by `jce_pos_migrator`, and
+  the historical register feed rows now carry their owning branch.
+- Authorized feed queries order the numeric `change_feed.sequence` column
+  instead of its text projection. A live authenticated pull returned 31
+  readable events in strictly increasing order through cursor 53; all 10
+  register events had the requested branch and the cursor-53 follow-up was
+  empty.
+- New register commands retain branch scope. POS bootstrap publication now
+  seeds the incremental-feed cursor at its snapshot watermark, including the
+  first permission-digest cursor, so a new cache does not replay its own
+  historical snapshot. Existing staged browsers can recover the saved
+  bootstrap watermark when the earlier client persisted a digest without a
+  cursor.
+- All 12 Functions are active with source hash
+  `c7cf967f6b2630f4f89ee79394d10815d6fc8f5b`. The refreshed web client is live
+  at `https://jce-pos-staging-259528.web.app`; local and live `main.dart.js`
+  SHA-256 both equal
+  `c303c58afca1f9446cef5c071162af5f8eb3b8ee0e587dd3f73f965f500d3b86`,
+  and the root returned HTTP 200.
+- Backend lint and all 59 backend tests passed. Flutter analyze and all 308
+  non-performance tests passed; the opt-in performance benchmark remained
+  skipped.
+
 ## POS sync v2 deployment — 2026-09-14
 
 - A fresh logical backup was restored locally and migrations were rehearsed
