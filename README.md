@@ -3,6 +3,18 @@
 Offline-first Flutter foundation for a scalable, multi-branch point of sale and
 inventory system.
 
+## Node.js/PostgreSQL refactor
+
+The accepted architecture replaces Firebase with the separate `jce_backend`
+repository for local Wi-Fi operation or independent Render deployment. Phase 0
+establishes the baseline and migration documentation; it does not change runtime
+behavior or remove the current production platform gates.
+
+See the [refactor handoff and implementation plan](docs/backend_refactor.md) and
+the repository-local [development rules](AGENTS.md). The target is Windows and
+Android POS with web administration, enrolled offline cashier PINs, and optional
+product images. The platform statuses below describe the current Firebase build.
+
 ## Intended deployment platforms
 
 - Android: initial production POS and operational candidate
