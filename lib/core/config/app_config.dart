@@ -33,13 +33,17 @@ class AppConfig {
     this.apiBaseUri,
     this.demoBranchId,
     this.firebaseFunctionsRegion,
+    this.appCheckWebSiteKey,
   });
 
   factory AppConfig.fromDartDefines() {
-    const environmentValue = String.fromEnvironment(
-      'JCE_ENV',
-      defaultValue: 'development',
-    );
+    const environmentValue = String.fromEnvironment('JCE_ENV');
+    const isReleaseBuild = bool.fromEnvironment('dart.vm.product');
+    const isProfileBuild = bool.fromEnvironment('dart.vm.profile');
+    final environmentWasExplicit = environmentValue.trim().isNotEmpty;
+    final resolvedEnvironment = environmentWasExplicit
+        ? environmentValue
+        : 'development';
     const apiBaseUrl = String.fromEnvironment('JCE_API_BASE_URL');
     const demoAuthValue = String.fromEnvironment('JCE_ENABLE_DEMO_AUTH');
     const diagnosticsValue = String.fromEnvironment('JCE_ENABLE_DIAGNOSTICS');
@@ -47,6 +51,9 @@ class AppConfig {
     const functionsRegion = String.fromEnvironment(
       'JCE_FIREBASE_FUNCTIONS_REGION',
       defaultValue: defaultFirebaseFunctionsRegion,
+    );
+    const appCheckWebSiteKey = String.fromEnvironment(
+      'JCE_APP_CHECK_WEB_SITE_KEY',
     );
     const accessProfileFunction = String.fromEnvironment(
       'JCE_ACCESS_PROFILE_FUNCTION',
@@ -103,12 +110,13 @@ class AppConfig {
       'JCE_MAX_OFFLINE_ACCESS_HOURS',
     );
     return AppConfig.fromValues(
-      environment: environmentValue,
+      environment: resolvedEnvironment,
       apiBaseUrl: apiBaseUrl,
       enableDemoAuth: demoAuthValue,
       enableDiagnostics: diagnosticsValue,
       demoBranchId: demoBranchIdValue,
       firebaseFunctionsRegion: functionsRegion,
+      appCheckWebSiteKey: appCheckWebSiteKey,
       accessProfileFunctionName: accessProfileFunction,
       deviceRegistrationFunctionName: deviceRegistrationFunction,
       updateBranchNameFunctionName: updateBranchNameFunction,
@@ -124,6 +132,8 @@ class AppConfig {
       enablePosSyncV2: posSyncV2Value,
       accessRefreshMinutes: accessRefreshMinutes,
       maxOfflineAccessHours: maxOfflineAccessHours,
+      enforceReleaseSafety: isReleaseBuild || isProfileBuild,
+      environmentWasExplicit: environmentWasExplicit,
     );
   }
 
@@ -134,6 +144,7 @@ class AppConfig {
     String? enableDiagnostics,
     String? demoBranchId,
     String? firebaseFunctionsRegion,
+    String? appCheckWebSiteKey,
     String accessProfileFunctionName = 'getMyAccessProfile',
     String deviceRegistrationFunctionName = 'registerDevice',
     String updateBranchNameFunctionName = 'updateBranchName',
@@ -149,7 +160,14 @@ class AppConfig {
     String? enablePosSyncV2,
     String? accessRefreshMinutes,
     String? maxOfflineAccessHours,
+    bool enforceReleaseSafety = false,
+    bool environmentWasExplicit = true,
   }) {
+    if (enforceReleaseSafety && !environmentWasExplicit) {
+      throw const FormatException(
+        'JCE_ENV is required for profile and release builds.',
+      );
+    }
     final parsedEnvironment = AppEnvironment.parse(environment);
     final parsedApiBaseUri = _parseAbsoluteUri(apiBaseUrl);
     final parsedEnableDemoAuth = _parseOptionalBool(
@@ -166,6 +184,7 @@ class AppConfig {
     final normalizedFunctionsRegion =
         _normalizeOptional(firebaseFunctionsRegion) ??
         defaultFirebaseFunctionsRegion;
+    final normalizedAppCheckWebSiteKey = _normalizeOptional(appCheckWebSiteKey);
     final normalizedAccessProfileFunction = _requireValue(
       accessProfileFunctionName,
       key: 'JCE_ACCESS_PROFILE_FUNCTION',
@@ -236,6 +255,17 @@ class AppConfig {
         'Demo authentication can only be enabled in development.',
       );
     }
+    if (enforceReleaseSafety &&
+        parsedEnvironment == AppEnvironment.development) {
+      throw const FormatException(
+        'Development cannot be selected for a profile or release build.',
+      );
+    }
+    if (parsedEnvironment.isProduction && parsedEnableDiagnostics) {
+      throw const FormatException(
+        'JCE_ENABLE_DIAGNOSTICS must be false in production.',
+      );
+    }
 
     return AppConfig(
       environment: parsedEnvironment,
@@ -244,6 +274,7 @@ class AppConfig {
       enableDiagnostics: parsedEnableDiagnostics,
       demoBranchId: normalizedDemoBranchId,
       firebaseFunctionsRegion: normalizedFunctionsRegion,
+      appCheckWebSiteKey: normalizedAppCheckWebSiteKey,
       accessProfileFunctionName: normalizedAccessProfileFunction,
       deviceRegistrationFunctionName: normalizedDeviceRegistrationFunction,
       updateBranchNameFunctionName: normalizedUpdateBranchNameFunction,
@@ -269,6 +300,7 @@ class AppConfig {
   final bool enableDiagnostics;
   final String? demoBranchId;
   final String? firebaseFunctionsRegion;
+  final String? appCheckWebSiteKey;
   final String accessProfileFunctionName;
   final String deviceRegistrationFunctionName;
   final String updateBranchNameFunctionName;

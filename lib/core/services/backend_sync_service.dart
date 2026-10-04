@@ -24,6 +24,7 @@ import '../remote/remote_sync_data_source.dart';
 import '../sync/connectivity_monitor.dart';
 import '../sync/remote_change_applier.dart';
 import '../sync/sync_coordinator.dart';
+import '../sync/throttle_retry_policy.dart';
 import '../utils/app_clock.dart';
 
 final remoteCommandDataSourceProvider = Provider<RemoteCommandDataSource>((
@@ -143,6 +144,20 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
     SyncTrigger trigger,
   ) async {
     final startedAt = _clock.nowUtc();
+    final cooldown = DateTime.tryParse(
+      await _database.metadataDao.readValue(_cooldownKey(context)) ?? '',
+    );
+    if (cooldown != null && cooldown.isAfter(startedAt)) {
+      return SyncRunResult(
+        trigger: trigger,
+        startedAt: startedAt,
+        finishedAt: startedAt,
+        pushed: 0,
+        pulled: 0,
+        conflicts: 0,
+        offline: false,
+      );
+    }
     final hasNetworkInterface = await _connectivity.isConnected;
     int initialPull;
     try {
@@ -150,6 +165,19 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       // backend pull is the reachability check that establishes online state.
       initialPull = await _pullAndApply(context);
     } catch (error, stackTrace) {
+      if (error is FirebaseFunctionsException &&
+          error.code == 'resource-exhausted') {
+        await _saveThrottle(context, error.details);
+        return SyncRunResult(
+          trigger: trigger,
+          startedAt: startedAt,
+          finishedAt: _clock.nowUtc(),
+          pushed: 0,
+          pulled: 0,
+          conflicts: 0,
+          offline: false,
+        );
+      }
       if (hasNetworkInterface && !_isReachabilityFailure(error)) rethrow;
       _logger.warning(
         'The backend is unreachable; local POS operation remains available.',
@@ -197,9 +225,16 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       conflicts += outcomes
           .where((outcome) => outcome == _PushOutcome.conflict)
           .length;
+      if (outcomes.contains(_PushOutcome.throttled)) break;
     }
 
-    final finalPull = await _pullAndApply(context);
+    var finalPull = 0;
+    try {
+      finalPull = await _pullAndApply(context);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code != 'resource-exhausted') rethrow;
+      await _saveThrottle(context, error.details);
+    }
     return SyncRunResult(
       trigger: trigger,
       startedAt: startedAt,
@@ -250,6 +285,16 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       return _PushOutcome.succeeded;
     } catch (error, stackTrace) {
       final message = _safeError(error);
+      if (error is FirebaseFunctionsException &&
+          error.code == 'resource-exhausted') {
+        final delay = await _saveThrottle(context, error.details);
+        await _outboxDao.markThrottled(
+          operationId: command.operationId,
+          nextAttemptAt: _clock.nowUtc().add(delay),
+          now: _clock.nowUtc(),
+        );
+        return _PushOutcome.throttled;
+      }
       if (_isConflict(error)) {
         await _recordConflict(context, command, message);
         return _PushOutcome.conflict;
@@ -292,6 +337,50 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       );
     }
     return payload;
+  }
+
+  String _cooldownKey(BusinessContext context) =>
+      'sync_usage_cooldown:${context.organizationId}:${context.branchId}:${context.actorUserId}';
+
+  Future<Duration> _saveThrottle(BusinessContext context, Object? details) {
+    return _database.transaction(() async {
+      final key = _cooldownKey(context);
+      final existing = DateTime.tryParse(
+        await _database.metadataDao.readValue(key) ?? '',
+      );
+      final now = _clock.nowUtc();
+      final previousAttempts =
+          int.tryParse(
+            await _database.metadataDao.readValue('$key:attempts') ?? '',
+          ) ??
+          0;
+      final attempts =
+          existing == null ||
+              now.difference(existing) > const Duration(minutes: 5)
+          ? 1
+          : existing.isAfter(now)
+          ? previousAttempts.clamp(1, 16)
+          : (previousAttempts + 1).clamp(1, 16);
+      final delay = throttleRetryDelay(
+        attemptCount: attempts,
+        details: details,
+      );
+      final until = now.add(delay);
+      if (existing != null && existing.isAfter(until)) {
+        return existing.difference(now);
+      }
+      await _database.metadataDao.writeValue(
+        key: '$key:attempts',
+        value: attempts.toString(),
+        updatedAt: now,
+      );
+      await _database.metadataDao.writeValue(
+        key: key,
+        value: until.toIso8601String(),
+        updatedAt: _clock.nowUtc(),
+      );
+      return delay;
+    });
   }
 
   Future<int> _pullAndApply(BusinessContext context) async {
@@ -672,4 +761,4 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
   }
 }
 
-enum _PushOutcome { succeeded, retry, permanentFailure, conflict }
+enum _PushOutcome { succeeded, retry, permanentFailure, conflict, throttled }

@@ -16,6 +16,10 @@ let poolInitialization: Promise<void> | undefined;
 // connector's scheduled refresh.
 export const maximumPoolAgeMilliseconds = 45 * 60 * 1000;
 
+// Twelve single-instance callables reserve 12 steady-state connections. Keep
+// headroom for overlapping revisions and non-application database clients.
+export const maximumDatabasePoolConnections = 1;
+
 export type DatabaseConnectionConfig = {
   instanceConnectionName: string;
   database: string;
@@ -112,7 +116,7 @@ async function rebuildPool(
       ...connectionOptions,
       database: config.database,
       user: config.user,
-      max: 5,
+      max: maximumDatabasePoolConnections,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 10_000,
     });

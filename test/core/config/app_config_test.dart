@@ -101,5 +101,46 @@ void main() {
         throwsFormatException,
       );
     });
+
+    test('requires an explicit environment for protected builds', () {
+      expect(
+        () => AppConfig.fromValues(
+          environment: 'development',
+          enforceReleaseSafety: true,
+          environmentWasExplicit: false,
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test('rejects development in profile and release builds', () {
+      expect(
+        () => AppConfig.fromValues(
+          environment: 'development',
+          enforceReleaseSafety: true,
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test('accepts an explicit staging protected build', () {
+      final config = AppConfig.fromValues(
+        environment: 'staging',
+        enforceReleaseSafety: true,
+      );
+
+      expect(config.environment, AppEnvironment.staging);
+      expect(config.enableDemoAuth, isFalse);
+    });
+
+    test('rejects production diagnostics', () {
+      expect(
+        () => AppConfig.fromValues(
+          environment: 'production',
+          enableDiagnostics: 'true',
+        ),
+        throwsFormatException,
+      );
+    });
   });
 }

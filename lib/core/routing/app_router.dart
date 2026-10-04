@@ -20,11 +20,13 @@ import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/transfers/presentation/pages/transfers_page.dart';
 import '../../features/users/presentation/pages/users_page.dart';
 import '../widgets/app_navigation_shell.dart';
+import '../config/production_platform_policy.dart';
 import 'app_navigation_item.dart';
 import 'app_route.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = _RouterRefreshNotifier();
+  final platformPolicy = ref.watch(productionPlatformPolicyProvider);
   ref.listen(authControllerProvider, (_, _) => refreshNotifier.refresh());
 
   final initialSession = ref.read(authControllerProvider).asData?.value;
@@ -47,16 +49,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (isAuthRoute) {
-        return _firstAccessiblePath(session);
+        return _firstAccessiblePath(session, platformPolicy);
       }
 
       final route = _routeForLocation(state.matchedLocation);
-      final hasAccess = route == null || route.canAccess(session);
+      final hasAccess =
+          route == null ||
+          (route.canAccess(session) &&
+              (platformPolicy.allowsPointOfSale || route != AppRoute.pos));
 
       if (hasAccess) {
         return null;
       }
-      return _firstAccessiblePath(session) ?? AppRoute.auth.path;
+      return _firstAccessiblePath(session, platformPolicy) ??
+          AppRoute.auth.path;
     },
     routes: [
       GoRoute(
@@ -124,9 +130,13 @@ class _RouterRefreshNotifier extends ChangeNotifier {
   void refresh() => notifyListeners();
 }
 
-String? _firstAccessiblePath(AuthSession session) {
+String? _firstAccessiblePath(
+  AuthSession session,
+  ProductionPlatformPolicy platformPolicy,
+) {
   for (final item in appNavigationItems) {
-    if (item.route.canAccess(session)) {
+    if (item.route.canAccess(session) &&
+        (platformPolicy.allowsPointOfSale || item.route != AppRoute.pos)) {
       return item.route.path;
     }
   }

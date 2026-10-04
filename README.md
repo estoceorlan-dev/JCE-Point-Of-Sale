@@ -3,12 +3,14 @@
 Offline-first Flutter foundation for a scalable, multi-branch point of sale and
 inventory system.
 
-## Supported production platforms
+## Intended deployment platforms
 
-- Windows: primary desktop POS and administration client
-- Android: mobile POS and operational client
-- Web: administration and operational fallback; hardware-specific POS flows
-  remain Windows/Android responsibilities
+- Android: initial production POS and operational candidate
+- Web: production administration/operational fallback; the production POS route
+  is disabled
+- Windows: primary desktop target for development and staging, but production is
+  fail-closed until the supported transport and device-trust requirements in
+  [ADR-0001](docs/adr/0001_windows_production_transport.md) are complete
 
 The generated Linux, macOS, and iOS projects are retained for future evaluation
 but are not current production targets.
@@ -71,11 +73,18 @@ flutter run \
   --dart-define=JCE_DEMO_BRANCH_ID=demo-main
 ```
 
-Production example:
+Production Android example after the isolated backend is provisioned:
 
-```sh
-flutter build windows \
-  --dart-define=JCE_ENV=production
+```powershell
+dart run tool/validate_release_config.dart `
+  --config=config/production_android.local.json `
+  --platform=android `
+  --expected-project=$env:JCE_APPROVED_PRODUCTION_PROJECT_ID
+
+flutter build appbundle `
+  --release `
+  --dart-define=JCE_APPROVED_PRODUCTION_PROJECT_ID=$env:JCE_APPROVED_PRODUCTION_PROJECT_ID `
+  --dart-define-from-file=config/production_android.local.json
 ```
 
 See [Environment configuration](docs/environment_configuration.md) for the
@@ -127,9 +136,9 @@ queries, permission-code seeds, and authenticated product-image finalization.
 See [Phase 7 remote backend](docs/phase_7_remote_backend.md) before applying
 migrations or deploying an environment. Development and staging are deployed
 as separate Firebase/SQL Connect/Cloud SQL projects. The isolated production
-project and runtime identity are prepared, but its live resources remain
-blocked by the Cloud Billing project quota; never point it at a non-production
-database.
+project, runtime identity, client app registrations, billing link, and budget are
+prepared, but its live SQL/Storage resources are not provisioned;
+never point it at a non-production database.
 
 Phase 8 adds the restartable synchronization engine, scoped outbox ownership,
 atomic cursor advancement, optimistic master-data conflicts, accepted
@@ -182,6 +191,14 @@ updated Functions and schema-version-13 client. See
 The ongoing administration and cashier completion work is tracked in
 [Admin/POS implementation status](docs/admin_pos_completion_status.md), including
 what is implemented, the remaining phase exits, verification, and deployment order.
+
+Production release work is gated by the phased
+[deployment, testing, and production-readiness plan](docs/production_deployment_plan.md).
+Phase 0 governance is tracked in the
+[production governance policy](docs/production_governance.md), and Phase 2
+operators use the [production environment runbook](docs/production_environment_runbook.md).
+The current repository implementation and external blockers are summarized in
+the [Phase 0–2 checkpoint](docs/phase_0_2_production_readiness.md).
 
 ```sh
 dart run build_runner build --delete-conflicting-outputs --low-resources-mode

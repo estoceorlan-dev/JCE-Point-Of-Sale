@@ -5,7 +5,13 @@ import {
   isDatabaseAuthenticationFailure,
   isDatabasePoolFresh,
   maximumPoolAgeMilliseconds,
+  maximumDatabasePoolConnections,
 } from "./database.js";
+
+test("pilot pools leave headroom within the verified 25-connection database", () => {
+  assert.equal(maximumDatabasePoolConnections, 1);
+  assert.ok(12 * maximumDatabasePoolConnections <= Math.floor(25 * 0.7));
+});
 
 test("database pools renew before IAM credentials reach one hour", () => {
   const input = {

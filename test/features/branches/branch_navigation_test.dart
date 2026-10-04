@@ -47,6 +47,21 @@ void main() {
     },
   );
 
+  test('production web navigation excludes the POS route', () {
+    final session = _session({
+      AppPermission.viewDashboard,
+      AppPermission.processSales,
+    });
+
+    expect(
+      navigationItemsForSession(
+        session,
+        allowPointOfSale: false,
+      ).map((item) => item.route),
+      [AppRoute.dashboard],
+    );
+  });
+
   testWidgets(
     'compact navigation exposes permission-filtered grouped destinations',
     (tester) async {

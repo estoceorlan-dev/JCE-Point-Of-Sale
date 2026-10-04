@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/config/app_config.dart';
 import 'core/constants/app_constants.dart';
 import 'core/routing/app_router.dart';
 import 'core/sync/sync_lifecycle_listener.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/environment_banner.dart';
 import 'features/hardware/presentation/widgets/receipt_print_lifecycle_listener.dart';
 
 class JcePosApp extends ConsumerWidget {
@@ -13,6 +15,7 @@ class JcePosApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final environment = ref.watch(appConfigProvider).environment;
 
     return MaterialApp.router(
       title: AppConstants.appName,
@@ -21,8 +24,11 @@ class JcePosApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
       routerConfig: router,
-      builder: (context, child) => ReceiptPrintLifecycleListener(
-        child: SyncLifecycleListener(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => EnvironmentBanner(
+        environment: environment,
+        child: ReceiptPrintLifecycleListener(
+          child: SyncLifecycleListener(child: child ?? const SizedBox.shrink()),
+        ),
       ),
     );
   }

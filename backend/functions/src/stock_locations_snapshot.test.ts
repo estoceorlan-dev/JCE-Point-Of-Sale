@@ -19,7 +19,7 @@ function database(permissions: string[]) {
     if (sql.includes("SELECT au.id AS actor_user_id")) {
       return {rows: permissions.length ? [{actor_user_id: "user", permission_codes: permissions}] : [], rowCount: permissions.length ? 1 : 0};
     }
-    assert.deepEqual(values, ["organization", "branch"]);
+        assert.deepEqual(values, ["organization", "branch", 5001]);
     return {rows: [{
       id: "location",
       organization_id: "organization",

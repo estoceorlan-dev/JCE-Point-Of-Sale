@@ -38,6 +38,16 @@ migrate_working_dir/
 .env
 .env.*
 config/*.local.json
+**/credentials*.md
+/credentials.md
+**/*service-account*.json
+**/*application-credentials*.json
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+/android/key.properties
 
 # Symbolication related
 app.*.symbols

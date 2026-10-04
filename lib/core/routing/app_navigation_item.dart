@@ -112,8 +112,15 @@ const appNavigationItems = <AppNavigationItem>[
   ),
 ];
 
-List<AppNavigationItem> navigationItemsForSession(AuthSession session) {
+List<AppNavigationItem> navigationItemsForSession(
+  AuthSession session, {
+  bool allowPointOfSale = true,
+}) {
   return appNavigationItems
-      .where((item) => item.route.canAccess(session))
+      .where(
+        (item) =>
+            item.route.canAccess(session) &&
+            (allowPointOfSale || item.route != AppRoute.pos),
+      )
       .toList(growable: false);
 }

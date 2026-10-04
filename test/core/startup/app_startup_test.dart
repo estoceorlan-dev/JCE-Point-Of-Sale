@@ -6,6 +6,7 @@ import 'package:jce_pos/core/database/app_database.dart';
 import 'package:jce_pos/core/database/database_provider.dart';
 import 'package:jce_pos/core/config/app_config.dart';
 import 'package:jce_pos/core/config/app_environment.dart';
+import 'package:jce_pos/core/config/production_platform_policy.dart';
 import 'package:jce_pos/core/services/firebase_initialization_service.dart';
 import 'package:jce_pos/core/startup/app_initialization_service.dart';
 import 'package:jce_pos/core/startup/app_startup.dart';
@@ -69,6 +70,41 @@ void main() {
 
     expect(initializer.calls, 2);
     expect(find.text('Sign in to your workspace'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  });
+
+  testWidgets('fails before Firebase on a blocked production platform', (
+    tester,
+  ) async {
+    final initializer = _FakeInitializationService();
+    const productionConfig = AppConfig(
+      environment: AppEnvironment.production,
+      enableDemoAuth: false,
+      enableDiagnostics: false,
+    );
+    const blocked = ProductionPlatformPolicy(
+      platform: AppClientPlatform.windows,
+      isSupported: false,
+      allowsPointOfSale: false,
+      blockReason: 'Windows production is deferred.',
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appConfigProvider.overrideWithValue(productionConfig),
+          productionPlatformPolicyProvider.overrideWithValue(blocked),
+          appDatabaseProvider.overrideWithValue(database),
+          firebaseInitializationServiceProvider.overrideWithValue(initializer),
+        ],
+        child: const AppStartup(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(initializer.calls, 0);
+    expect(find.text('JCE POS could not start'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
   });

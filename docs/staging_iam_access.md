@@ -5,12 +5,12 @@ the production project or the POS application password for these steps.
 
 ## Target and current state
 
-Update: the operator completed the temporary role grant. IAM `SET ROLE`, schema
-USAGE/CREATE and live migrations through `0012` subsequently passed.
+Update 2026-09-14: the operator completed the temporary role grant. IAM `SET ROLE`,
+schema USAGE/CREATE and live migrations through `0015` subsequently passed.
 The instructions below remain the reproducible setup/cleanup procedure; do not
 repeat grants unnecessarily. The user approved Functions Auth permissions and
 application-role provisioning; both are configured, and staging schema/connector
-and all eight Functions are deployed. The custom runtime Auth role contains only
+and all 12 Functions are deployed. The custom runtime Auth role contains only
 users.create/get/sendEmail/update. Approved administration grants were audited.
 Temporary migration membership remains present: perform step 5 after database
 work is finished. See the staging checkpoint.

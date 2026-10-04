@@ -344,6 +344,29 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
     return state;
   }
 
+  Future<int> markThrottled({
+    required String operationId,
+    required DateTime nextAttemptAt,
+    required DateTime now,
+  }) {
+    return (update(
+      syncOutboxEntries,
+    )..where((row) => row.operationId.equals(operationId))).write(
+      SyncOutboxEntriesCompanion.custom(
+        status: Constant(OutboxState.retryableFailure.databaseValue),
+        // A quota pause must not exhaust the ordinary failure retry budget.
+        attemptCount: const CustomExpression<int>(
+          'CASE WHEN attempt_count > 0 THEN attempt_count - 1 ELSE 0 END',
+        ),
+        nextAttemptAt: Constant(nextAttemptAt.toUtc()),
+        lastError: const Constant(
+          'Remote usage limit reached; retry scheduled.',
+        ),
+        updatedAt: Constant(now.toUtc()),
+      ),
+    );
+  }
+
   Future<int> recoverStaleProcessing({
     required DateTime staleBefore,
     required DateTime now,

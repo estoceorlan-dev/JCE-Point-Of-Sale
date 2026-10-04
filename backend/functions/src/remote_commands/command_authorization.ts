@@ -37,6 +37,7 @@ const permissionByCommandPrefix: ReadonlyArray<[string, string]> = [
 ];
 
 const permissionByCommand: Readonly<Record<string, string>> = {
+  "product_image.finalize": "products.manage",
   "branch.create": "branches.manage",
   "branch.update": "branches.manage",
   "branch.archive": "branches.manage",

@@ -7,6 +7,11 @@ generated SQL Connect SDK under `lib/core/remote/generated`.
 
 ## Environment isolation
 
+Current-state note (2026-09-15): staging has migrations through `0015`, 63
+migration-owned public tables, and all 12 Functions. See the
+[staging acceptance checkpoint](staging_acceptance_checkpoint.md). The Phase 7
+counts later in this document are retained as historical Phase 7 evidence.
+
 Use one Firebase project, SQL Connect service, Cloud SQL instance, runtime
 service account, and Storage bucket per environment. Reuse the stable service,
 instance, and database IDs from `dataconnect/dataconnect.yaml` inside each
@@ -16,7 +21,7 @@ project; project boundaries provide the isolation.
 |---|---|---|
 | `development` | `jce-pos` | Live; migrations, SQL Connect, Storage, and five Functions deployed; signed-in smoke passed |
 | `staging` | `jce-pos-staging-259528` | Live and isolated; migrations, SQL Connect, Storage, and five Functions deployed; signed-in smoke passed |
-| `production` | `jce-pos-production-259528` | Project and dedicated runtime identity created; live resources blocked by the Cloud Billing project quota |
+| `production` | `jce-pos-production-259528` | Project, dedicated identities, client registrations, billing, and budget prepared; live SQL/Storage resources are not provisioned |
 
 The aliases are checked into `.firebaserc`. Staging uses a dedicated
 `jce-pos-functions` service account with the runtime roles needed for Cloud SQL,

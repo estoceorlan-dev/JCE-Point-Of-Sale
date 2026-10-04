@@ -1,4 +1,3 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/app_config.dart';
@@ -53,7 +52,6 @@ final productImageUploadProcessorProvider =
       return ProductImageUploadProcessor(
         database: ref.watch(appDatabaseProvider),
         firebaseAuth: ref.watch(firebaseAuthProvider),
-        storage: FirebaseStorage.instance,
         functions: ref.watch(firebaseFunctionsProvider),
         functionName: config.finalizeProductImageFunctionName,
         idGenerator: ref.watch(idGeneratorProvider),

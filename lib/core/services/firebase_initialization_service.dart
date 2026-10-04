@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/app_config.dart';
 import '../startup/app_initialization_service.dart';
 import 'firebase_environment_options.dart';
+import 'firebase_app_check_initializer.dart';
 
 final firebaseInitializationServiceProvider =
     Provider<AppInitializationService>((ref) {
@@ -27,9 +28,13 @@ class FirebaseInitializationService implements AppInitializationService {
           '${config.environment.name} build requires ${options.projectId}.',
         );
       }
-      return;
+    } else {
+      await Firebase.initializeApp(options: options);
     }
 
-    await Firebase.initializeApp(options: options);
+    await const FirebaseAppCheckInitializer().initialize(
+      app: Firebase.app(),
+      config: config,
+    );
   }
 }

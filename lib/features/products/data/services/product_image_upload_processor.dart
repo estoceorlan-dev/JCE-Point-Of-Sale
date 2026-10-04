@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:drift/drift.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../../../core/logger/app_logger.dart';
+import '../../../../core/sync/throttle_retry_policy.dart';
 import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../shared/models/business_context.dart';
@@ -16,7 +16,6 @@ class ProductImageUploadProcessor {
   const ProductImageUploadProcessor({
     required AppDatabase database,
     required FirebaseAuth firebaseAuth,
-    required FirebaseStorage storage,
     required FirebaseFunctions functions,
     required String functionName,
     required IdGenerator idGenerator,
@@ -24,7 +23,6 @@ class ProductImageUploadProcessor {
     required AppLogger logger,
   }) : _database = database,
        _firebaseAuth = firebaseAuth,
-       _storage = storage,
        _functions = functions,
        _functionName = functionName,
        _idGenerator = idGenerator,
@@ -33,7 +31,6 @@ class ProductImageUploadProcessor {
 
   final AppDatabase _database;
   final FirebaseAuth _firebaseAuth;
-  final FirebaseStorage _storage;
   final FirebaseFunctions _functions;
   final String _functionName;
   final IdGenerator _idGenerator;
@@ -45,6 +42,12 @@ class ProductImageUploadProcessor {
     if (user == null) {
       return 0;
     }
+    final cooldownKey =
+        'image_usage_cooldown:${context.organizationId}:${user.uid}';
+    final cooldown = DateTime.tryParse(
+      await _database.metadataDao.readValue(cooldownKey) ?? '',
+    );
+    if (cooldown != null && cooldown.isAfter(_clock.nowUtc())) return 0;
     final pending =
         await (_database.select(_database.productImages)
               ..where(
@@ -57,22 +60,30 @@ class ProductImageUploadProcessor {
               ..orderBy([
                 (row) => OrderingTerm.asc(row.updatedAt),
                 (row) => OrderingTerm.asc(row.sortOrder),
-              ]))
+              ])
+              ..limit(20))
             .get();
     var completed = 0;
     for (final image in pending) {
-      if (await _uploadOne(context, user.uid, image)) {
-        completed += 1;
+      try {
+        if (await _uploadOne(context, image)) completed += 1;
+      } on FirebaseFunctionsException catch (error) {
+        if (error.code != 'resource-exhausted') rethrow;
+        await _database.metadataDao.writeValue(
+          key: cooldownKey,
+          value: _clock
+              .nowUtc()
+              .add(throttleRetryDelay(attemptCount: 1, details: error.details))
+              .toIso8601String(),
+          updatedAt: _clock.nowUtc(),
+        );
+        break;
       }
     }
     return completed;
   }
 
-  Future<bool> _uploadOne(
-    BusinessContext context,
-    String firebaseUid,
-    ProductImage image,
-  ) async {
+  Future<bool> _uploadOne(BusinessContext context, ProductImage image) async {
     final localPath = image.localPath;
     if (localPath == null) {
       return false;
@@ -86,15 +97,11 @@ class ProductImageUploadProcessor {
         updatedAt: Value(now),
       ),
     );
-    final stagingPath = 'users/$firebaseUid/product-images/${image.id}';
     try {
       final bytes = await readProductImageBytes(localPath);
-      await _storage
-          .ref(stagingPath)
-          .putData(
-            bytes,
-            SettableMetadata(contentType: _contentType(localPath)),
-          );
+      if (bytes.isEmpty || bytes.length > 5 * 1024 * 1024) {
+        throw const FormatException('Product images must be at most 5 MiB.');
+      }
       final response = await _functions
           .httpsCallable(_functionName)
           .call<Map<Object?, Object?>>({
@@ -103,7 +110,8 @@ class ProductImageUploadProcessor {
             'branchId': context.branchId,
             'productId': image.productId,
             'imageId': image.id,
-            'stagingPath': stagingPath,
+            'bytesBase64': base64Encode(bytes),
+            'contentType': _contentType(localPath),
           });
       final productImage = _map(response.data['productImage']);
       final remoteUrl = productImage['remote_url'] ?? productImage['remoteUrl'];
@@ -154,6 +162,10 @@ class ProductImageUploadProcessor {
           updatedAt: Value(_clock.nowUtc()),
         ),
       );
+      if (error is FirebaseFunctionsException &&
+          error.code == 'resource-exhausted') {
+        rethrow;
+      }
       _logger.warning(
         'A pending product image upload failed and will be retried.',
         scope: 'product_image_upload',

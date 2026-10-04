@@ -18,6 +18,9 @@ test("an authenticated user updates last-seen device metadata without taking own
         ]);
         return { rows: [{ app_user_id: "admin-user" }], rowCount: 1 };
       }
+      if (sql.startsWith("SELECT disabled_at FROM devices")) {
+        return {rows: [{disabled_at: null}], rowCount: 1};
+      }
       assert.ok(sql.startsWith("INSERT INTO devices"));
       assert.ok(
         sql.includes(
@@ -26,6 +29,7 @@ test("an authenticated user updates last-seen device metadata without taking own
       );
       assert.ok(!sql.includes("user_id = EXCLUDED.user_id"));
       assert.ok(!sql.includes("WHERE devices.user_id = EXCLUDED.user_id"));
+      assert.ok(sql.includes("WHERE devices.disabled_at IS NULL"));
       assert.deepEqual(values, [
         "device-a",
         "organization",
@@ -45,5 +49,19 @@ test("an authenticated user updates last-seen device metadata without taking own
     branchId: "branch",
   });
 
-  assert.equal(statements.length, 2);
+  assert.equal(statements.length, 3);
+});
+
+test("disabled installations cannot re-register to remove disablement", async () => {
+  const client = {async query(sql: string) {
+    if (sql.includes("SELECT au.id AS app_user_id")) {
+      return {rows: [{app_user_id: "user"}], rowCount: 1};
+    }
+    assert.ok(sql.includes("SELECT disabled_at FROM devices"));
+    return {rows: [{disabled_at: new Date()}], rowCount: 1};
+  }};
+  await assert.rejects(registerDeviceForUser(client as unknown as PoolClient, {
+    firebaseUid: "user", deviceId: "disabled", platform: "android",
+    organizationId: "org", branchId: "branch",
+  }));
 });

@@ -1,6 +1,7 @@
 import {PoolClient} from "pg";
 
 import {StaffInviteError} from "./staff_invites";
+import {boundedSnapshotQuery, ensureSnapshotFits} from "./snapshot_capacity";
 
 export async function loadAdministrationSnapshot(
   client: PoolClient,
@@ -51,7 +52,7 @@ async function readSnapshot(
   const registerDirectory = accessDirectory || permissions.has("branches.manage") ||
     permissions.has("registers.manage");
   const read = (sql: string, allowed = true) => allowed ?
-    client.query(sql, [input.organizationId]) : Promise.resolve({rows: []});
+    boundedSnapshotQuery(client, sql, [input.organizationId]) : Promise.resolve({rows: []});
 
   const [branches, users, roles, rolePermissions, assignments, registers,
     taxCategories] = await Promise.all([
@@ -128,7 +129,7 @@ async function readSnapshot(
     ),
   ]);
 
-  return {
+  return ensureSnapshotFits({
     schemaVersion: 1,
     organizationId: input.organizationId,
     permissions: [...permissions].sort(),
@@ -140,7 +141,7 @@ async function readSnapshot(
     registers: serializeRows(registers.rows),
     taxCategories: serializeRows(taxCategories.rows),
     generatedAt: new Date().toISOString(),
-  };
+  });
 }
 
 function serializeRows(rows: Record<string, unknown>[]) {

@@ -3,11 +3,9 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     match /users/{uid}/product-images/{imageId} {
-      allow write: if request.auth != null
-        && request.auth.uid == uid
-        && request.resource.size < 10 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
-      allow read: if false;
+      // Upload bytes go through the App Check + Auth + RBAC protected callable.
+      // Direct client writes would bypass organization and byte quotas.
+      allow read, write: if false;
     }
 
     match /organizations/{organizationId}/products/{productId}/{imageId} {

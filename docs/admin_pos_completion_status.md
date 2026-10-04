@@ -1,6 +1,17 @@
 # Admin operations and cashier POS — implementation checkpoint
 
-Updated 2026-09-10. This tracks the requested **Phases 0–7**, separately from the
+Updated 2026-09-15. The latest staging baseline has PostgreSQL migrations through
+`0015`, 63 migration-owned public tables, all 12 Functions, and the schema-19
+client. The 2026-09-15 production-hardening work adds Phase 0 governance records,
+an interim Windows production ADR, fail-closed release configuration, isolated
+production Hosting mapping, and read-only production preflight automation. No
+production data, migration, or deployment occurred. Production labels and IAM
+were hardened, keyless foundation identities and Android/web app registrations
+were created, and validated local client builds now pass. Billing-dependent cloud
+provisioning and named approvals remain open. Historical dated evidence below is
+retained as recorded.
+
+This tracks the requested **Phases 0–7**, separately from the
 repository's historical Phase 15 hardware work. **The full delivery plan is not
 complete. The staging backend plus Android and web clients are deployed; the
 Windows client is built, and full pilot acceptance is pending.**

@@ -120,6 +120,17 @@ test("cross-branch access is denied before a remote write", async () => {
   assert.equal(client.statements.at(-1), "ROLLBACK");
 });
 
+test("register resolution serializes with access changes before authorization", async () => {
+  const client = new FakePoolClient({access: false});
+  await assert.rejects(processRemoteCommand(asClient(client), command({
+    commandType: "register.claim.resolve",
+  })), (error) => error instanceof RemoteCommandError && error.code === "permission-denied");
+  assert.match(client.statements[1], /pg_advisory_xact_lock/);
+  assert.match(client.statements[2], /pg_advisory_xact_lock/);
+  assert.match(client.statements[3], /FROM branches/);
+  assert.equal(client.statements.at(-1), "ROLLBACK");
+});
+
 test("a duplicate operation returns its original result", async () => {
   const original = {transactionId: "movement-1", balances: [{onHandMilli: 7}]};
   const client = new FakePoolClient({priorResult: original});

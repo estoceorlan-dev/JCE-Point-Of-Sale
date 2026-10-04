@@ -19,6 +19,13 @@
           "jce-pos-staging-259528"
         ]
       }
+    },
+    "jce-pos-production-259528": {
+      "hosting": {
+        "production-web": [
+          "jce-pos-production-259528"
+        ]
+      }
     }
   },
   "etags": {}

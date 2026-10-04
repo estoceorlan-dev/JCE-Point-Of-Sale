@@ -60,6 +60,124 @@ void main() {
     );
   }
 
+  test(
+    'throttling remains retryable beyond the normal attempt limit',
+    () async {
+      await _enqueue(database, initialTime, operationId: 'throttled');
+      commands.error = FirebaseFunctionsException(
+        code: 'resource-exhausted',
+        message: 'Usage limit reached',
+        details: {'retryAfterSeconds': 120},
+      );
+      for (var attempt = 0; attempt < 12; attempt++) {
+        await service().synchronize(context: context);
+        final row = await database
+            .select(database.syncOutboxEntries)
+            .getSingle();
+        expect(row.status, OutboxState.retryableFailure.databaseValue);
+        expect(row.attemptCount, 0);
+        expect(
+          row.nextAttemptAt!.difference(clock.value).inSeconds,
+          greaterThanOrEqualTo(120),
+        );
+        expect(await database.select(database.syncConflicts).get(), isEmpty);
+        // A fresh service still observes the persisted cooldown.
+        final requests = commands.executed.length;
+        await service().synchronize(context: context);
+        expect(commands.executed.length, requests);
+        clock.value = clock.value.add(const Duration(hours: 2));
+      }
+      commands.error = _FunctionsError('unavailable');
+      await service().synchronize(context: context);
+      final afterNetworkFailure = await database
+          .select(database.syncOutboxEntries)
+          .getSingle();
+      expect(
+        afterNetworkFailure.status,
+        OutboxState.retryableFailure.databaseValue,
+      );
+      expect(afterNetworkFailure.attemptCount, 1);
+      clock.value = clock.value.add(const Duration(hours: 2));
+      commands.error = null;
+      expect((await service().synchronize(context: context)).pushed, 1);
+      expect(
+        (await database.select(database.syncOutboxEntries).getSingle())
+            .operationId,
+        'throttled',
+      );
+      expect(
+        (await database.select(database.syncOutboxEntries).getSingle()).status,
+        OutboxState.succeeded.databaseValue,
+      );
+    },
+  );
+
+  test(
+    'a throttled push stops further batches without discarding pending work',
+    () async {
+      for (var index = 0; index < 12; index++) {
+        await _enqueue(
+          database,
+          initialTime,
+          operationId: 'op-$index',
+          aggregateId: 'item-$index',
+        );
+      }
+      commands.error = _FunctionsError('resource-exhausted');
+      await service().synchronize(context: context);
+      expect(commands.executed.length, 4);
+      expect(
+        await database.select(database.syncOutboxEntries).get(),
+        hasLength(12),
+      );
+      expect(await database.select(database.syncConflicts).get(), isEmpty);
+      clock.value = clock.value.add(const Duration(hours: 2));
+      commands.error = null;
+      expect((await service().synchronize(context: context)).pushed, 12);
+    },
+  );
+
+  test(
+    'consecutive quota windows back off across recreated services',
+    () async {
+      await _enqueue(database, initialTime, operationId: 'quota-backoff');
+      commands.error = FirebaseFunctionsException(
+        code: 'resource-exhausted',
+        message: 'Usage limit reached',
+        details: {'retryAfterSeconds': 1},
+      );
+      for (var attempt = 1; attempt <= 6; attempt++) {
+        await service().synchronize(context: context);
+        final row = await database
+            .select(database.syncOutboxEntries)
+            .getSingle();
+        expect(row.attemptCount, 0);
+        expect(
+          row.nextAttemptAt!.difference(clock.value).inMilliseconds,
+          greaterThanOrEqualTo(5000 * (1 << (attempt - 1))),
+        );
+        clock.value = row.nextAttemptAt!.add(const Duration(seconds: 1));
+      }
+      commands.error = null;
+      expect((await service().synchronize(context: context)).pushed, 1);
+    },
+  );
+
+  test(
+    'throttled pulls pause and recover without touching the outbox',
+    () async {
+      await _enqueue(database, initialTime, operationId: 'pull-pause');
+      remote.error = _FunctionsError('resource-exhausted');
+      await service().synchronize(context: context);
+      expect(commands.executed, isEmpty);
+      remote.error = null;
+      await service().synchronize(context: context);
+      expect(commands.executed, isEmpty);
+      clock.value = clock.value.add(const Duration(minutes: 2));
+      expect((await service().synchronize(context: context)).pushed, 1);
+    },
+  );
+
   test('offline commands synchronize after connectivity returns', () async {
     await _enqueue(database, initialTime, operationId: 'op-1');
     connectivity.connected = false;

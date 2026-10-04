@@ -55,17 +55,18 @@ export async function copyProductImage(
   const source = bucket.file(input.stagingPath);
   const [exists] = await source.exists();
   if (!exists) throw new RemoteCommandError("not-found", "The staged product image does not exist.");
+  const [metadata] = await source.getMetadata();
+  const size = Number(metadata.size ?? 0);
+  const allowedContentTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+  if (!Number.isSafeInteger(size) || size < 1 || size > 5 * 1024 * 1024 ||
+      !metadata.contentType || !allowedContentTypes.has(metadata.contentType)) {
+    await source.delete({ignoreNotFound: true});
+    throw new RemoteCommandError("invalid-argument", "The staged product image is invalid.");
+  }
   const storagePath = `organizations/${input.organizationId}/products/${input.productId}/${input.aggregateId}`;
   const destination = bucket.file(storagePath);
   await source.copy(destination);
-  const tokenHash = createHash("sha256").update(input.operationId).digest("hex");
-  const downloadToken = [
-    tokenHash.slice(0, 8),
-    tokenHash.slice(8, 12),
-    tokenHash.slice(12, 16),
-    tokenHash.slice(16, 20),
-    tokenHash.slice(20, 32),
-  ].join("-");
+  const downloadToken = randomUUID();
   await destination.setMetadata({metadata: {firebaseStorageDownloadTokens: downloadToken}});
   const remoteUrl = `https://firebasestorage.googleapis.com/v0/b/${encodeURIComponent(bucket.name)}/o/${encodeURIComponent(storagePath)}?alt=media&token=${downloadToken}`;
   return {storagePath, remoteUrl};

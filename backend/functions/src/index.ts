@@ -11,6 +11,7 @@ import {
   updateBranchNameForUser,
 } from "./access_profile";
 import {withDatabase} from "./database";
+import {requireVerifiedUser, requireRecentVerifiedUser} from "./callable_identity";
 import {
   asObject,
   RemoteCommandError,
@@ -33,6 +34,11 @@ import {loadStockLocationsSnapshot} from "./stock_locations_snapshot";
 import {getPosBootstrapPageForUser} from "./pos_bootstrap";
 import {pullAuthorizedChangesForUser} from "./pull_authorized_changes";
 import {issueRegisterClaimResolutionGrant} from "./manager_action_grants";
+import {RateLimitExceededError} from "./api_rate_limiter";
+import {loadUsagePolicies, UsageScope} from "./usage_policy";
+import {enforceUsageAdmission, OptionalFeatureDisabledError} from "./usage_admission";
+import {decodeImageUpload, reserveImageBytes, stageAuthorizedImage} from "./product_image_upload";
+import {SnapshotCapacityError} from "./snapshot_capacity";
 
 initializeApp();
 
@@ -53,16 +59,22 @@ const runtimeServiceAccount = defineString("JCE_FUNCTIONS_SERVICE_ACCOUNT", {
   description: "Runtime service account for this environment.",
 });
 
+const standardCallableOptions = {
+  region: functionsRegion,
+  serviceAccount: runtimeServiceAccount,
+  enforceAppCheck: true,
+  maxInstances: 1,
+  minInstances: 0,
+  concurrency: 10,
+  memory: "256MiB" as const,
+  timeoutSeconds: 60,
+};
+
 export const getMyAccessProfile = onCall(
-  {
-    region: functionsRegion,
-    serviceAccount: runtimeServiceAccount,
-  },
+  standardCallableOptions,
   async (request) => {
-    const uid = request.auth?.uid;
-    if (uid === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
+    const uid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(uid, "access_profile", request.data);
 
     try {
       return await withDatabase(databaseConfig(), (client) =>
@@ -88,15 +100,10 @@ export const getMyAccessProfile = onCall(
 );
 
 export const registerDevice = onCall(
-  {
-    region: functionsRegion,
-    serviceAccount: runtimeServiceAccount,
-  },
+  standardCallableOptions,
   async (request) => {
-    const uid = request.auth?.uid;
-    if (uid === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
+    const uid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(uid, "register_device", request.data);
 
     const deviceId = requiredString(request.data, "deviceId");
     const platform = requiredString(request.data, "platform");
@@ -121,22 +128,23 @@ export const registerDevice = onCall(
           "The device cannot be registered for this branch.",
         );
       }
-      logger.error("Device registration failed.", error);
+      if (error instanceof RateLimitExceededError) {
+        logger.warn("Device enrollment quota denied a request.",
+          {event: "usage_limit_denied", scope: "new_device"});
+        throw new HttpsError("resource-exhausted", "The device enrollment budget is temporarily exhausted.",
+          {retryAfterSeconds: error.retryAfterSeconds});
+      }
+      logger.error("Device registration failed.", {code: (error as {code?: string}).code ?? "unknown"});
       throw new HttpsError("internal", "Device registration failed.");
     }
   },
 );
 
 export const updateBranchName = onCall(
-  {
-    region: functionsRegion,
-    serviceAccount: runtimeServiceAccount,
-  },
+  standardCallableOptions,
   async (request) => {
-    const uid = request.auth?.uid;
-    if (uid === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
+    const uid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(uid, "update_branch", request.data);
 
     const organizationId = requiredString(request.data, "organizationId");
     const branchId = requiredString(request.data, "branchId");
@@ -172,15 +180,10 @@ export const updateBranchName = onCall(
 );
 
 export const applyRemoteCommand = onCall(
-  {
-    region: functionsRegion,
-    serviceAccount: runtimeServiceAccount,
-  },
+  standardCallableOptions,
   async (request) => {
-    const uid = request.auth?.uid;
-    if (uid === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
+    const uid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(uid, "remote_command", request.data);
     try {
       const data = asObject(request.data, "data");
       const payload = asObject(data.payload, "payload");
@@ -217,15 +220,10 @@ export const applyRemoteCommand = onCall(
 );
 
 export const generateStaffInviteLink = onCall(
-  {
-    region: functionsRegion,
-    serviceAccount: runtimeServiceAccount,
-  },
+  standardCallableOptions,
   async (request) => {
-    const actorFirebaseUid = request.auth?.uid;
-    if (actorFirebaseUid === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
+    const actorFirebaseUid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(actorFirebaseUid, "staff_invite", request.data);
     const organizationId = requiredString(request.data, "organizationId");
     const userId = requiredString(request.data, "userId");
     try {
@@ -272,16 +270,14 @@ export const generateStaffInviteLink = onCall(
 );
 
 export const acceptStaffInvitation = onCall(
-  {
-    region: functionsRegion,
-    serviceAccount: runtimeServiceAccount,
-  },
+  standardCallableOptions,
   async (request) => {
-    const firebaseUid = request.auth?.uid;
+    const firebaseUid = requireVerifiedUser(request);
     const email = request.auth?.token.email;
-    if (firebaseUid === undefined || typeof email !== "string") {
+    if (typeof email !== "string") {
       throw new HttpsError("unauthenticated", "A verified identity is required.");
     }
+    await enforceRequestRateLimit(firebaseUid, "accept_invite", request.data);
     const organizationId = optionalString(request.data, "organizationId") ?? undefined;
     try {
       const acceptedCount = await withDatabase(databaseConfig(), (client) =>
@@ -299,10 +295,10 @@ export const acceptStaffInvitation = onCall(
 );
 
 export const getStockLocationsSnapshot = onCall(
-  {region: functionsRegion, serviceAccount: runtimeServiceAccount},
+  standardCallableOptions,
   async (request) => {
-    const firebaseUid = request.auth?.uid;
-    if (!firebaseUid) throw new HttpsError("unauthenticated", "Authentication is required.");
+    const firebaseUid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(firebaseUid, "stock_locations", request.data);
     const organizationId = requiredString(request.data, "organizationId");
     const branchId = requiredString(request.data, "branchId");
     try {
@@ -310,6 +306,10 @@ export const getStockLocationsSnapshot = onCall(
         loadStockLocationsSnapshot(client, {firebaseUid, organizationId, branchId}));
     } catch (error) {
       if (error instanceof RemoteCommandError) throw new HttpsError(error.code, error.message);
+      if (error instanceof SnapshotCapacityError) {
+        throw new HttpsError("resource-exhausted", error.message,
+          {retryAfterSeconds: 3600, reason: "snapshot-capacity"});
+      }
       logger.error("Stock location snapshot failed.", {code: (error as {code?: string}).code ?? "unknown"});
       throw new HttpsError("internal", "Stock locations could not be refreshed.");
     }
@@ -317,15 +317,10 @@ export const getStockLocationsSnapshot = onCall(
 );
 
 export const getAdministrationSnapshot = onCall(
-  {
-    region: functionsRegion,
-    serviceAccount: runtimeServiceAccount,
-  },
+  standardCallableOptions,
   async (request) => {
-    const firebaseUid = request.auth?.uid;
-    if (firebaseUid === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
+    const firebaseUid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(firebaseUid, "administration_snapshot", request.data);
     const organizationId = requiredString(request.data, "organizationId");
     try {
       return await withDatabase(databaseConfig(), (client) =>
@@ -335,19 +330,21 @@ export const getAdministrationSnapshot = onCall(
       if (error instanceof StaffInviteError) {
         throw new HttpsError(error.reason, error.message);
       }
-      logger.error("Administration snapshot failed.", error);
+      if (error instanceof SnapshotCapacityError) {
+        throw new HttpsError("resource-exhausted", error.message,
+          {retryAfterSeconds: 3600, reason: "snapshot-capacity"});
+      }
+      logger.error("Administration snapshot failed.", {code: (error as {code?: string}).code ?? "unknown"});
       throw new HttpsError("internal", "The administration snapshot could not be loaded.");
     }
   },
 );
 
 export const getPosBootstrapPage = onCall(
-  {region: functionsRegion, serviceAccount: runtimeServiceAccount},
+  standardCallableOptions,
   async (request) => {
-    const firebaseUid = request.auth?.uid;
-    if (firebaseUid === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
+    const firebaseUid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(firebaseUid, "pos_bootstrap", request.data);
     try {
       const data = asObject(request.data, "data");
       const rawPageSize = data.pageSize;
@@ -377,12 +374,10 @@ export const getPosBootstrapPage = onCall(
 );
 
 export const pullAuthorizedChangesV2 = onCall(
-  {region: functionsRegion, serviceAccount: runtimeServiceAccount},
+  standardCallableOptions,
   async (request) => {
-    const firebaseUid = request.auth?.uid;
-    if (firebaseUid === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
+    const firebaseUid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(firebaseUid, "pull_changes", request.data);
     try {
       const data = asObject(request.data, "data");
       const afterSequence = data.afterSequence;
@@ -414,12 +409,10 @@ export const pullAuthorizedChangesV2 = onCall(
 );
 
 export const authorizeRegisterClaimResolution = onCall(
-  {region: functionsRegion, serviceAccount: runtimeServiceAccount},
+  standardCallableOptions,
   async (request) => {
-    const managerFirebaseUid = request.auth?.uid;
-    if (managerFirebaseUid === undefined) {
-      throw new HttpsError("unauthenticated", "Manager authentication is required.");
-    }
+    const managerFirebaseUid = requireRecentVerifiedUser(request);
+    await enforceRequestRateLimit(managerFirebaseUid, "register_claim", request.data);
     try {
       const data = asObject(request.data, "data");
       return await withDatabase(databaseConfig(), (client) =>
@@ -459,18 +452,16 @@ async function getAuthUserForStaff(
 }
 
 export const finalizeProductImage = onCall(
-  {
-    region: functionsRegion,
-    serviceAccount: runtimeServiceAccount,
-  },
+  {...standardCallableOptions, concurrency: 1},
   async (request) => {
-    const uid = request.auth?.uid;
-    if (uid === undefined) {
-      throw new HttpsError("unauthenticated", "Authentication is required.");
-    }
+    const uid = requireVerifiedUser(request);
+    await enforceRequestRateLimit(uid, "product_image", request.data);
     try {
       const data = asObject(request.data, "data");
       const imageId = requiredString(data, "imageId");
+      if (![imageId, uid].every((value) => /^[A-Za-z0-9_.:-]{1,256}$/.test(value))) {
+        throw new HttpsError("invalid-argument", "The image identity is invalid.");
+      }
       const input = {
         firebaseUid: uid,
         operationId: requiredString(data, "operationId"),
@@ -480,13 +471,21 @@ export const finalizeProductImage = onCall(
         aggregateType: "product_image",
         aggregateId: imageId,
         productId: requiredString(data, "productId"),
-        stagingPath: requiredString(data, "stagingPath"),
+        stagingPath: `users/${uid}/product-images/${imageId}`,
         payload: {},
       };
       const prior = await withDatabase(databaseConfig(), (client) =>
         findPriorImageFinalization(client, input),
       );
       if (prior !== null) return prior;
+      if (data.bytesBase64 !== undefined) {
+        const bytes = decodeImageUpload(data.bytesBase64, data.contentType);
+        await withDatabase(databaseConfig(), (client) =>
+          reserveImageBytes(client, input.organizationId, bytes.length));
+        await stageAuthorizedImage(input, bytes, data.contentType as string);
+      } else if (requiredString(data, "stagingPath") !== input.stagingPath) {
+        throw new HttpsError("permission-denied", "The staging image path is invalid.");
+      }
       const uploaded = await copyProductImage(input);
       const result = await withDatabase(databaseConfig(), (client) =>
         persistProductImageFinalization(client, input, uploaded),
@@ -497,7 +496,14 @@ export const finalizeProductImage = onCall(
       if (error instanceof RemoteCommandError) {
         throw new HttpsError(error.code, error.message);
       }
-      logger.error("Product image finalization failed.", error);
+      if (error instanceof HttpsError) throw error;
+      if (error instanceof RateLimitExceededError) {
+        logger.warn("Image byte budget denied a request.",
+          {event: "usage_limit_denied", scope: "image_bytes"});
+        throw new HttpsError("resource-exhausted", "The image upload budget is temporarily exhausted.",
+          {retryAfterSeconds: error.retryAfterSeconds});
+      }
+      logger.error("Product image finalization failed.", {code: (error as {code?: string}).code ?? "unknown"});
       throw new HttpsError("internal", "The product image could not be finalized.");
     }
   },
@@ -509,6 +515,47 @@ function databaseConfig() {
     database: databaseName.value(),
     user: databaseUser.value(),
   };
+}
+
+async function enforceRequestRateLimit(
+  firebaseUid: string,
+  scope: UsageScope,
+  data: unknown,
+): Promise<void> {
+  const maximumBytes = scope === "product_image" ? 7 * 1024 * 1024 : 1024 * 1024;
+  if (Buffer.byteLength(JSON.stringify(data) ?? "") > maximumBytes) {
+    throw new HttpsError("invalid-argument", "The request is too large.");
+  }
+  const organizationId = optionalString(data, "organizationId") ?? undefined;
+  const branchId = optionalString(data, "branchId") ?? undefined;
+  if ((organizationId?.length ?? 0) > 256 || (branchId?.length ?? 0) > 256) {
+    throw new HttpsError("invalid-argument", "The request scope is invalid.");
+  }
+  try {
+    const policy = loadUsagePolicies()[scope];
+    await withDatabase(databaseConfig(), (client) =>
+      enforceUsageAdmission(client, {firebaseUid, scope, policy, organizationId, branchId}),
+    );
+  } catch (error) {
+    if (error instanceof RateLimitExceededError) {
+      logger.warn("Usage limit denied a request.", {event: "usage_limit_denied", scope});
+      throw new HttpsError(
+        "resource-exhausted",
+        "Too many requests. Retry shortly.",
+        {retryAfterSeconds: error.retryAfterSeconds},
+      );
+    }
+    if (error instanceof OptionalFeatureDisabledError) {
+      logger.warn("Optional feature paused.", {event: "optional_feature_paused", scope});
+      throw new HttpsError("resource-exhausted", "This optional feature is temporarily paused.",
+        {retryAfterSeconds: 3600, reason: "optional-feature-paused"});
+    }
+    logger.error("Rate-limit enforcement failed closed.", {
+      scope,
+      code: (error as {code?: string}).code ?? "unknown",
+    });
+    throw new HttpsError("unavailable", "Request protection is unavailable.");
+  }
 }
 
 function requiredString(

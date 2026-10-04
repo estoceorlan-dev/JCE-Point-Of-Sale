@@ -60,6 +60,7 @@ final registerClaimAuthorizationServiceProvider =
     Provider<RegisterClaimAuthorizationService>((ref) {
       final config = ref.watch(appConfigProvider);
       return FirebaseRegisterClaimAuthorizationService(
+        config: config,
         functionName: config.registerClaimAuthorizationFunctionName,
         region:
             config.firebaseFunctionsRegion ??

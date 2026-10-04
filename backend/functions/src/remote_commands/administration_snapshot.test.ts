@@ -16,7 +16,8 @@ function database(permissions: string[], failRead = false) {
       assert.deepEqual(values?.slice(0, 2), ["uid", "org"]);
       return {rows: permissions.map((permission_code) => ({permission_code})), rowCount: permissions.length};
     }
-    assert.deepEqual(values, ["org"]);
+      assert.deepEqual(values, ["org", 5001]);
+      assert.match(sql, /LIMIT \$2$/);
     if (failRead) throw new Error("database read failed");
     return {rows: [{id: "record", createdAt: new Date("2026-09-06T00:00:00Z")}], rowCount: 1};
   }} as unknown as PoolClient;

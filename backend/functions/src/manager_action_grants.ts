@@ -25,9 +25,15 @@ export async function issueRegisterClaimResolutionGrant(
   }
   await client.query("BEGIN");
   try {
+    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
+      [`access-administration:${input.organizationId}`]);
     const manager = await client.query<{id: string}>(
       `SELECT au.id
        FROM app_users au
+       INNER JOIN organizations o ON o.id = au.organization_id
+         AND o.is_active = true AND o.deleted_at IS NULL
+       INNER JOIN branches b ON b.organization_id = o.id AND b.id = $3
+         AND b.is_active = true AND b.deleted_at IS NULL
        INNER JOIN user_role_assignments ura
          ON ura.user_id = au.id AND ura.organization_id = au.organization_id
          AND (ura.branch_id IS NULL OR ura.branch_id = $3)
@@ -39,7 +45,7 @@ export async function issueRegisterClaimResolutionGrant(
          ON rp.role_id = r.id AND rp.permission_code = 'registers.manage'
        WHERE au.firebase_uid = $1 AND au.organization_id = $2
          AND au.status = 'active' AND au.deleted_at IS NULL
-       LIMIT 1`,
+       LIMIT 1 FOR SHARE OF au, o, b`,
       [input.managerFirebaseUid, input.organizationId, input.branchId],
     );
     if (manager.rowCount !== 1) {
@@ -58,6 +64,10 @@ export async function issueRegisterClaimResolutionGrant(
        INNER JOIN app_users requester
          ON requester.id = $6 AND requester.organization_id = claim.organization_id
          AND requester.status = 'active' AND requester.deleted_at IS NULL
+       INNER JOIN devices device
+         ON device.id = claim.device_id
+         AND device.organization_id = claim.organization_id
+         AND device.branch_id = claim.branch_id AND device.disabled_at IS NULL
        WHERE claim.id = $1 AND claim.organization_id = $2
          AND claim.branch_id = $3 AND claim.device_id = $5
          AND claim.status = 'rejected'
@@ -127,6 +137,7 @@ export async function hasValidRegisterClaimGrant(
        AND requested_by_user_id = $4 AND action = 'register.claim.resolve'
        AND conflict_id = $5 AND target_register_id = $6
        AND device_id = $7 AND nonce_hash = $8
+       AND ${currentManagerAuthority}
        AND ((consumed_at IS NULL AND expires_at > now())
          OR consumed_by_operation_id = $9)`,
     [
@@ -160,6 +171,7 @@ export async function consumeRegisterClaimGrant(
        AND requested_by_user_id = $4 AND action = 'register.claim.resolve'
        AND conflict_id = $5 AND target_register_id = $6
        AND device_id = $7 AND nonce_hash = $8
+       AND ${currentManagerAuthority}
        AND consumed_at IS NULL AND expires_at > now()
      RETURNING manager_user_id`,
     [
@@ -186,3 +198,26 @@ export async function consumeRegisterClaimGrant(
 function hashNonce(nonce: string): string {
   return createHash("sha256").update(nonce).digest("hex");
 }
+
+// Fixed SQL, never client input. Recheck authority at both authorization and
+// consumption so an outstanding grant cannot outlive a role/user revocation.
+const currentManagerAuthority = `EXISTS (
+  SELECT 1 FROM app_users manager
+  JOIN organizations o ON o.id = manager.organization_id
+    AND o.is_active = true AND o.deleted_at IS NULL
+  JOIN branches b ON b.organization_id = o.id
+    AND b.id = manager_action_grants.branch_id
+    AND b.is_active = true AND b.deleted_at IS NULL
+  JOIN user_role_assignments assignment ON assignment.user_id = manager.id
+    AND assignment.organization_id = manager.organization_id
+    AND (assignment.branch_id IS NULL OR assignment.branch_id = b.id)
+    AND assignment.revoked_at IS NULL
+  JOIN roles role ON role.id = assignment.role_id
+    AND role.organization_id = manager.organization_id
+    AND role.is_active = true AND role.deleted_at IS NULL
+  JOIN role_permissions permission ON permission.role_id = role.id
+    AND permission.permission_code = 'registers.manage'
+  WHERE manager.id = manager_action_grants.manager_user_id
+    AND manager.organization_id = manager_action_grants.organization_id
+    AND manager.status = 'active' AND manager.deleted_at IS NULL
+)`;

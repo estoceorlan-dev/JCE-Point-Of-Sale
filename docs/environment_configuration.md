@@ -23,7 +23,14 @@ be copied into development.
 | `JCE_ENABLE_DEMO_AUTH` | No | Enables the development-only demo repository |
 | `JCE_DEMO_BRANCH_ID` | When demo auth is enabled | Non-production demo branch identifier |
 | `JCE_ENABLE_DIAGNOSTICS` | No | Enables additional non-sensitive diagnostics |
-| `JCE_FIREBASE_FUNCTIONS_REGION` | No | Firebase Functions region override. Defaults to `asia-southeast1` |
+| `JCE_FIREBASE_FUNCTIONS_REGION` | Production | Firebase Functions region; non-production defaults to `asia-southeast1` |
+| `JCE_FIREBASE_API_KEY` | Production | Platform-specific public Firebase client identifier |
+| `JCE_FIREBASE_APP_ID` | Production | Platform-specific production Firebase app ID |
+| `JCE_FIREBASE_MESSAGING_SENDER_ID` | Production | Production Firebase sender/project number |
+| `JCE_FIREBASE_PROJECT_ID` | Production | Isolated production Firebase project ID |
+| `JCE_APPROVED_PRODUCTION_PROJECT_ID` | Production build | Independently approved production project ID supplied by protected CI |
+| `JCE_FIREBASE_AUTH_DOMAIN` | Production web | Production Firebase Auth domain |
+| `JCE_FIREBASE_STORAGE_BUCKET` | Production | Private production Storage bucket identifier |
 | `JCE_ACCESS_PROFILE_FUNCTION` | No | Callable name used to load the current access profile |
 | `JCE_DEVICE_REGISTRATION_FUNCTION` | No | Callable name used to register the local device |
 | `JCE_UPDATE_BRANCH_NAME_FUNCTION` | No | Callable name used to update a branch label |
@@ -39,10 +46,20 @@ For the `jce-pos` Firebase project, the Flutter app automatically targets
 project or region.
 
 Firebase client options are selected from `JCE_ENV`. Development uses
-`jce-pos`, staging uses `jce-pos-staging-259528`, and production fails closed
-until its isolated backend and client registrations are provisioned. Android
-uses explicit Dart Firebase options instead of native Google Services resource
-auto-initialization so a staging binary cannot silently attach to development.
+`jce-pos`, staging uses `jce-pos-staging-259528`, and production requires its
+platform identifiers through a validated `--dart-define-from-file` configuration.
+Protected CI supplies `JCE_APPROVED_PRODUCTION_PROJECT_ID` separately to the
+validator and build so runtime startup also enforces the approved project.
+Production rejects known development/staging project IDs and missing placeholder
+values. Android uses explicit Dart Firebase options instead of native Google
+Services resource auto-initialization so a staging binary cannot silently attach
+to development.
+
+Profile and release builds require an explicit `JCE_ENV` and reject
+`development`. Production also rejects demo auth and enabled diagnostics.
+Development/staging render a visible environment banner. Production Windows is
+blocked by [ADR-0001](adr/0001_windows_production_transport.md), while production
+web omits and rejects the POS route.
 
 See [Phase 7 remote backend](phase_7_remote_backend.md) for isolated Firebase,
 SQL Connect, Cloud SQL, and Storage environment provisioning and deployment.
@@ -76,10 +93,24 @@ flutter build apk \
   --dart-define=JCE_ENV=staging
 ```
 
-```sh
-flutter build windows \
-  --dart-define=JCE_ENV=production
+Production builds use a gitignored per-platform file. Copy an example under
+`config/`, validate it against the independently approved CI project ID, and
+then pass the same file to Flutter:
+
+```powershell
+dart run tool/validate_release_config.dart `
+  --config=config/production_android.local.json `
+  --platform=android `
+  --expected-project=$env:JCE_APPROVED_PRODUCTION_PROJECT_ID
+
+flutter build appbundle `
+  --release `
+  --dart-define=JCE_APPROVED_PRODUCTION_PROJECT_ID=$env:JCE_APPROVED_PRODUCTION_PROJECT_ID `
+  --dart-define-from-file=config/production_android.local.json
 ```
+
+Do not put server/database/signing secrets in this file; dart defines are
+recoverable from the client. See [release configuration](../config/README.md).
 
 Staging web deployment uses the dedicated Hosting target so it cannot resolve
 against the development or production project accidentally:
@@ -93,6 +124,15 @@ flutter build web \
 firebase deploy \
   --only hosting:staging-web \
   --project jce-pos-staging-259528
+```
+
+Production Hosting uses the separate `production-web` target and may only be
+deployed after the production runbook and later security/release phases pass:
+
+```powershell
+firebase deploy `
+  --only hosting:production-web `
+  --project $env:JCE_APPROVED_PRODUCTION_PROJECT_ID
 ```
 
 The same staging build is also published at the shorter public URL

@@ -47,9 +47,10 @@ export async function processRemoteCommand(
       "SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
       [`${input.organizationId}|${input.operationId}`],
     );
-    // Read administration permissions only after earlier access mutations have
-    // committed; otherwise an administrator could act on revoked access.
-    if (input.commandType.startsWith("user.") || input.commandType.startsWith("role.")) {
+    // Read administration/manager-grant permissions only after earlier access
+    // mutations commit; outstanding grants must not outlive revoked access.
+    if (input.commandType.startsWith("user.") || input.commandType.startsWith("role.") ||
+        input.commandType === "register.claim.resolve") {
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
         [`access-administration:${input.organizationId}`]);
     }

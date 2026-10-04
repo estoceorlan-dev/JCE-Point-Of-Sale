@@ -1,4 +1,6 @@
 import {PoolClient} from "pg";
+import {enforceUsageAdmission} from "./usage_admission";
+import {loadUsagePolicies} from "./usage_policy";
 
 type MembershipRow = {
   app_user_id: string;
@@ -229,6 +231,16 @@ export async function registerDeviceForUser(
     throw new AccessProfileDeniedError("not-found");
   }
 
+  const device = await client.query<{disabled_at: Date | null}>(
+    "SELECT disabled_at FROM devices WHERE id = $1 AND organization_id = $2",
+    [input.deviceId, input.organizationId]);
+  if (device.rowCount === 0) {
+    await enforceUsageAdmission(client, {...input, scope: "new_device",
+      policy: loadUsagePolicies().new_device});
+  } else if (device.rows[0].disabled_at !== null) {
+    throw new AccessProfileDeniedError("not-found");
+  }
+
   const result = await client.query(
     `
       INSERT INTO devices (
@@ -260,8 +272,8 @@ export async function registerDeviceForUser(
           devices.user_id
         ),
         last_seen_by_user_id = EXCLUDED.last_seen_by_user_id,
-        last_seen_at = now(),
-        disabled_at = NULL
+        last_seen_at = now()
+      WHERE devices.disabled_at IS NULL
       RETURNING id
     `,
     [

@@ -6,6 +6,7 @@ import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/auth/presentation/providers/session_exit_providers.dart';
 import '../../shared/models/business_context.dart';
 import '../config/app_config.dart';
+import '../config/production_platform_policy.dart';
 import '../routing/app_navigation_item.dart';
 import '../routing/app_route.dart';
 import '../sync/sync_controller.dart';
@@ -27,7 +28,11 @@ class AppNavigationShell extends ConsumerWidget {
       return const Scaffold(body: SizedBox.shrink());
     }
 
-    final navigationItems = navigationItemsForSession(session);
+    final platformPolicy = ref.watch(productionPlatformPolicyProvider);
+    final navigationItems = navigationItemsForSession(
+      session,
+      allowPointOfSale: platformPolicy.allowsPointOfSale,
+    );
     final selectedRoute =
         appNavigationItems[navigationShell.currentIndex].route;
     final syncState = ref.watch(syncStateProvider).asData?.value;

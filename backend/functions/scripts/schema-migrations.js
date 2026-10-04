@@ -3,6 +3,7 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 
 const requiredTables = [
+  "api_rate_limit_windows",
   "app_users",
   "approval_decisions",
   "approval_requests",
