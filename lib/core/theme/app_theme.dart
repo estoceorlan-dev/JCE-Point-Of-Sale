@@ -39,6 +39,7 @@ abstract final class AppTheme {
       useMaterial3: true,
       brightness: brightness,
       colorScheme: colorScheme,
+      fontFamily: AppTypography.fontFamily,
       scaffoldBackgroundColor: isDark ? AppColors.slate900 : AppColors.slate50,
       textTheme: AppTypography.textTheme(brightness),
       appBarTheme: AppBarTheme(

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 abstract final class AppTypography {
+  static const fontFamily = 'Poppins';
+
   static TextTheme textTheme(Brightness brightness) {
     final textColor = brightness == Brightness.dark
         ? Colors.white
@@ -50,6 +52,6 @@ abstract final class AppTypography {
         fontWeight: FontWeight.w600,
         height: 1.2,
       ),
-    );
+    ).apply(fontFamily: fontFamily);
   }
 }
