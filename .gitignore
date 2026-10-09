@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+.tmp/
 .firebase/
 
 # Local environment and secret files
@@ -56,6 +57,7 @@ app.*.symbols
 app.*.map.json
 
 # Android Studio will place build artifacts here
+/android/.kotlin/
 /android/app/debug
 /android/app/profile
 /android/app/release

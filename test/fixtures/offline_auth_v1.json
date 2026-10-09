@@ -1,0 +1,40 @@
+{
+  "formatVersion": 1,
+  "verificationKey": {
+    "crv": "P-256",
+    "kty": "EC",
+    "x": "axfR8uEsQkf4vOblY6RA8ncDfYEt6zOg9KE5RdiYwpY",
+    "y": "T-NC4v4af5uO5-tKfA-eFivOM1drMV7Oy7ZAaDe_UfU",
+    "kid": "c71d01700fb0328870f1ab580c939eea9786328764946db04470655c732f9743"
+  },
+  "devicePublicKey": {
+    "crv": "P-256",
+    "kty": "EC",
+    "x": "fPJ7GI0DT36KUjgDBLUaw8CJaeJ38hs1pgtI_EdmmXg",
+    "y": "B3dVENuO0EApPZrGn3Qw27p9reY86YIpngS3nSJ4c9E"
+  },
+  "devicePrivateTestScalar": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAI",
+  "claims": {
+    "iss": "deployment-test",
+    "aud": "jce-offline-cashier-v1",
+    "jti": "enrollment-test",
+    "iat": 1791331200,
+    "exp": 1791936000,
+    "deploymentId": "deployment-test",
+    "identityId": "identity-test",
+    "userId": "user-test",
+    "organizationId": "org-test",
+    "branchId": "branch-test",
+    "deviceId": "device-test",
+    "deviceKeyId": "key-test",
+    "keyThumbprint": "021a87cda6170393339830abb2c794b150462b27e10e1bde931d131e31ffc481",
+    "credentialVersion": 1,
+    "permissions": [
+      "sales.process"
+    ],
+    "displayName": "Test cashier"
+  },
+  "authorization": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpDRS1PRkZMSU5FIiwia2lkIjoiYzcxZDAxNzAwZmIwMzI4ODcwZjFhYjU4MGM5MzllZWE5Nzg2MzI4NzY0OTQ2ZGIwNDQ3MDY1NWM3MzJmOTc0MyJ9.eyJpc3MiOiJkZXBsb3ltZW50LXRlc3QiLCJhdWQiOiJqY2Utb2ZmbGluZS1jYXNoaWVyLXYxIiwianRpIjoiZW5yb2xsbWVudC10ZXN0IiwiaWF0IjoxNzkxMzMxMjAwLCJleHAiOjE3OTE5MzYwMDAsImRlcGxveW1lbnRJZCI6ImRlcGxveW1lbnQtdGVzdCIsImlkZW50aXR5SWQiOiJpZGVudGl0eS10ZXN0IiwidXNlcklkIjoidXNlci10ZXN0Iiwib3JnYW5pemF0aW9uSWQiOiJvcmctdGVzdCIsImJyYW5jaElkIjoiYnJhbmNoLXRlc3QiLCJkZXZpY2VJZCI6ImRldmljZS10ZXN0IiwiZGV2aWNlS2V5SWQiOiJrZXktdGVzdCIsImtleVRodW1icHJpbnQiOiIwMjFhODdjZGE2MTcwMzkzMzM5ODMwYWJiMmM3OTRiMTUwNDYyYjI3ZTEwZTFiZGU5MzFkMTMxZTMxZmZjNDgxIiwiY3JlZGVudGlhbFZlcnNpb24iOjEsInBlcm1pc3Npb25zIjpbInNhbGVzLnByb2Nlc3MiXSwiZGlzcGxheU5hbWUiOiJUZXN0IGNhc2hpZXIifQ.8TOlZEEniFxhnWfnvLZam2UOLnRpjDh7eLTdHEL2tUEX4Ugw--ljQ73TOiZDiJLiyIgcoZ2Y09pjNcW6trlK5w",
+  "proofMessage": "[\"jce-device-proof-v1\",\"register\",\"deployment-test\",\"org-test\",\"identity-test\",\"device-test\",\"challenge-test\",\"branch-test\",\"021a87cda6170393339830abb2c794b150462b27e10e1bde931d131e31ffc481\"]",
+  "proofSignature": "gFxfrvFJhf77SFXg2dQrMwOzSK_LtcXxj9qlhz8C8VoBkggaEu2uCZNx8yKWElkp33F9kyBTvCaQZxFp1a4WYg"
+}

@@ -1,7 +1,7 @@
 # Node.js/PostgreSQL refactor handoff
 
-Updated: 2026-10-04 (Asia/Manila). Refactor Phase 0 is complete; runtime integration
-has not started. This numbering is separate from the historical Firebase
+Updated: 2026-10-07 (Asia/Manila). Refactor Phases 1–2 have backend and native auth
+components; the main Flutter transport switch remains Phase 4. This numbering is separate from the historical Firebase
 production-readiness and feature-delivery phases.
 
 ## Baseline
@@ -46,9 +46,23 @@ ADR-0001 production restrictions remain in force until their replacement phase
 passes. Offline supervisor approval is currently unavailable; offline cashier PIN
 work must not accidentally enable manager approvals.
 
-## Next phase
+## Current implementation and next phase
 
-Port the 16 authoritative SQL migrations, append independent identity/deployment
-schema, separate migration and runtime roles, implement operator provisioning,
-and demonstrate database readiness from a second device with WAN disconnected.
-Do not delete Firebase resources as part of this documentation phase.
+Phase 2 adds the native auth contracts under `features/auth/domain/offline`, HTTP
+session/enrollment adapters, Windows/Android protected credential storage, signed
+grant verification, persistent PIN lockouts, and cashier-switch rules. Separate
+Riverpod providers require a verified `NativeAuthProfile`; the existing provider
+remains Firebase until Phase 4. Web API sessions use protected cookies; the native
+secure-storage adapter deliberately refuses web usage.
+
+See the sibling backend's [Phase 2 guide](../../jce_backend/docs/phase_2_authentication.md)
+and [verification report](../../jce_backend/docs/phase_2_verification.md). The backend
+owns `docs/auth_openapi.json`; this repository keeps a copied public cryptographic
+fixture and runs the live contract test when invoked by the backend integration suite.
+
+Next is Phase 3: transactional commands, snapshots, synchronization and original
+actor authorization. Main-app session/branch switching must use the existing shift
+and recovery checks and preserve each queued operation's actor. Before offline
+protected actions, call the native repository's `validateActive`; PIN login alone
+does not authorize an expired session indefinitely. Physical Android security and
+second-device WAN-disconnected acceptance remain pending.
