@@ -1,4 +1,5 @@
 {
+  "JCE_BACKEND": "firebase",
   "JCE_ENV": "production",
   "JCE_ENABLE_DEMO_AUTH": "false",
   "JCE_ENABLE_DIAGNOSTICS": "false",

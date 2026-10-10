@@ -1,3 +1,6 @@
+import 'package:flutter/foundation.dart';
+import '../../../../core/config/app_config.dart';
+import '../../../auth/presentation/widgets/offline_pin_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -79,6 +82,8 @@ class SettingsPage extends ConsumerWidget {
                     ),
                 const SizedBox(height: AppSpacing.xl),
                 const SyncConflictPanel(),
+                if ((!kIsWeb && ref.watch(appConfigProvider).useNodeBackend))
+                  const OfflinePinPanel(enroll: true),
               ],
             ),
           ),

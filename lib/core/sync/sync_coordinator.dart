@@ -11,6 +11,7 @@ class SyncRunResult {
     required this.pulled,
     required this.conflicts,
     required this.offline,
+    this.authenticationRequired = false,
   });
 
   final SyncTrigger trigger;
@@ -20,6 +21,7 @@ class SyncRunResult {
   final int pulled;
   final int conflicts;
   final bool offline;
+  final bool authenticationRequired;
 }
 
 /// Coalesces every synchronization trigger for one operational scope.

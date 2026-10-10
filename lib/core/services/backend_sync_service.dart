@@ -1,8 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
 export '../sync/sync_coordinator.dart';
 
-import 'package:cloud_functions/cloud_functions.dart';
+import '../remote/remote_api_exception.dart';
+import '../remote/legacy_sync_error.dart';
+import '../remote/node_command_data_source.dart';
+import '../remote/node_sync_data_source.dart';
+import '../error/failures.dart';
+import '../../features/auth/presentation/providers/native_auth_providers.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,6 +37,9 @@ final remoteCommandDataSourceProvider = Provider<RemoteCommandDataSource>((
   ref,
 ) {
   final config = ref.watch(appConfigProvider);
+  if (config.useNodeBackend) {
+    return NodeCommandDataSource(ref.watch(nodeDeviceTransportProvider));
+  }
   return CloudFunctionsRemoteCommandDataSource(
     functions: ref.watch(firebaseFunctionsProvider),
     functionName: config.remoteCommandFunctionName,
@@ -41,6 +50,9 @@ final remoteCommandDataSourceProvider = Provider<RemoteCommandDataSource>((
 
 final remoteSyncDataSourceProvider = Provider<RemoteSyncDataSource>((ref) {
   final config = ref.watch(appConfigProvider);
+  if (config.useNodeBackend) {
+    return NodeSyncDataSource(ref.watch(nodeDeviceTransportProvider));
+  }
   if (!config.enablePosSyncV2) return SqlConnectRemoteSyncDataSource();
   return CloudFunctionsAuthorizedRemoteSyncDataSource(
     functions: ref.watch(firebaseFunctionsProvider),
@@ -54,6 +66,7 @@ final remoteChangeApplierProvider = Provider<RemoteChangeApplier>((ref) {
 
 final backendSyncServiceProvider = Provider<BackendSyncService>((ref) {
   return OfflineFirstBackendSyncService(
+    deviceUploads: !kIsWeb && ref.watch(appConfigProvider).useNodeBackend,
     commands: ref.watch(remoteCommandDataSourceProvider),
     remote: ref.watch(remoteSyncDataSourceProvider),
     database: ref.watch(appDatabaseProvider),
@@ -78,6 +91,7 @@ abstract interface class BackendSyncService implements SyncCoordinator {
 
 class OfflineFirstBackendSyncService implements BackendSyncService {
   OfflineFirstBackendSyncService({
+    this.deviceUploads = false,
     required RemoteCommandDataSource commands,
     required RemoteSyncDataSource remote,
     required AppDatabase database,
@@ -108,6 +122,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
   static const _pullBatchSize = 100;
   static const _maximumPullBatches = 20;
 
+  final bool deviceUploads;
   final RemoteCommandDataSource _commands;
   final RemoteSyncDataSource _remote;
   final AppDatabase _database;
@@ -130,7 +145,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
     final scopeKey = [
       context.organizationId,
       context.branchId,
-      context.actorUserId,
+      if (!deviceUploads) context.actorUserId,
     ].join(':');
     final active = _activeRuns[scopeKey];
     if (active != null) return active;
@@ -159,14 +174,15 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       );
     }
     final hasNetworkInterface = await _connectivity.isConnected;
-    int initialPull;
+    int initialPull = 0;
+    bool canPull = true;
     try {
       // A usable network interface is only a hint. A successful authorized
       // backend pull is the reachability check that establishes online state.
       initialPull = await _pullAndApply(context);
-    } catch (error, stackTrace) {
-      if (error is FirebaseFunctionsException &&
-          error.code == 'resource-exhausted') {
+    } catch (rawError, stackTrace) {
+      final error = normalizeLegacySyncError(rawError);
+      if (error is RemoteApiException && error.code == 'resource-exhausted') {
         await _saveThrottle(context, error.details);
         return SyncRunResult(
           trigger: trigger,
@@ -178,22 +194,52 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
           offline: false,
         );
       }
-      if (hasNetworkInterface && !_isReachabilityFailure(error)) rethrow;
-      _logger.warning(
-        'The backend is unreachable; local POS operation remains available.',
-        scope: 'sync.reachability',
-        error: error,
-        stackTrace: stackTrace,
-      );
-      return SyncRunResult(
-        trigger: trigger,
-        startedAt: startedAt,
-        finishedAt: _clock.nowUtc(),
-        pushed: 0,
-        pulled: 0,
-        conflicts: 0,
-        offline: true,
-      );
+      if (deviceUploads &&
+          (error is AuthenticationFailure ||
+              error is AuthorizationFailure ||
+              error is RemoteApiException &&
+                  {
+                    'unauthorized',
+                    'unauthenticated',
+                    'invalid_device',
+                    'https_required',
+                    'forbidden',
+                    'permission-denied',
+                  }.contains(error.code))) {
+        canPull = false;
+        if (_commands case final NodeCommandDataSource commands) {
+          try {
+            await commands.checkReachability();
+          } on NetworkFailure {
+            return SyncRunResult(
+              trigger: trigger,
+              startedAt: startedAt,
+              finishedAt: _clock.nowUtc(),
+              pushed: 0,
+              pulled: 0,
+              conflicts: 0,
+              offline: true,
+            );
+          }
+        }
+      } else {
+        if (hasNetworkInterface && !_isReachabilityFailure(error)) rethrow;
+        _logger.warning(
+          'The backend is unreachable; local POS operation remains available.',
+          scope: 'sync.reachability',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        return SyncRunResult(
+          trigger: trigger,
+          startedAt: startedAt,
+          finishedAt: _clock.nowUtc(),
+          pushed: 0,
+          pulled: 0,
+          conflicts: 0,
+          offline: true,
+        );
+      }
     }
 
     var pushed = 0;
@@ -212,7 +258,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
         now: now,
         organizationId: context.organizationId,
         branchId: context.branchId,
-        actorUserId: context.actorUserId,
+        actorUserId: deviceUploads ? null : context.actorUserId,
         limit: _pushBatchSize,
       );
       if (batch.isEmpty) break;
@@ -230,15 +276,19 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
 
     var finalPull = 0;
     try {
-      finalPull = await _pullAndApply(context);
-    } on FirebaseFunctionsException catch (error) {
-      if (error.code != 'resource-exhausted') rethrow;
+      if (canPull) finalPull = await _pullAndApply(context);
+    } catch (rawError) {
+      final error = normalizeLegacySyncError(rawError);
+      if (error is! RemoteApiException || error.code != 'resource-exhausted') {
+        rethrow;
+      }
       await _saveThrottle(context, error.details);
     }
     return SyncRunResult(
       trigger: trigger,
       startedAt: startedAt,
       finishedAt: _clock.nowUtc(),
+      authenticationRequired: !canPull,
       pushed: pushed,
       pulled: initialPull + finalPull,
       conflicts: conflicts,
@@ -253,7 +303,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
     try {
       final result = await _commands.execute(
         command,
-        payloadOverride: await _payloadFor(command),
+        payloadOverride: deviceUploads ? null : await _payloadFor(command),
       );
       if (result.operationId != command.operationId) {
         throw StateError('Remote operation ID did not match the outbox entry.');
@@ -283,10 +333,10 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
         );
       }
       return _PushOutcome.succeeded;
-    } catch (error, stackTrace) {
+    } catch (rawError, stackTrace) {
+      final error = normalizeLegacySyncError(rawError);
       final message = _safeError(error);
-      if (error is FirebaseFunctionsException &&
-          error.code == 'resource-exhausted') {
+      if (error is RemoteApiException && error.code == 'resource-exhausted') {
         final delay = await _saveThrottle(context, error.details);
         await _outboxDao.markThrottled(
           operationId: command.operationId,
@@ -551,7 +601,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
           operationId: command.operationId,
           organizationId: Value(context.organizationId),
           branchId: Value(context.branchId),
-          actorUserId: Value(context.actorUserId),
+          actorUserId: Value(command.actorUserId ?? context.actorUserId),
           entityType: command.aggregateType,
           entityId: command.aggregateId,
           localPayloadJson: command.payloadJson,
@@ -586,7 +636,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
           operationId: command.operationId,
           organizationId: Value(context.organizationId),
           branchId: Value(context.branchId),
-          actorUserId: Value(context.actorUserId),
+          actorUserId: Value(command.actorUserId ?? context.actorUserId),
           entityType: command.aggregateType,
           entityId: command.aggregateId,
           localPayloadJson: command.payloadJson,
@@ -665,30 +715,38 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
   }
 
   bool _isConflict(Object error) {
-    return error is FirebaseFunctionsException &&
+    return error is RemoteApiException &&
         const {
           'aborted',
           'already-exists',
           'failed-precondition',
+          'conflict',
         }.contains(error.code);
   }
 
   bool _isPermanent(Object error) {
     return error is FormatException ||
         error is StateError ||
-        (error is FirebaseFunctionsException &&
+        (error is RemoteApiException &&
             const {
               'invalid-argument',
               'permission-denied',
               'not-found',
               'unauthenticated',
+              'invalid_device',
+              'https_required',
+              'forbidden',
+              'unauthorized',
+              'invalid_input',
             }.contains(error.code));
   }
 
   bool _isReachabilityFailure(Object error) {
-    if (error is FirebaseFunctionsException) {
+    if (error is NetworkFailure) return true;
+    if (error is RemoteApiException) {
       return const {
         'unavailable',
+        'service_unavailable',
         'deadline-exceeded',
         'internal',
         'unknown',
@@ -754,7 +812,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
   }
 
   String _safeError(Object error) {
-    if (error is FirebaseFunctionsException) {
+    if (error is RemoteApiException) {
       return '${error.code}: ${error.message ?? 'Remote command failed.'}';
     }
     return error.toString();

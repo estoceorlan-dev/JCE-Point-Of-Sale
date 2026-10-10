@@ -1,4 +1,6 @@
 import 'dart:async';
+import '../../features/auth/presentation/providers/native_auth_providers.dart';
+import '../remote/node_bootstrap_data_source.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,10 +17,12 @@ final posBootstrapRepositoryProvider = Provider<PosBootstrapRepository>((ref) {
   final config = ref.watch(appConfigProvider);
   return DriftPosBootstrapRepository(
     database: ref.watch(appDatabaseProvider),
-    remote: CloudFunctionsPosBootstrapRemoteDataSource(
-      functions: ref.watch(firebaseFunctionsProvider),
-      functionName: config.posBootstrapFunctionName,
-    ),
+    remote: config.useNodeBackend
+        ? NodeBootstrapDataSource(ref.watch(nativeApiSessionRepositoryProvider))
+        : CloudFunctionsPosBootstrapRemoteDataSource(
+            functions: ref.watch(firebaseFunctionsProvider),
+            functionName: config.posBootstrapFunctionName,
+          ),
   );
 });
 

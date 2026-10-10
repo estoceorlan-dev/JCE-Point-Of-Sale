@@ -13,6 +13,7 @@ class SyncOutboxEntries extends Table {
   TextColumn get aggregateId => text()();
   TextColumn get causalGroupId => text().nullable()();
   TextColumn get dependsOnOperationId => text().nullable()();
+  TextColumn get evidenceJson => text().nullable()();
   TextColumn get payloadJson => text()();
   TextColumn get status => text()();
   IntColumn get attemptCount => integer().withDefault(const Constant<int>(0))();

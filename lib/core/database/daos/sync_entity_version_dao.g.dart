@@ -6,4 +6,15 @@ part of 'sync_entity_version_dao.dart';
 mixin _$SyncEntityVersionDaoMixin on DatabaseAccessor<AppDatabase> {
   $SyncEntityVersionsTable get syncEntityVersions =>
       attachedDatabase.syncEntityVersions;
+  SyncEntityVersionDaoManager get managers => SyncEntityVersionDaoManager(this);
+}
+
+class SyncEntityVersionDaoManager {
+  final _$SyncEntityVersionDaoMixin _db;
+  SyncEntityVersionDaoManager(this._db);
+  $$SyncEntityVersionsTableTableManager get syncEntityVersions =>
+      $$SyncEntityVersionsTableTableManager(
+        _db.attachedDatabase,
+        _db.syncEntityVersions,
+      );
 }

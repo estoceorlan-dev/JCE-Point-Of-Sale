@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../../core/error/failure.dart';
+import '../../../../core/remote/remote_api_exception.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/offline/native_auth_profile.dart';
 
@@ -21,6 +22,7 @@ class NativeAuthApi {
       throw ArgumentError('A trusted HTTPS API origin is required.');
     }
   }
+  Future<void> Function()? beforeRequest;
   final http.Client client;
   final NativeAuthProfile profile;
 
@@ -29,8 +31,11 @@ class NativeAuthApi {
     String method = 'POST',
     Map<String, dynamic>? body,
     String? accessToken,
+    Map<String, String> headers = const {},
+    bool syncRequest = false,
   }) async {
     try {
+      if (path != '/v1/meta') await beforeRequest?.call();
       final target = profile.apiOrigin.resolve(path);
       if (!path.startsWith('/v1/') ||
           target.origin != profile.apiOrigin.origin) {
@@ -41,10 +46,13 @@ class NativeAuthApi {
       final request = http.Request(method, target)
         ..followRedirects = false
         ..headers['content-type'] = 'application/json';
+      request.headers.addAll(headers);
       if (accessToken != null) {
         request.headers['authorization'] = 'Bearer $accessToken';
       }
-      if (body != null) request.body = jsonEncode(body);
+      if (body != null || !{'GET', 'HEAD'}.contains(method)) {
+        request.body = jsonEncode(body ?? <String, dynamic>{});
+      }
       final response = await client
           .send(request)
           .timeout(const Duration(seconds: 15));
@@ -53,11 +61,22 @@ class NativeAuthApi {
         const Duration(seconds: 15),
       )) {
         bytes.addAll(chunk);
-        if (bytes.length > 1048576) {
+        if (bytes.length > (syncRequest ? 8388608 : 1048576)) {
           throw const FormatException('Response too large.');
         }
       }
       final value = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+      if (syncRequest &&
+          (response.statusCode < 200 || response.statusCode >= 300)) {
+        throw RemoteApiException(
+          response.statusCode == 429
+              ? 'resource-exhausted'
+              : value['code'] as String? ?? 'unavailable',
+          message: value['message'] as String?,
+          details: value['details'],
+          status: response.statusCode,
+        );
+      }
       if (response.statusCode == 401) {
         throw AuthenticationFailure(
           'API authentication required.',
@@ -86,6 +105,8 @@ class NativeAuthApi {
         throw const ValidationFailure('The API could not accept this request.');
       }
       return value;
+    } on RemoteApiException {
+      rethrow;
     } on Failure {
       rethrow;
     } catch (_) {

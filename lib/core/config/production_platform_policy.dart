@@ -9,6 +9,14 @@ enum AppClientPlatform { web, android, windows, ios, macos, linux, other }
 final productionPlatformPolicyProvider = Provider<ProductionPlatformPolicy>((
   ref,
 ) {
+  final config = ref.watch(appConfigProvider);
+  if (config.useNodeBackend && kIsWeb) {
+    return const ProductionPlatformPolicy(
+      platform: AppClientPlatform.web,
+      isSupported: true,
+      allowsPointOfSale: false,
+    );
+  }
   return ProductionPlatformPolicy.forEnvironment(
     environment: ref.watch(appConfigProvider).environment,
     platform: currentAppClientPlatform(),

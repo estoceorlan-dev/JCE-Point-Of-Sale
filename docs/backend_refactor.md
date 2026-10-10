@@ -1,8 +1,8 @@
 # Node.js/PostgreSQL refactor handoff
 
-Updated: 2026-10-07 (Asia/Manila). Refactor Phases 1–2 have backend and native auth
-components; the main Flutter transport switch remains Phase 4. This numbering is separate from the historical Firebase
-production-readiness and feature-delivery phases.
+Updated: 2026-10-09 (Asia/Manila). Refactor Phases 3-4 implement the standalone
+command/sync API and default Flutter Node transport. Physical acceptance remains
+pending. This numbering is separate from historical Firebase delivery phases.
 
 ## Baseline
 
@@ -41,28 +41,27 @@ pending queue to another deployment. Branch/organization IDs and API origins sta
 configurable, even for one branch. Images remain optional. Native Windows/Android
 POS and web administration are the target; browser checkout stays disabled.
 
-Existing Firebase transport, generated connectors, local SQLite schema 19, and
-ADR-0001 production restrictions remain in force until their replacement phase
-passes. Offline supervisor approval is currently unavailable; offline cashier PIN
-work must not accidentally enable manager approvals.
+The explicit Firebase rollback transport and generated connectors remain until
+Phase 7. The Node path uses deployment-specific SQLite schema 20 and signed
+outbox evidence. ADR-0001 production restrictions remain in force; offline PINs
+never authorize supervisor actions.
 
 ## Current implementation and next phase
 
-Phase 2 adds the native auth contracts under `features/auth/domain/offline`, HTTP
-session/enrollment adapters, Windows/Android protected credential storage, signed
-grant verification, persistent PIN lockouts, and cashier-switch rules. Separate
-Riverpod providers require a verified `NativeAuthProfile`; the existing provider
-remains Firebase until Phase 4. Web API sessions use protected cookies; the native
-secure-storage adapter deliberately refuses web usage.
+Follow [Node installation](node_installation.md) for required Dart defines and
+cashier enrollment. Riverpod selects HTTP authentication, commands, bootstrap,
+snapshots and synchronization when `JCE_BACKEND=node` (the default). Browser
+administration uses same-origin protected cookies; native installations use
+protected P-256 credentials. Signed work retains its original actor after logout,
+restart and cashier switching.
 
-See the sibling backend's [Phase 2 guide](../../jce_backend/docs/phase_2_authentication.md)
-and [verification report](../../jce_backend/docs/phase_2_verification.md). The backend
-owns `docs/auth_openapi.json`; this repository keeps a copied public cryptographic
-fixture and runs the live contract test when invoked by the backend integration suite.
+The backend owns [OpenAPI](../../jce_backend/docs/auth_openapi.json) and the
+[signed protocol](../../jce_backend/docs/signed_sync_protocol.md). See
+[Phase 3-4 verification](../../jce_backend/docs/phase_3_4_verification.md) for
+checks, live Flutter/PostgreSQL sale evidence and remaining acceptance gates.
 
-Next is Phase 3: transactional commands, snapshots, synchronization and original
-actor authorization. Main-app session/branch switching must use the existing shift
-and recovery checks and preserve each queued operation's actor. Before offline
-protected actions, call the native repository's `validateActive`; PIN login alone
-does not authorize an expired session indefinitely. Physical Android security and
-second-device WAN-disconnected acceptance remain pending.
+Next is Phase 5: remaining feature/UI parity, staff activation/recovery UI and
+optional storage adapters. Native device builds, secure storage/reboot behavior,
+trusted LAN HTTPS and second-device WAN-disconnected tests require physical
+acceptance before production approval. Production packaging is Phase 6; Firebase
+resource and SDK retirement is Phase 7.

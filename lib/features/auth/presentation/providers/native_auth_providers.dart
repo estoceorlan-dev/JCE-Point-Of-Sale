@@ -1,4 +1,10 @@
+import '../../data/repositories/browser_api_session_repository.dart';
+import '../../data/security/browser_session_platform.dart';
 import 'package:flutter/foundation.dart';
+import '../../../../core/config/node_installation_profile.dart';
+import '../../../../core/sync/node_actor_evidence.dart';
+import '../../../../core/sync/node_device_transport.dart';
+import '../../data/security/installation_binding.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import '../../domain/offline/native_auth_profile.dart';
@@ -13,15 +19,33 @@ import '../../data/security/native_credential_vault.dart';
 import '../../data/security/native_installation_store.dart';
 import '../../data/security/p256_grant_verifier.dart';
 
-// Phase 4 supplies the verified installation profile and selects this adapter.
-// Merely importing these providers never changes the existing authRepositoryProvider.
 final nativeAuthProfileProvider = Provider<NativeAuthProfile>(
-  (ref) =>
-      throw StateError('A verified native installation profile is required.'),
+  (ref) => nodeInstallationProfile(),
+);
+final nativeAuthApiProvider = Provider<NativeAuthApi>((ref) {
+  final client = http.Client();
+  ref.onDispose(client.close);
+  return NativeAuthApi(client, ref.watch(nativeAuthProfileProvider));
+});
+final installationBindingProvider = Provider<InstallationBinding>((ref) {
+  final api = ref.watch(nativeAuthApiProvider);
+  final binding = InstallationBinding(
+    api,
+    ref.watch(nativeCredentialRecordsProvider),
+  );
+  api.beforeRequest = binding.verify;
+  return binding;
+});
+final nodeDeviceTransportProvider = Provider<NodeDeviceTransport>(
+  (ref) => NodeDeviceTransport(
+    ref.watch(nativeApiSessionRepositoryProvider),
+    ref.watch(nativeInstallationStoreProvider),
+    web: kIsWeb,
+  ),
 );
 final nativeCredentialRecordsProvider = Provider<CredentialRecordStore>(
   (ref) => CredentialRecordStore(
-    NativeCredentialVault(),
+    kIsWeb ? browserMetadataVault() : NativeCredentialVault(),
     ref.watch(nativeAuthProfileProvider).deploymentId,
   ),
 );
@@ -30,10 +54,15 @@ final nativeInstallationStoreProvider = Provider<NativeInstallationStore>(
 );
 final nativeApiSessionRepositoryProvider = Provider<NativeApiSessionRepository>(
   (ref) {
-    final client = http.Client();
-    ref.onDispose(client.close);
+    ref.watch(installationBindingProvider);
+    if (kIsWeb) {
+      return BrowserApiSessionRepository(
+        ref.watch(nativeAuthApiProvider),
+        ref.watch(nativeCredentialRecordsProvider),
+      );
+    }
     return NativeApiSessionRepository(
-      NativeAuthApi(client, ref.watch(nativeAuthProfileProvider)),
+      ref.watch(nativeAuthApiProvider),
       ref.watch(nativeCredentialRecordsProvider),
     );
   },
@@ -60,3 +89,11 @@ final offlinePinRepositoryProvider = Provider<OfflinePinRepository>((ref) {
     now: DateTime.now,
   );
 });
+
+final nodeActorEvidenceProvider = Provider<NodeActorEvidence>(
+  (ref) => NodeActorEvidence(
+    ref.watch(nodeDeviceTransportProvider),
+    ref.watch(nativeInstallationStoreProvider),
+    ref.watch(offlinePinRepositoryProvider),
+  ),
+);

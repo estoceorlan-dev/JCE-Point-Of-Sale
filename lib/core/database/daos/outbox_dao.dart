@@ -15,6 +15,7 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
   OutboxDao(super.attachedDatabase);
 
   Future<void> enqueue(OutboxCommand command) async {
+    final evidence = await attachedDatabase.signOutboxCommand?.call(command);
     await into(syncOutboxEntries).insert(
       SyncOutboxEntriesCompanion.insert(
         operationId: command.operationId,
@@ -27,6 +28,7 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
         causalGroupId: Value(command.causalGroupId),
         dependsOnOperationId: Value(command.dependsOnOperationId),
         payloadJson: command.payloadJson,
+        evidenceJson: Value(evidence),
         status: command.state.databaseValue,
         createdAt: command.createdAt.toUtc(),
         updatedAt: command.createdAt.toUtc(),

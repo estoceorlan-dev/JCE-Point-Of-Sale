@@ -9,7 +9,7 @@ class P256GrantVerifier implements OfflineGrantVerifier {
     required this.deploymentId,
     required this.trustedKeys,
     this.maxAge = const Duration(days: 7),
-    this.cashierPermissions = const {'sales.process'},
+    this.cashierPermissions = const {'sales.process', 'registers.claim'},
   });
   final String deploymentId;
   // Public keys are pinned by the trusted installation profile, never by a JWT header.

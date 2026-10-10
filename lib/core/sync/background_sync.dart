@@ -1,3 +1,5 @@
+import 'node_queue_recovery.dart';
+import '../../features/auth/presentation/providers/native_auth_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,6 +46,11 @@ void syncCallbackDispatcher() {
     try {
       final config = container.read(appConfigProvider);
       if (config.enableDemoAuth) return true;
+      if (config.useNodeBackend) {
+        await container.read(installationBindingProvider).initialize();
+        await container.read(nodeQueueRecoveryProvider).recover();
+        return true;
+      }
       await container
           .read(firebaseInitializationServiceProvider)
           .initialize(config);

@@ -1,3 +1,4 @@
+import '../../features/auth/presentation/providers/native_auth_providers.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,11 +11,22 @@ import '../remote/firebase_functions_provider.dart';
 final administrationSnapshotServiceProvider =
     Provider<AdministrationSnapshotService>((ref) {
       final config = ref.watch(appConfigProvider);
-      final functions = ref.watch(firebaseFunctionsProvider);
+      final functions = config.useNodeBackend
+          ? null
+          : ref.watch(firebaseFunctionsProvider);
       return AdministrationSnapshotService(
         database: ref.watch(appDatabaseProvider),
         loadSnapshot: (context) async {
-          final response = await functions
+          if (config.useNodeBackend) {
+            return ref
+                .read(nativeApiSessionRepositoryProvider)
+                .authenticated(
+                  '/v1/admin/snapshot',
+                  method: 'GET',
+                  syncRequest: true,
+                );
+          }
+          final response = await functions!
               .httpsCallable(config.administrationSnapshotFunctionName)
               .call({'organizationId': context.organizationId});
           return _map(response.data, 'snapshot');
@@ -249,7 +261,9 @@ class AdministrationSnapshotService {
             AppUsersCompanion.insert(
               id: id,
               organizationId: context.organizationId,
-              firebaseUid: Value(_string(row['firebaseUid'])),
+              firebaseUid: Value(
+                _string((row['identityId'] ?? row['firebaseUid'])),
+              ),
               email: _requiredString(row, 'email'),
               displayName: _requiredString(row, 'displayName'),
               status: _requiredString(row, 'status'),

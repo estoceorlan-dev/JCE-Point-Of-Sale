@@ -13,7 +13,10 @@ class CredentialRecordStore {
   final String key;
   Future<void> _tail = Future.value();
 
-  Future<T> transact<T>(Future<T> Function(Map<String, dynamic>) action) {
+  Future<T> transact<T>(
+    Future<T> Function(Map<String, dynamic>) action, {
+    bool requireWrite = false,
+  }) {
     final result = _tail.then((_) async {
       final encoded = await vault.read(key);
       final state = encoded == null
@@ -23,7 +26,8 @@ class CredentialRecordStore {
         throw StateError('Deployment mismatch.');
       }
       final value = await action(state);
-      await vault.write(key, jsonEncode(state));
+      final updated = jsonEncode(state);
+      if (requireWrite || updated != encoded) await vault.write(key, updated);
       return value;
     });
     _tail = result.then<void>((_) {}, onError: (Object _, StackTrace _) {});

@@ -157,6 +157,24 @@ class OperationsChangeApplier {
         );
       }
     }
+    final register = _map(envelope.result['register']);
+    if (register != null && register['id'] is String) {
+      final version = _nullableInt(register['version']) ?? 0;
+      await (database.update(database.registers)..where(
+            (value) =>
+                value.id.equals(register['id'] as String) &
+                value.organizationId.equals(envelope.change.organizationId) &
+                value.branchId.equals(_branchId(envelope)) &
+                value.version.isSmallerOrEqualValue(version),
+          ))
+          .write(
+            RegistersCompanion(
+              assignedDeviceId: Value(_string(register['assigned_device_id'])),
+              version: Value(version),
+              updatedAt: Value(updatedAt),
+            ),
+          );
+    }
     final directive = envelope.result['directive'];
     if (directive is Map) {
       final value = directive.map(
@@ -230,7 +248,10 @@ class OperationsChangeApplier {
         database.syncOutboxEntries,
       )..where((row) => row.operationId.equals(command.operationId))).write(
         SyncOutboxEntriesCompanion(
-          payloadJson: Value(jsonEncode(payload)),
+          // Signed commands retain original content. The server applies the audited claim resolution.
+          payloadJson: command.evidenceJson == null
+              ? Value(jsonEncode(payload))
+              : const Value.absent(),
           status: const Value('pending'),
           nextAttemptAt: const Value(null),
           lastError: const Value(null),
@@ -641,7 +662,9 @@ class OperationsChangeApplier {
           AppUsersCompanion.insert(
             id: id,
             organizationId: envelope.change.organizationId,
-            firebaseUid: Value(_string(row['firebaseUid'])),
+            firebaseUid: Value(
+              _string((row['identityId'] ?? row['firebaseUid'])),
+            ),
             email:
                 _string(row['email']) ??
                 _requiredString(envelope.commandPayload, 'email'),

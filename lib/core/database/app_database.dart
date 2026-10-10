@@ -11,6 +11,7 @@ import 'daos/sync_cursor_dao.dart';
 import 'daos/sync_entity_version_dao.dart';
 import 'database_connection.dart';
 import 'models/outbox_state.dart';
+import 'models/outbox_command.dart';
 import 'tables/app_users_table.dart';
 import 'tables/approval_decisions_table.dart';
 import 'tables/approval_requests_table.dart';
@@ -165,7 +166,9 @@ class AppDatabase extends _$AppDatabase {
 
   AppDatabase.forTesting(super.executor);
 
-  static const int currentSchemaVersion = 19;
+  Future<String?> Function(OutboxCommand)? signOutboxCommand;
+
+  static const int currentSchemaVersion = 20;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -565,6 +568,13 @@ class AppDatabase extends _$AppDatabase {
       case 18:
         await migrator.createIndex(productBarcodesProductLookupIdx);
         await migrator.createIndex(productPricesLookupIdx);
+      case 20:
+        if (!await _tableHasColumn('sync_outbox', 'evidence_json')) {
+          await migrator.addColumn(
+            syncOutboxEntries,
+            syncOutboxEntries.evidenceJson,
+          );
+        }
       case 19:
         if (!await _tableHasColumn('sync_outbox', 'causal_group_id')) {
           await migrator.addColumn(

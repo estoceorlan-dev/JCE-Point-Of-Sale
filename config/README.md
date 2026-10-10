@@ -1,5 +1,16 @@
 # Release configuration
 
+For the Node refactor, use `node.local.example.json` or `node.render.example.json`
+and follow [Node installation](../docs/node_installation.md). These examples target
+staging until physical acceptance and production packaging are complete.
+
+The production Android/web examples below belong to the retained **Firebase**
+release path and explicitly set `JCE_BACKEND=firebase`. Add that setting to any
+older local Firebase profile, because the application default is now Node. The
+existing Firebase release validator does not validate Node deployments.
+
+## Legacy Firebase release configuration
+
 Copy the platform example to a gitignored `*.local.json` file, replace every
 placeholder with the isolated production Firebase client identifiers, then
 validate it against the production project ID approved in the protected CI

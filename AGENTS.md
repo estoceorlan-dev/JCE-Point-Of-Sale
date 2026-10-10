@@ -72,8 +72,9 @@ credentials. Retain SQLite-first writes and the dedicated synchronization queue.
 The accepted migration plan is
 `jce_backend/docs/architecture_refactor_plan.md`. Phase 0 establishes checkpoints,
 ownership, inventory, and release contracts; it does not migrate runtime behavior.
-Existing Firebase adapters remain the working baseline until their replacements
-pass the relevant phase checks. Do not remove platform gates or authorize new
+Phases 3-4 select the Node runtime by default and preserve explicit Firebase
+rollback adapters. Physical device acceptance remains pending; retain production
+platform gates and defer Firebase retirement to Phase 7. Do not remove platform gates or authorize new
 production deployments merely because a planning phase is complete.
 
 Target clients are Windows and Android POS, with web administration. Offline

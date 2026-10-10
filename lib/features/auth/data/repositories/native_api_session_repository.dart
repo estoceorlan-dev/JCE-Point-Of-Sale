@@ -1,4 +1,5 @@
 import 'package:uuid/uuid.dart';
+import '../../../../core/remote/remote_api_exception.dart';
 import '../../../../core/error/failure.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/error/result.dart';
@@ -89,6 +90,8 @@ class NativeApiSessionRepository implements NativeSessionRepository {
     String path, {
     String method = 'POST',
     Map<String, dynamic>? body,
+    Map<String, String> headers = const {},
+    bool syncRequest = false,
   }) async {
     final session = await records.transact(
       (state) async => state['session'] == null
@@ -107,15 +110,25 @@ class NativeApiSessionRepository implements NativeSessionRepository {
         method: method,
         body: body,
         accessToken: session['accessToken'] as String,
+        headers: headers,
+        syncRequest: syncRequest,
       );
-    } on AuthenticationFailure catch (failure) {
-      if (failure.code != 'unauthorized') rethrow;
+    } catch (failure) {
+      if (failure is! AuthenticationFailure &&
+          !(failure is RemoteApiException && failure.status == 401)) {
+        rethrow;
+      }
+      if (failure is AuthenticationFailure && failure.code != 'unauthorized') {
+        rethrow;
+      }
       final updated = await _refresh(session);
       return api.request(
         path,
         method: method,
         body: body,
         accessToken: updated['accessToken'] as String,
+        headers: headers,
+        syncRequest: syncRequest,
       );
     }
   }

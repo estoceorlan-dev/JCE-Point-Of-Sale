@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import '../../features/auth/presentation/widgets/offline_pin_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -68,6 +70,32 @@ class AppNavigationShell extends ConsumerWidget {
         onRefreshAccess: () => _refreshAccess(ref),
         syncState: syncState,
         onSync: () => _sync(ref),
+        onOfflinePin: (!kIsWeb && ref.watch(appConfigProvider).useNodeBackend)
+            ? () => showDialog<void>(
+                context: context,
+                builder: (_) => const Dialog(
+                  child: SizedBox(
+                    width: 440,
+                    child: SingleChildScrollView(
+                      child: OfflinePinPanel(enroll: true),
+                    ),
+                  ),
+                ),
+              )
+            : null,
+        onSwitchCashier:
+            (!kIsWeb && ref.watch(appConfigProvider).useNodeBackend)
+            ? () async {
+                final result = await ref
+                    .read(authControllerProvider.notifier)
+                    .switchCashier();
+                if (context.mounted && result.failureOrNull != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(result.failureOrNull!.message)),
+                  );
+                }
+              }
+            : null,
       ),
       body: navigationShell,
       bottomNavigationBar: MobileBottomNavigation(

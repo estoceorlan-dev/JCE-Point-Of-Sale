@@ -24,10 +24,19 @@ class SecureOfflinePinRepository implements OfflinePinRepository {
   final DateTime Function() now;
   bool _validPin(String pin) => RegExp(r'^\d{6,12}$').hasMatch(pin);
   Result<OfflineGrant, Failure> _failure(String code) => Result.failure(
-    AuthenticationFailure(
-      'Offline sign-in unavailable. Reconnect and authenticate if required.',
-      code: code,
-    ),
+    AuthenticationFailure(switch (code) {
+      'invalid_pin' => 'Enter a valid 6-12 digit PIN.',
+      'pin_locked' =>
+        'Offline PIN sign-in is locked for 15 minutes after repeated attempts.',
+      'enrollment_expired_or_invalid' =>
+        'This offline enrollment expired or is invalid. Sign in online and enroll again.',
+      'clock_rollback' =>
+        'The device clock moved backwards. Correct the clock and renew enrollment online.',
+      'not_enrolled' =>
+        'This cashier is not enrolled on this device. Sign in online first.',
+      _ =>
+        'Offline sign-in unavailable. Reconnect and authenticate if required.',
+    }, code: code),
   );
 
   @override
@@ -73,7 +82,7 @@ class SecureOfflinePinRepository implements OfflinePinRepository {
         state['lastSeenUtc'] = time.millisecondsSinceEpoch;
         state['clockRollback'] = false;
         return Result<OfflineGrant, Failure>.success(grant);
-      });
+      }, requireWrite: true);
     } on Failure catch (failure) {
       return Result.failure(failure);
     } catch (_) {
@@ -151,7 +160,7 @@ class SecureOfflinePinRepository implements OfflinePinRepository {
         entry['lockedUntil'] = null;
         entries!['$identityId:$branchId'] = entry;
         return Result<OfflineGrant, Failure>.success(grant);
-      });
+      }, requireWrite: true);
     } catch (_) {
       return _failure('credential_storage_or_enrollment_invalid');
     }
@@ -194,7 +203,7 @@ class SecureOfflinePinRepository implements OfflinePinRepository {
         } catch (_) {
           return _failure('enrollment_expired_or_invalid');
         }
-      });
+      }, requireWrite: true);
     } catch (_) {
       return _failure('credential_storage_or_enrollment_invalid');
     }

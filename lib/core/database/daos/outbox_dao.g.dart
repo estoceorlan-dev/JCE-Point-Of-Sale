@@ -8,4 +8,20 @@ mixin _$OutboxDaoMixin on DatabaseAccessor<AppDatabase> {
       attachedDatabase.syncOutboxEntries;
   $SyncOutboxDependenciesTable get syncOutboxDependencies =>
       attachedDatabase.syncOutboxDependencies;
+  OutboxDaoManager get managers => OutboxDaoManager(this);
+}
+
+class OutboxDaoManager {
+  final _$OutboxDaoMixin _db;
+  OutboxDaoManager(this._db);
+  $$SyncOutboxEntriesTableTableManager get syncOutboxEntries =>
+      $$SyncOutboxEntriesTableTableManager(
+        _db.attachedDatabase,
+        _db.syncOutboxEntries,
+      );
+  $$SyncOutboxDependenciesTableTableManager get syncOutboxDependencies =>
+      $$SyncOutboxDependenciesTableTableManager(
+        _db.attachedDatabase,
+        _db.syncOutboxDependencies,
+      );
 }

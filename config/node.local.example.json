@@ -1,0 +1,11 @@
+{
+  "JCE_BACKEND": "node",
+  "JCE_ENV": "staging",
+  "JCE_ENABLE_DEMO_AUTH": "false",
+  "JCE_ENABLE_DIAGNOSTICS": "true",
+  "JCE_API_BASE_URL": "https://replace-with-trusted-branch-host",
+  "JCE_DEPLOYMENT_ID": "REPLACE_WITH_PROVISIONED_UUID",
+  "JCE_ORGANIZATION_CODE": "REPLACE_WITH_ORGANIZATION_CODE",
+  "JCE_OFFLINE_VERIFICATION_KEYS": "{\"REPLACE_WITH_KEY_ID\":{\"kid\":\"REPLACE_WITH_KEY_ID\",\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"REPLACE_WITH_PUBLIC_X\",\"y\":\"REPLACE_WITH_PUBLIC_Y\"}}",
+  "JCE_ALLOW_HTTP_LOOPBACK": "false"
+}

@@ -1,3 +1,5 @@
+import '../../../auth/presentation/providers/native_auth_providers.dart';
+import '../../data/services/node_register_claim_authorization_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_provider.dart';
@@ -59,6 +61,11 @@ final registerClaimRepositoryProvider = Provider<RegisterClaimRepository>((
 final registerClaimAuthorizationServiceProvider =
     Provider<RegisterClaimAuthorizationService>((ref) {
       final config = ref.watch(appConfigProvider);
+      if (config.useNodeBackend) {
+        return NodeRegisterClaimAuthorizationService(
+          ref.watch(nativeAuthApiProvider),
+        );
+      }
       return FirebaseRegisterClaimAuthorizationService(
         config: config,
         functionName: config.registerClaimAuthorizationFunctionName,

@@ -1,3 +1,4 @@
+import 'package:jce_pos/core/remote/remote_api_exception.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -42,10 +43,12 @@ void main() {
   tearDown(() => database.close());
 
   OfflineFirstBackendSyncService service({
+    bool deviceUploads = false,
     RemoteChangeApplier? applier,
     RemoteSyncDataSource? remoteOverride,
   }) {
     return OfflineFirstBackendSyncService(
+      deviceUploads: deviceUploads,
       commands: commands,
       remote: remoteOverride ?? remote,
       database: database,
@@ -59,6 +62,36 @@ void main() {
       logger: const _SilentLogger(),
     );
   }
+
+  test(
+    'device upload keeps the original actor when another cashier is active and download auth expired',
+    () async {
+      await _enqueue(database, initialTime, operationId: 'original-actor');
+      remote.error = const RemoteApiException('unauthorized', status: 401);
+      commands.error = const RemoteApiException(
+        'permission-denied',
+        status: 403,
+      );
+      final result = await service(deviceUploads: true).synchronize(
+        context: const BusinessContext(
+          organizationId: 'org',
+          branchId: 'branch',
+          actorUserId: 'another-cashier',
+        ),
+      );
+      expect(commands.executed, ['original-actor']);
+      expect(result.authenticationRequired, true);
+      final conflict = await database
+          .select(database.syncConflicts)
+          .getSingle();
+      expect(conflict.actorUserId, 'user');
+      expect(
+        (await database.select(database.syncOutboxEntries).getSingle())
+            .actorUserId,
+        'user',
+      );
+    },
+  );
 
   test(
     'throttling remains retryable beyond the normal attempt limit',

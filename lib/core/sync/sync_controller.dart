@@ -1,3 +1,5 @@
+import '../error/failures.dart';
+import '../remote/remote_api_exception.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -150,7 +152,15 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
     );
     try {
       final config = _ref.read(appConfigProvider);
-      if (_posActive && config.enablePosSyncV2 && !config.enableDemoAuth) {
+      final deviceResult = config.useNodeBackend
+          ? await _ref
+                .read(backendSyncServiceProvider)
+                .synchronize(context: context, trigger: trigger)
+          : null;
+      if (_posActive &&
+          config.enablePosSyncV2 &&
+          !config.enableDemoAuth &&
+          deviceResult?.authenticationRequired != true) {
         final bootstrap = await _ref
             .read(posBootstrapRepositoryProvider)
             .provision(context);
@@ -164,6 +174,8 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
         }
       }
       if (_hydrateAdministration &&
+          deviceResult?.authenticationRequired != true &&
+          deviceResult?.offline != true &&
           await _ref.read(connectivityMonitorProvider).isConnected) {
         await _ref
             .read(administrationSnapshotServiceProvider)
@@ -178,11 +190,15 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
                   '',
             );
       }
-      final result = await _ref
-          .read(backendSyncServiceProvider)
-          .synchronize(context: context, trigger: trigger);
+      final result =
+          deviceResult ??
+          await _ref
+              .read(backendSyncServiceProvider)
+              .synchronize(context: context, trigger: trigger);
       final latest = state.asData?.value ?? current;
-      if (_hydrateLocations && !result.offline) {
+      if (_hydrateLocations &&
+          !result.offline &&
+          !result.authenticationRequired) {
         await _ref.read(stockLocationSnapshotServiceProvider).refresh(context);
       }
       state = AsyncData(
@@ -190,7 +206,11 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
           status: result.offline ? SyncStatus.offline : SyncStatus.idle,
           lastSyncedAt: result.offline ? null : result.finishedAt,
           message: result.offline
-              ? 'Network unavailable. Local changes are safe.'
+              ? 'The API is unavailable. Local changes are safe.'
+              : result.authenticationRequired
+              ? 'Sign in online to download updates. Signed operations can still upload.'
+              : result.conflicts > 0
+              ? 'Some operations were rejected. Review sync conflicts; local records are preserved.'
               : 'Synced ${result.pushed} uploads and ${result.pulled} updates.',
         ),
       );
@@ -200,7 +220,12 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
       state = AsyncData(
         latest.copyWith(
           status: SyncStatus.failed,
-          message: 'Sync could not reach or apply the backend. Retry is safe.',
+          message: error is NetworkFailure
+              ? 'The configured API is unavailable. Local changes are safe.'
+              : error is AuthenticationFailure ||
+                    error is RemoteApiException && error.status == 401
+              ? 'Your API session expired. Sign in again to download updates.'
+              : 'The API could not accept or apply this update. Review sync conflicts; local records are preserved.',
         ),
       );
     }

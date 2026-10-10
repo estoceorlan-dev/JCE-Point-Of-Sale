@@ -9,6 +9,7 @@ class AppUser {
   });
 
   final String firebaseUid;
+  String get identityId => firebaseUid;
   final String email;
   final String displayName;
   final List<OrganizationAccess> organizations;

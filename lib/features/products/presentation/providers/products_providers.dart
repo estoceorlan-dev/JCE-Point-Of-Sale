@@ -63,7 +63,7 @@ final productImageUploadProcessorProvider =
 final pendingProductImageUploadProvider = FutureProvider<int>((ref) async {
   final config = ref.watch(appConfigProvider);
   final context = ref.watch(businessContextProvider);
-  if (config.enableDemoAuth || context == null) {
+  if (config.enableDemoAuth || config.useNodeBackend || context == null) {
     return 0;
   }
   return ref.watch(productImageUploadProcessorProvider).processPending(context);

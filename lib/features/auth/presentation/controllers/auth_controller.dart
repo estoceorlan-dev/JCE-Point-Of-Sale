@@ -1,3 +1,6 @@
+import '../../../../core/database/database_provider.dart';
+import '../../data/repositories/cashier_exit_check.dart';
+import '../../data/repositories/node_auth_repository.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,6 +56,22 @@ class AuthController extends AsyncNotifier<AuthSession?> {
         .call(email: email, password: password);
     _applySessionResult(result);
     return result;
+  }
+
+  Future<Result<void, Failure>> switchCashier() async {
+    final repository = ref.read(authRepositoryProvider);
+    final session = state.asData?.value;
+    if (repository is! NodeAuthRepository || session == null) {
+      return const Result.failure(
+        AuthenticationFailure('A native cashier session is required.'),
+      );
+    }
+    try {
+      await checkCashierExit(ref.read(appDatabaseProvider), session);
+      return signOut();
+    } on Failure catch (failure) {
+      return Result.failure(failure);
+    }
   }
 
   Future<Result<void, Failure>> signOut() async {

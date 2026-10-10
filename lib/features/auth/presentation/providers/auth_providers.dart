@@ -1,5 +1,10 @@
+import '../../data/repositories/browser_installation_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
+import 'native_auth_providers.dart';
+import '../../data/repositories/node_auth_repository.dart';
+import '../../data/repositories/node_device_registration_repository.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/database/database_provider.dart';
@@ -68,6 +73,7 @@ final operationalAccessPolicyProvider = Provider<OperationalAccessPolicy?>((
 ) {
   final config = ref.watch(appConfigProvider);
   if (config.enableDemoAuth) return null;
+  if (config.useNodeBackend) return ref.watch(nodeActorEvidenceProvider);
   return CachedOperationalAccessPolicy(
     metadataDao: ref.watch(metadataDaoProvider),
     clock: ref.watch(appClockProvider),
@@ -90,6 +96,19 @@ final deviceRegistrationRepositoryProvider =
       if (config.enableDemoAuth) {
         return const DemoDeviceRegistrationRepository();
       }
+      if (config.useNodeBackend && kIsWeb) {
+        return BrowserInstallationRepository(ref.watch(metadataDaoProvider));
+      }
+      if (config.useNodeBackend) {
+        return NodeDeviceRegistrationRepository(
+          ref.watch(nativeApiSessionRepositoryProvider),
+          ref.watch(nativeInstallationStoreProvider),
+          ref.watch(metadataDaoProvider),
+          defaultTargetPlatform == TargetPlatform.windows
+              ? 'windows'
+              : 'android',
+        );
+      }
       return CloudFunctionsDeviceRegistrationRepository(
         functions: ref.watch(firebaseFunctionsProvider),
         functionName: config.deviceRegistrationFunctionName,
@@ -104,6 +123,17 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final config = ref.watch(appConfigProvider);
   if (config.enableDemoAuth) {
     final repository = HardcodedAuthRepository(branchId: config.demoBranchId!);
+    ref.onDispose(repository.dispose);
+    return repository;
+  }
+  if (config.useNodeBackend) {
+    final repository = NodeAuthRepository(
+      ref.watch(nativeApiSessionRepositoryProvider),
+      ref.watch(deviceRegistrationRepositoryProvider),
+      ref.watch(accessLocalDataSourceProvider),
+      ref.watch(nodeActorEvidenceProvider),
+      ref.watch(offlinePinRepositoryProvider),
+    );
     ref.onDispose(repository.dispose);
     return repository;
   }

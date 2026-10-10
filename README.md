@@ -5,15 +5,19 @@ inventory system.
 
 ## Node.js/PostgreSQL refactor
 
-The accepted architecture replaces Firebase with the separate `jce_backend`
-repository for local Wi-Fi operation or independent Render deployment. Phase 0
-establishes the baseline and migration documentation; it does not change runtime
-behavior or remove the current production platform gates.
+The default build now uses the standalone `jce_backend` Node.js/PostgreSQL API
+for local Wi-Fi or independent Render deployment. Follow
+[Node installation](docs/node_installation.md) to supply the deployment ID, API
+origin and public verification key. SQLite-first checkout and signed queued work
+survive API outages and restart; offline cashier access requires prior per-device
+PIN enrollment. Web is administration only.
 
 See the [refactor handoff and implementation plan](docs/backend_refactor.md) and
-the repository-local [development rules](AGENTS.md). The target is Windows and
-Android POS with web administration, enrolled offline cashier PINs, and optional
-product images. The platform statuses below describe the current Firebase build.
+[development rules](AGENTS.md). Phases 3-4 have automated end-to-end sale evidence;
+physical device and disconnected-WAN acceptance remain pending. Windows production
+stays blocked by ADR-0001. `JCE_BACKEND=firebase` explicitly selects the retained
+legacy path; its SDK removal is Phase 7. The historical feature/build sections
+below describe that legacy baseline unless stated otherwise.
 
 ## Intended deployment platforms
 

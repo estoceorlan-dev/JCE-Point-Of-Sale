@@ -31,6 +31,7 @@ class AppConfig {
     this.accessRefreshInterval = defaultAccessRefreshInterval,
     this.maxOfflineAccessAge = defaultMaxOfflineAccessAge,
     this.apiBaseUri,
+    this.useNodeBackend = false,
     this.demoBranchId,
     this.firebaseFunctionsRegion,
     this.appCheckWebSiteKey,
@@ -44,6 +45,10 @@ class AppConfig {
     final resolvedEnvironment = environmentWasExplicit
         ? environmentValue
         : 'development';
+    const backend = String.fromEnvironment('JCE_BACKEND', defaultValue: 'node');
+    if (!{'node', 'firebase'}.contains(backend)) {
+      throw const FormatException('JCE_BACKEND must be node or firebase.');
+    }
     const apiBaseUrl = String.fromEnvironment('JCE_API_BASE_URL');
     const demoAuthValue = String.fromEnvironment('JCE_ENABLE_DEMO_AUTH');
     const diagnosticsValue = String.fromEnvironment('JCE_ENABLE_DIAGNOSTICS');
@@ -111,6 +116,7 @@ class AppConfig {
     );
     return AppConfig.fromValues(
       environment: resolvedEnvironment,
+      useNodeBackend: backend == 'node',
       apiBaseUrl: apiBaseUrl,
       enableDemoAuth: demoAuthValue,
       enableDiagnostics: diagnosticsValue,
@@ -139,6 +145,7 @@ class AppConfig {
 
   factory AppConfig.fromValues({
     required String environment,
+    bool useNodeBackend = false,
     String? apiBaseUrl,
     String? enableDemoAuth,
     String? enableDiagnostics,
@@ -269,6 +276,7 @@ class AppConfig {
 
     return AppConfig(
       environment: parsedEnvironment,
+      useNodeBackend: useNodeBackend,
       apiBaseUri: parsedApiBaseUri,
       enableDemoAuth: parsedEnableDemoAuth,
       enableDiagnostics: parsedEnableDiagnostics,
@@ -296,6 +304,7 @@ class AppConfig {
 
   final AppEnvironment environment;
   final Uri? apiBaseUri;
+  final bool useNodeBackend;
   final bool enableDemoAuth;
   final bool enableDiagnostics;
   final String? demoBranchId;

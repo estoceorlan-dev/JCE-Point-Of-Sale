@@ -18,6 +18,8 @@ class ShellTopBar extends StatelessWidget {
     required this.onRefreshAccess,
     required this.syncState,
     required this.onSync,
+    this.onOfflinePin,
+    this.onSwitchCashier,
   });
 
   final String title;
@@ -28,6 +30,8 @@ class ShellTopBar extends StatelessWidget {
   final VoidCallback onRefreshAccess;
   final SyncState? syncState;
   final VoidCallback onSync;
+  final VoidCallback? onOfflinePin;
+  final VoidCallback? onSwitchCashier;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +78,18 @@ class ShellTopBar extends StatelessWidget {
               ],
             ),
           ),
+          if (onOfflinePin != null)
+            IconButton(
+              tooltip: 'Offline cashier PIN',
+              onPressed: onOfflinePin,
+              icon: const Icon(Icons.pin_outlined),
+            ),
+          if (onSwitchCashier != null)
+            IconButton(
+              tooltip: 'Switch cashier',
+              onPressed: onSwitchCashier,
+              icon: const Icon(Icons.switch_account_outlined),
+            ),
           const SizedBox(width: AppSpacing.sm),
           IconButton(
             tooltip: syncState?.message ?? 'Synchronize now',

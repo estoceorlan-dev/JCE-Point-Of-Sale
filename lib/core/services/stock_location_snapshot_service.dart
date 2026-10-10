@@ -1,3 +1,4 @@
+import '../../features/auth/presentation/providers/native_auth_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
 import '../../shared/models/business_context.dart';
@@ -13,12 +14,27 @@ final stockLocationSnapshotServiceProvider =
         'JCE_STOCK_LOCATIONS_SNAPSHOT_FUNCTION',
         defaultValue: 'getStockLocationsSnapshot',
       );
-      final functions = ref.watch(firebaseFunctionsProvider);
+      final config = ref.watch(appConfigProvider);
+      final functions = config.useNodeBackend
+          ? null
+          : ref.watch(firebaseFunctionsProvider);
       return StockLocationSnapshotService(
         database: ref.watch(appDatabaseProvider),
         demoMode: ref.watch(appConfigProvider).enableDemoAuth,
         load: (context) async {
-          final response = await functions.httpsCallable(functionName).call({
+          if (config.useNodeBackend) {
+            return ref
+                .read(nativeApiSessionRepositoryProvider)
+                .authenticated(
+                  Uri(
+                    path: '/v1/stock-locations/snapshot',
+                    queryParameters: {'branchId': context.branchId},
+                  ).toString(),
+                  method: 'GET',
+                  syncRequest: true,
+                );
+          }
+          final response = await functions!.httpsCallable(functionName).call({
             'organizationId': context.organizationId,
             'branchId': context.branchId,
           });
