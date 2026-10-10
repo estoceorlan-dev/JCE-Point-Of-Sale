@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../domain/services/image_upload_processor.dart';
 
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:drift/drift.dart';
@@ -12,7 +13,7 @@ import '../../../../core/utils/id_generator.dart';
 import '../../../../shared/models/business_context.dart';
 import 'product_image_bytes_reader.dart';
 
-class ProductImageUploadProcessor {
+class ProductImageUploadProcessor implements ImageUploadProcessor {
   const ProductImageUploadProcessor({
     required AppDatabase database,
     required FirebaseAuth firebaseAuth,
@@ -37,6 +38,7 @@ class ProductImageUploadProcessor {
   final AppClock _clock;
   final AppLogger _logger;
 
+  @override
   Future<int> processPending(BusinessContext context) async {
     final user = _firebaseAuth.currentUser;
     if (user == null) {

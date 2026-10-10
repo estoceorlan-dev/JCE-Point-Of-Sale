@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/config/app_config.dart';
+import '../../../auth/presentation/controllers/account_action_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
@@ -330,6 +332,8 @@ class _UsersPageState extends ConsumerState<UsersPage>
                   _setStaffStatus(account, UserAccountStatus.disabled);
                 case 'invite':
                   _copyInviteLink(account);
+                case 'recovery':
+                  _copyRecovery(account);
               }
             },
             itemBuilder: (_) => [
@@ -338,9 +342,19 @@ class _UsersPageState extends ConsumerState<UsersPage>
                 child: Text('Edit account & access'),
               ),
               if (account.status == UserAccountStatus.invited)
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'invite',
-                  child: Text('Copy invite link'),
+                  child: Text(
+                    ref.watch(appConfigProvider).useNodeBackend
+                        ? 'Copy activation token'
+                        : 'Copy invite link',
+                  ),
+                ),
+              if (account.status == UserAccountStatus.active &&
+                  ref.watch(appConfigProvider).useNodeBackend)
+                const PopupMenuItem(
+                  value: 'recovery',
+                  child: Text('Copy password recovery token'),
                 ),
               if (account.status != UserAccountStatus.active)
                 const PopupMenuItem(value: 'active', child: Text('Activate')),
@@ -521,6 +535,35 @@ class _UsersPageState extends ConsumerState<UsersPage>
     );
   }
 
+  Future<void> _copyRecovery(StaffAccount account) async {
+    setState(() => _busy = true);
+    final result = await ref
+        .read(accountActionServiceProvider)
+        .issue(userId: account.id, recovery: true);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    await result.fold(
+      onSuccess: (value) async {
+        await Clipboard.setData(
+          ClipboardData(
+            text:
+                'Recovery token: ${value.token}\nExpires: ${value.expiresAt.toLocal()}',
+          ),
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Recovery token copied. Existing access is revoked when it is used.',
+              ),
+            ),
+          );
+        }
+      },
+      onFailure: (failure) async => _showFailure(failure),
+    );
+  }
+
   Future<void> _copyInviteLink(StaffAccount account) async {
     setState(() => _busy = true);
     await ref.read(syncStateProvider.notifier).synchronize();
@@ -537,8 +580,12 @@ class _UsersPageState extends ConsumerState<UsersPage>
         await Clipboard.setData(ClipboardData(text: url));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invite link copied. It was not stored locally.'),
+            SnackBar(
+              content: Text(
+                ref.read(appConfigProvider).useNodeBackend
+                    ? 'Activation token copied. It expires in one hour.'
+                    : 'Invite link copied. It was not stored locally.',
+              ),
             ),
           );
         }

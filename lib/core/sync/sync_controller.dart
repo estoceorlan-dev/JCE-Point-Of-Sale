@@ -1,3 +1,4 @@
+import '../../features/products/presentation/providers/products_providers.dart';
 import '../error/failures.dart';
 import '../remote/remote_api_exception.dart';
 import 'dart:async';
@@ -200,6 +201,12 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
           !result.offline &&
           !result.authenticationRequired) {
         await _ref.read(stockLocationSnapshotServiceProvider).refresh(context);
+      }
+      if (!result.offline &&
+          !result.authenticationRequired &&
+          !config.enableDemoAuth) {
+        _ref.invalidate(pendingProductImageUploadProvider);
+        unawaited(_ref.read(pendingProductImageUploadProvider.future));
       }
       state = AsyncData(
         latest.copyWith(

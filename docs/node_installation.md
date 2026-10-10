@@ -50,3 +50,21 @@ Windows production remains blocked by ADR-0001 pending real device acceptance.
 The automated SQLite/API sale test is not proof of physical Android secure storage,
 Windows installer/reboot, printers, trusted LAN TLS, or two-device operation with
 the router WAN disconnected. Do those checks before approving production.
+
+## Phase 5-6 update (2026-10-10)
+
+The Node client includes optional private image upload/retrieval and account
+activation/recovery. New installation checks require API major 1 / PostgreSQL
+migration 0024 and reject a server with `recoveryRequired:true` while preserving
+local queues. API 1.1.0 keeps signed command protocol 1 and SQLite schema 20.
+
+For local HTTPS, `JCE_TLS_CA_CERT_BASE64` contains only the operator-verified public
+Caddy root certificate. The native HTTP adapter extends normal trusted roots and
+retains hostname/expiry verification on Windows and Android. Android's main manifest
+includes INTERNET for LAN sockets. Browser administration uses browser certificate
+trust and same-origin cookie/CSRF handling. Deploy the compatible server/schema
+before clients; preserve the deployment ID and signing key.
+
+Operator source runbooks are in `jce_backend/docs/local_production_package.md` and
+`backup_restore.md`. Native signed installers, physical reboot/hardware/Wi-Fi tests
+and the Windows production gate remain pending; Render/Firebase retirement is Phase 7.

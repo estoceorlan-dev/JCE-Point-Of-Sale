@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../../../core/config/app_config.dart';
 import '../widgets/offline_pin_panel.dart';
 import 'package:flutter/material.dart';
+import '../widgets/account_action_panel.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -99,6 +100,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       if ((!kIsWeb &&
                           ref.watch(appConfigProvider).useNodeBackend))
                         const OfflinePinPanel(),
+                      if (ref.watch(appConfigProvider).useNodeBackend)
+                        const AccountActionPanel(),
                     ],
                   ),
                 ),

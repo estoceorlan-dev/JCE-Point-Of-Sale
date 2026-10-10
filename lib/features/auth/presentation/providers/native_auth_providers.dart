@@ -6,7 +6,7 @@ import '../../../../core/sync/node_actor_evidence.dart';
 import '../../../../core/sync/node_device_transport.dart';
 import '../../data/security/installation_binding.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
+import '../../data/security/node_http_client.dart';
 import '../../domain/offline/native_auth_profile.dart';
 import '../../domain/offline/offline_pin_repository.dart';
 import '../../data/datasources/native_auth_api.dart';
@@ -23,7 +23,7 @@ final nativeAuthProfileProvider = Provider<NativeAuthProfile>(
   (ref) => nodeInstallationProfile(),
 );
 final nativeAuthApiProvider = Provider<NativeAuthApi>((ref) {
-  final client = http.Client();
+  final client = createNodeHttpClient();
   ref.onDispose(client.close);
   return NativeAuthApi(client, ref.watch(nativeAuthProfileProvider));
 });

@@ -128,7 +128,7 @@ SELECT r.id, r.organization_id, r.code, r.name, r.description, r.is_active,
           WHERE ura.role_id = r.id AND ura.revoked_at IS NULL) assignment_count
 FROM roles r
 LEFT JOIN role_permissions rp ON rp.role_id = r.id
-WHERE r.organization_id = ? ${includeArchived ? '' : 'AND r.is_active = 1 AND r.deleted_at IS NULL'}
+WHERE r.organization_id = ? AND r.id NOT LIKE 'effective:%' ${includeArchived ? '' : 'AND r.is_active = 1 AND r.deleted_at IS NULL'}
 ORDER BY lower(r.name), r.id, rp.permission_code
 ''',
           variables: [Variable<String>(context.organizationId)],

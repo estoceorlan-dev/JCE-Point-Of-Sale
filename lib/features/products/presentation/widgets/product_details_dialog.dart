@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/app_image.dart';
+import '../providers/product_image_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_spacing.dart';
@@ -29,6 +31,13 @@ class ProductDetailsDialog extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  AppImage(
+                    bytes: ref
+                        .watch(productImageBytesProvider(summary.id))
+                        .asData
+                        ?.value,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   _Detail(label: 'SKU', value: details.sku),
                   _Detail(
                     label: 'Price',

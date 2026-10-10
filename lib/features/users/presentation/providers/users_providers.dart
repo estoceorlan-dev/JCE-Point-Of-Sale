@@ -1,4 +1,5 @@
-import '../../data/services/operator_staff_invitation_service.dart';
+import '../../data/services/node_staff_invitation_service.dart';
+import '../../../auth/presentation/controllers/account_action_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_provider.dart';
@@ -56,7 +57,9 @@ final activeUserAdminSessionProvider = Provider((ref) {
 
 final staffInvitationServiceProvider = Provider<StaffInvitationService>((ref) {
   final config = ref.watch(appConfigProvider);
-  if (config.useNodeBackend) return const OperatorStaffInvitationService();
+  if (config.useNodeBackend) {
+    return NodeStaffInvitationService(ref.watch(accountActionServiceProvider));
+  }
   return CloudStaffInvitationService(
     functions: ref.watch(firebaseFunctionsProvider),
     generateFunctionName: config.generateStaffInviteFunctionName,

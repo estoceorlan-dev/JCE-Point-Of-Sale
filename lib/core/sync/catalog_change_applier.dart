@@ -261,6 +261,7 @@ class CatalogChangeApplier {
             sortOrder: Value(existing?.sortOrder ?? 0),
             createdAt: existing?.createdAt ?? now,
             updatedAt: now,
+            deletedAt: Value(_date(image['deleted_at'])),
           ),
         );
   }

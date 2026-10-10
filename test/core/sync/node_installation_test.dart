@@ -30,8 +30,8 @@ void main() {
       );
   Map<String, Object?> meta(String identity) => {
     'deploymentId': identity,
-    'apiVersion': '1.0.0',
-    'databaseSchemaVersion': 22,
+    'apiVersion': '1.1.0',
+    'databaseSchemaVersion': 24,
     'minClientProtocolVersion': 1,
     'maxClientProtocolVersion': 1,
     'capabilities': {'signedCommands': true},
@@ -74,6 +74,38 @@ void main() {
       expect(requests, ['/v1/meta']);
       expect(await records.transact((state) async => state['session']), isNull);
       client.close();
+    },
+  );
+  test(
+    'restored or pre-guard servers block initialization without discarding preserved work',
+    () async {
+      final records = CredentialRecordStore(MemoryVault(), deployment);
+      await records.transact((state) async {
+        state['preservedOperation'] = {
+          'operationId': 'original',
+          'actorUserId': 'cashier',
+        };
+      });
+      for (final response in [
+        {...meta(deployment), 'recoveryRequired': true},
+        {...meta(deployment), 'databaseSchemaVersion': 22},
+      ]) {
+        final client = MockClient(
+          (_) async => http.Response(jsonEncode(response), 200),
+        );
+        await expectLater(
+          InstallationBinding(
+            NativeAuthApi(client, profile()),
+            records,
+          ).initialize(),
+          throwsA(isA<AuthenticationFailure>()),
+        );
+        expect(
+          await records.transact((state) async => state['preservedOperation']),
+          {'operationId': 'original', 'actorUserId': 'cashier'},
+        );
+        client.close();
+      }
     },
   );
   test(

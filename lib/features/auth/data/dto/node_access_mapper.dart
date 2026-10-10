@@ -25,6 +25,28 @@ AuthSession nodeAccessSession(
         .whereType<AppPermission>()
         .toSet(),
   );
+  List<AccessRole> assignedRoles(
+    Object? rows,
+    String scope,
+    Iterable permissions,
+  ) {
+    if (rows is! List) return [effective(scope, permissions)];
+    return rows
+        .cast<Map>()
+        .map(
+          (row) => AccessRole(
+            id: row['id'] as String,
+            code: row['code'] as String,
+            name: row['name'] as String,
+            permissions: (row['permissions'] as List)
+                .map((p) => AppPermission.fromCode(p as String))
+                .whereType<AppPermission>()
+                .toSet(),
+          ),
+        )
+        .toList();
+  }
+
   final branches = (value['branches'] as List)
       .cast<Map>()
       .where((b) => offline == null || b['id'] == offline.branchId)
@@ -37,12 +59,13 @@ AuthSession nodeAccessSession(
             name: b['name'] as String,
             timezone: b['timezone'] as String,
           ),
-          roles: [
-            effective(
-              b['id'] as String,
-              offline?.permissions ?? (b['permissions'] as List),
-            ),
-          ],
+          roles: offline != null
+              ? [effective(b['id'] as String, offline.permissions)]
+              : assignedRoles(
+                  b['roles'],
+                  b['id'] as String,
+                  b['permissions'] as List,
+                ),
         ),
       )
       .toList();
@@ -69,12 +92,11 @@ AuthSession nodeAccessSession(
           ),
           status: UserAccountStatus.active,
           organizationRoles: offline == null
-              ? [
-                  effective(
-                    'organization',
-                    value['organizationPermissions'] as List,
-                  ),
-                ]
+              ? assignedRoles(
+                  value['organizationRoles'],
+                  'organization',
+                  value['organizationPermissions'] as List,
+                )
               : [],
           branches: branches,
         ),

@@ -27,9 +27,15 @@ class InstallationBinding {
 
   Future<void> _verify() async {
     final meta = await api.request('/v1/meta', method: 'GET');
+    if (meta['recoveryRequired'] == true) {
+      throw const AuthenticationFailure(
+        'This server was restored. Your administrator must reconcile accepted sales and saved client queues before work resumes.',
+        code: 'recovery_required',
+      );
+    }
     if (meta['deploymentId'] != records.deploymentId ||
         !(meta['apiVersion'] as String? ?? '').startsWith('1.') ||
-        (meta['databaseSchemaVersion'] as num? ?? 0) < 22 ||
+        (meta['databaseSchemaVersion'] as num? ?? 0) < 24 ||
         (meta['minClientProtocolVersion'] as num) > 1 ||
         (meta['maxClientProtocolVersion'] as num) < 1 ||
         (meta['capabilities'] as Map)['signedCommands'] != true) {

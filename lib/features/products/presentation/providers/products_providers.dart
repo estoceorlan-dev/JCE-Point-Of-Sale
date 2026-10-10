@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../auth/presentation/providers/native_auth_providers.dart';
+import '../../domain/services/image_upload_processor.dart';
+import '../../data/services/node_image_upload_processor.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/database/database_provider.dart';
@@ -46,24 +49,33 @@ final productsRepositoryProvider = Provider<ProductsRepository>((ref) {
   );
 });
 
-final productImageUploadProcessorProvider =
-    Provider<ProductImageUploadProcessor>((ref) {
-      final config = ref.watch(appConfigProvider);
-      return ProductImageUploadProcessor(
-        database: ref.watch(appDatabaseProvider),
-        firebaseAuth: ref.watch(firebaseAuthProvider),
-        functions: ref.watch(firebaseFunctionsProvider),
-        functionName: config.finalizeProductImageFunctionName,
-        idGenerator: ref.watch(idGeneratorProvider),
-        clock: ref.watch(appClockProvider),
-        logger: ref.watch(appLoggerProvider),
-      );
-    });
+final productImageUploadProcessorProvider = Provider<ImageUploadProcessor>((
+  ref,
+) {
+  final config = ref.watch(appConfigProvider);
+  if (config.useNodeBackend) {
+    return NodeImageUploadProcessor(
+      ref.watch(appDatabaseProvider),
+      ref.watch(nativeApiSessionRepositoryProvider),
+      ref.watch(appClockProvider),
+      ref.watch(appLoggerProvider),
+    );
+  }
+  return ProductImageUploadProcessor(
+    database: ref.watch(appDatabaseProvider),
+    firebaseAuth: ref.watch(firebaseAuthProvider),
+    functions: ref.watch(firebaseFunctionsProvider),
+    functionName: config.finalizeProductImageFunctionName,
+    idGenerator: ref.watch(idGeneratorProvider),
+    clock: ref.watch(appClockProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+});
 
 final pendingProductImageUploadProvider = FutureProvider<int>((ref) async {
   final config = ref.watch(appConfigProvider);
   final context = ref.watch(businessContextProvider);
-  if (config.enableDemoAuth || config.useNodeBackend || context == null) {
+  if (config.enableDemoAuth || context == null) {
     return 0;
   }
   return ref.watch(productImageUploadProcessorProvider).processPending(context);
