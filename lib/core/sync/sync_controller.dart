@@ -153,15 +153,12 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
     );
     try {
       final config = _ref.read(appConfigProvider);
-      final deviceResult = config.useNodeBackend
-          ? await _ref
-                .read(backendSyncServiceProvider)
-                .synchronize(context: context, trigger: trigger)
-          : null;
+      final deviceResult = await _ref
+          .read(backendSyncServiceProvider)
+          .synchronize(context: context, trigger: trigger);
       if (_posActive &&
-          config.enablePosSyncV2 &&
           !config.enableDemoAuth &&
-          deviceResult?.authenticationRequired != true) {
+          deviceResult.authenticationRequired != true) {
         final bootstrap = await _ref
             .read(posBootstrapRepositoryProvider)
             .provision(context);
@@ -175,8 +172,8 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
         }
       }
       if (_hydrateAdministration &&
-          deviceResult?.authenticationRequired != true &&
-          deviceResult?.offline != true &&
+          deviceResult.authenticationRequired != true &&
+          deviceResult.offline != true &&
           await _ref.read(connectivityMonitorProvider).isConnected) {
         await _ref
             .read(administrationSnapshotServiceProvider)
@@ -191,11 +188,7 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
                   '',
             );
       }
-      final result =
-          deviceResult ??
-          await _ref
-              .read(backendSyncServiceProvider)
-              .synchronize(context: context, trigger: trigger);
+      final result = deviceResult;
       final latest = state.asData?.value ?? current;
       if (_hydrateLocations &&
           !result.offline &&

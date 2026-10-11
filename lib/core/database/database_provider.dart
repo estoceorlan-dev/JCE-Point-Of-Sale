@@ -13,19 +13,19 @@ import 'daos/sync_cursor_dao.dart';
 import 'daos/sync_entity_version_dao.dart';
 
 final appDatabaseConfigProvider = Provider<AppDatabaseConfig>((ref) {
-  if (ref.watch(appConfigProvider).useNodeBackend) {
-    return AppDatabaseConfig(
-      name: deploymentDatabaseName(
-        ref.watch(nativeAuthProfileProvider).deploymentId,
-      ),
-    );
+  if (ref.watch(appConfigProvider).enableDemoAuth) {
+    return const AppDatabaseConfig(name: 'jce_demo');
   }
-  return const AppDatabaseConfig();
+  return AppDatabaseConfig(
+    name: deploymentDatabaseName(
+      ref.watch(nativeAuthProfileProvider).deploymentId,
+    ),
+  );
 });
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final database = AppDatabase(ref.watch(appDatabaseConfigProvider));
-  if (ref.watch(appConfigProvider).useNodeBackend) {
+  if (!ref.watch(appConfigProvider).enableDemoAuth) {
     database.signOutboxCommand = ref.watch(nodeActorEvidenceProvider).sign;
   }
   ref.onDispose(database.close);

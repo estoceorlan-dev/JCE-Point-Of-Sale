@@ -26,7 +26,7 @@ jobs:
         run: flutter pub get
 
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib test integration_test
+        run: dart format --output=none --set-exit-if-changed lib test integration_test tool
 
       - name: Analyze
         run: flutter analyze
@@ -34,30 +34,5 @@ jobs:
       - name: Run tests
         run: flutter test
 
-  backend-verify:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-
-    defaults:
-      run:
-        working-directory: backend/functions
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: backend/functions/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run backend security and type checks
-        run: npm run lint
-
-      - name: Run backend tests
-        run: npm test
+      - name: Compile Node web administration (placeholder profile, build only)
+        run: flutter build web --release --no-web-resources-cdn --dart-define-from-file=config/node.render.example.json

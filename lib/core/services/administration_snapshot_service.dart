@@ -6,31 +6,19 @@ import '../../shared/models/business_context.dart';
 import '../config/app_config.dart';
 import '../database/app_database.dart';
 import '../database/database_provider.dart';
-import '../remote/firebase_functions_provider.dart';
 
 final administrationSnapshotServiceProvider =
     Provider<AdministrationSnapshotService>((ref) {
       final config = ref.watch(appConfigProvider);
-      final functions = config.useNodeBackend
-          ? null
-          : ref.watch(firebaseFunctionsProvider);
       return AdministrationSnapshotService(
         database: ref.watch(appDatabaseProvider),
-        loadSnapshot: (context) async {
-          if (config.useNodeBackend) {
-            return ref
-                .read(nativeApiSessionRepositoryProvider)
-                .authenticated(
-                  '/v1/admin/snapshot',
-                  method: 'GET',
-                  syncRequest: true,
-                );
-          }
-          final response = await functions!
-              .httpsCallable(config.administrationSnapshotFunctionName)
-              .call({'organizationId': context.organizationId});
-          return _map(response.data, 'snapshot');
-        },
+        loadSnapshot: (_) => ref
+            .read(nativeApiSessionRepositoryProvider)
+            .authenticated(
+              '/v1/admin/snapshot',
+              method: 'GET',
+              syncRequest: true,
+            ),
         demoMode: config.enableDemoAuth,
       );
     });

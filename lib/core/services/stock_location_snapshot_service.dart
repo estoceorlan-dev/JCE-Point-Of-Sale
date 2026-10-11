@@ -5,44 +5,23 @@ import '../../shared/models/business_context.dart';
 import '../database/app_database.dart';
 import '../database/database_provider.dart';
 import '../config/app_config.dart';
-import '../remote/firebase_functions_provider.dart';
 import '../sync/stock_location_change_applier.dart';
 
 final stockLocationSnapshotServiceProvider =
     Provider<StockLocationSnapshotService>((ref) {
-      const functionName = String.fromEnvironment(
-        'JCE_STOCK_LOCATIONS_SNAPSHOT_FUNCTION',
-        defaultValue: 'getStockLocationsSnapshot',
-      );
-      final config = ref.watch(appConfigProvider);
-      final functions = config.useNodeBackend
-          ? null
-          : ref.watch(firebaseFunctionsProvider);
       return StockLocationSnapshotService(
         database: ref.watch(appDatabaseProvider),
         demoMode: ref.watch(appConfigProvider).enableDemoAuth,
-        load: (context) async {
-          if (config.useNodeBackend) {
-            return ref
-                .read(nativeApiSessionRepositoryProvider)
-                .authenticated(
-                  Uri(
-                    path: '/v1/stock-locations/snapshot',
-                    queryParameters: {'branchId': context.branchId},
-                  ).toString(),
-                  method: 'GET',
-                  syncRequest: true,
-                );
-          }
-          final response = await functions!.httpsCallable(functionName).call({
-            'organizationId': context.organizationId,
-            'branchId': context.branchId,
-          });
-          if (response.data is! Map) {
-            throw const FormatException('Invalid location snapshot.');
-          }
-          return Map<String, Object?>.from(response.data as Map);
-        },
+        load: (context) => ref
+            .read(nativeApiSessionRepositoryProvider)
+            .authenticated(
+              Uri(
+                path: '/v1/stock-locations/snapshot',
+                queryParameters: {'branchId': context.branchId},
+              ).toString(),
+              method: 'GET',
+              syncRequest: true,
+            ),
       );
     });
 

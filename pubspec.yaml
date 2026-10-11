@@ -40,12 +40,6 @@ dependencies:
   go_router: ^17.2.3
   drift: ^2.35.0
   sqlite3_flutter_libs: ^0.6.0+eol
-  firebase_core: ^4.11.0
-  firebase_auth: ^6.5.3
-  firebase_app_check: ^0.4.8
-  firebase_storage: ^13.4.3
-  firebase_data_connect: ^0.3.3
-  cloud_functions: ^6.3.3
   connectivity_plus: ^6.1.5
   workmanager: ^0.10.9
   fl_chart: ^1.2.0

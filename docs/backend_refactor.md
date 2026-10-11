@@ -1,8 +1,9 @@
 # Node.js/PostgreSQL refactor handoff
 
-Updated: 2026-10-09 (Asia/Manila). Refactor Phases 3-4 implement the standalone
-command/sync API and default Flutter Node transport. Physical acceptance remains
-pending. This numbering is separate from historical Firebase delivery phases.
+Updated: 2026-10-11 (Asia/Manila). Phases 3-6 implement the Node transport, signed
+sync, optional images and local packaging/recovery. Phase 7 prepares hosted
+deployment locally and removes the Firebase client runtime. Physical and Render acceptance remain pending. This numbering
+is separate from historical Firebase delivery phases.
 
 ## Baseline
 
@@ -41,8 +42,8 @@ pending queue to another deployment. Branch/organization IDs and API origins sta
 configurable, even for one branch. Images remain optional. Native Windows/Android
 POS and web administration are the target; browser checkout stays disabled.
 
-The explicit Firebase rollback transport and generated connectors remain until
-Phase 7. The Node path uses deployment-specific SQLite schema 20 and signed
+The Firebase rollback source is preserved outside the active repository as documented
+in [source retirement](firebase_source_retirement.md). The client uses deployment-specific SQLite schema 20 and signed
 outbox evidence. ADR-0001 production restrictions remain in force; offline PINs
 never authorize supervisor actions.
 
@@ -50,7 +51,7 @@ never authorize supervisor actions.
 
 Follow [Node installation](node_installation.md) for required Dart defines and
 cashier enrollment. Riverpod selects HTTP authentication, commands, bootstrap,
-snapshots and synchronization when `JCE_BACKEND=node` (the default). Browser
+snapshots and synchronization through the sole Node backend. Browser
 administration uses same-origin protected cookies; native installations use
 protected P-256 credentials. Signed work retains its original actor after logout,
 restart and cashier switching.
@@ -60,8 +61,14 @@ The backend owns [OpenAPI](../../jce_backend/docs/auth_openapi.json) and the
 [Phase 3-4 verification](../../jce_backend/docs/phase_3_4_verification.md) for
 checks, live Flutter/PostgreSQL sale evidence and remaining acceptance gates.
 
-Next is Phase 5: remaining feature/UI parity, staff activation/recovery UI and
-optional storage adapters. Native device builds, secure storage/reboot behavior,
-trusted LAN HTTPS and second-device WAN-disconnected tests require physical
-acceptance before production approval. Production packaging is Phase 6; Firebase
-resource and SDK retirement is Phase 7.
+Phase 5 added staff activation/recovery UI and optional images; Phase 6 added
+packaging, trusted local TLS and guarded backups/restores. Phase 7 now provides
+Render configuration, same-origin web hosting, migration release tooling and
+provider-restore locking in the backend repository. Follow
+[Render deployment](../../jce_backend/docs/render_deployment.md) and
+[Phase 7 evidence](../../jce_backend/docs/phase_7_verification.md).
+
+The user selected local deployment-file preparation. No Render deployment occurred.
+Firebase source/SDK/backend removal is prepared locally at the user's explicit request.
+Production release remains gated by actual device, WAN/hardware and restore acceptance. See the [retirement procedure](../../jce_backend/docs/firebase_retirement.md)
+and filtered resource inventory. Keep ADR-0001 and browser checkout restrictions.

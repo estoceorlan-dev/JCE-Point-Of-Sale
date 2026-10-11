@@ -1,5 +1,9 @@
 # Phase 7 Remote Backend
 
+> Historical Firebase implementation/deployment record. Firebase runtime and deployment
+> commands below are retired. Use [Node installation](node_installation.md) and
+> the [source retirement record](firebase_source_retirement.md) for current operation.
+
 Phase 7 defines PostgreSQL as the authoritative online store while SQLite
 remains the first write target on each device. The client pushes immutable
 outbox commands through `applyRemoteCommand`; authorized reads use the

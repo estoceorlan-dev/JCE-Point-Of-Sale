@@ -82,7 +82,7 @@ class SettingsPage extends ConsumerWidget {
                     ),
                 const SizedBox(height: AppSpacing.xl),
                 const SyncConflictPanel(),
-                if ((!kIsWeb && ref.watch(appConfigProvider).useNodeBackend))
+                if ((!kIsWeb && !ref.watch(appConfigProvider).enableDemoAuth))
                   const OfflinePinPanel(enroll: true),
               ],
             ),

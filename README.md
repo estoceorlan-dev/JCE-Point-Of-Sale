@@ -1,253 +1,70 @@
 # JCE POS
 
-Offline-first Flutter foundation for a scalable, multi-branch point of sale and
-inventory system.
+Offline-first Flutter POS for multiple branches, with a standalone Node.js API
+and PostgreSQL server in the sibling `jce_backend` repository. Windows and Android
+are the POS targets; web is administration only.
 
-## Node.js/PostgreSQL refactor
+Firebase SDKs, adapters, generated connectors, configuration and the embedded
+legacy backend have been removed. `JCE_BACKEND=firebase` is rejected. See the
+[source retirement record](docs/firebase_source_retirement.md) for the recovery
+checkpoint, verification and remaining deployment gates.
 
-The default build now uses the standalone `jce_backend` Node.js/PostgreSQL API
-for local Wi-Fi or independent Render deployment. Follow
-[Node installation](docs/node_installation.md) to supply the deployment ID, API
-origin and public verification key. SQLite-first checkout and signed queued work
-survive API outages and restart; offline cashier access requires prior per-device
-PIN enrollment. Web is administration only.
+## Getting started
 
-See the [refactor handoff and implementation plan](docs/backend_refactor.md) and
-[development rules](AGENTS.md). Phases 3-4 have automated end-to-end sale evidence;
-physical device and disconnected-WAN acceptance remain pending. Windows production
-stays blocked by ADR-0001. `JCE_BACKEND=firebase` explicitly selects the retained
-legacy path; its SDK removal is Phase 7. The historical feature/build sections
-below describe that legacy baseline unless stated otherwise.
-
-## Intended deployment platforms
-
-- Android: initial production POS and operational candidate
-- Web: production administration/operational fallback; the production POS route
-  is disabled
-- Windows: primary desktop target for development and staging, but production is
-  fail-closed until the supported transport and device-trust requirements in
-  [ADR-0001](docs/adr/0001_windows_production_transport.md) are complete
-
-The generated Linux, macOS, and iOS projects are retained for future evaluation
-but are not current production targets.
-
-The canonical application and bundle identifier is `com.jce.pos`.
-
-## Architecture foundation
-
-- Feature-first clean architecture under `lib/features`
-- Riverpod for dependency injection and state access
-- GoRouter for centralized navigation
-- Drift/SQLite dependencies for the Phase 1 local database
-- Typed environment configuration through Dart defines
-- Shared typed `Result<Success, Failure>` and failure categories
-- Centralized application logging
-- Injectable clock and UUID generation
-- Recoverable Firebase initialization
-- Firebase Authentication with offline-cached application access profiles
-- Database-driven organization, branch, role, and permission context
-- PostgreSQL Phase 2 schema and deployable Firebase callable functions
-- Offline product catalog with normalized SKU, name, and barcode search
-- Effective-dated organization and branch pricing stored in integer minor units
-- Atomic product, category, and unit audit/outbox mutations
-- Immutable inventory ledger with versioned branch/location balance projections
-- Offline adjustments, compensating reversals, reorder signals, and stock counts
-- Branch negative-stock policy and optional manager approval thresholds
-- Device-assigned branch registers with recoverable offline cash shifts
-- Immutable cash-in, cash-out, payout, and correction movements
-- Payment-method close counts with discrepancy approval evidence and outbox writes
-- Offline cart pricing with integer tax/discount calculations and split payments
-- Atomic sale, inventory, receipt-sequence, audit, and outbox completion
-- Snapshot-backed receipts and recent transaction history
-- Migration-controlled PostgreSQL schema with branch-scoped remote commands
-- Authenticated, idempotent product, inventory, shift, and sale transactions
-- Generated typed SQL Connect change-feed and operation-result reads
-- Retriable authenticated product-image finalization through Cloud Storage
-- Auditable inter-branch transfer custody, reservations, shipment, and receipt
-- Offline suppliers, approval-ready purchase orders, partial goods receipts,
-  landed costs, and weighted-average inventory cost projections
-- Offline customer lookup and attribution with explicit duplicate/merge rules
-- Privacy-controlled archive and anonymization workflows
-- Idempotent immutable loyalty ledger with auditable point adjustments
-- Append-only local and remote audit trails with device identity and safe
-  before/after metadata
-- Offline organization defaults, branch overrides, reason codes, feature
-  flags, receipt formatting, tax behavior, and approval/shift policies
-
-## Environment configuration
-
-JCE POS supports `development`, `staging`, and `production`. Configuration is
-compiled into each build with `--dart-define`; service endpoints are never
-stored as production constants in source.
-
-Development example:
-
-```sh
-flutter run \
-  --dart-define=JCE_ENV=development \
-  --dart-define=JCE_ENABLE_DEMO_AUTH=true \
-  --dart-define=JCE_DEMO_BRANCH_ID=demo-main
-```
-
-Production Android example after the isolated backend is provisioned:
+Follow [Node installation](docs/node_installation.md) to provision the backend,
+configure the API origin/deployment UUID/public verification keys, and enroll a
+cashier PIN. Copy `config/node.local.example.json` to an ignored
+`config/node.local.json` and replace the placeholders before running:
 
 ```powershell
-dart run tool/validate_release_config.dart `
-  --config=config/production_android.local.json `
-  --platform=android `
-  --expected-project=$env:JCE_APPROVED_PRODUCTION_PROJECT_ID
-
-flutter build appbundle `
-  --release `
-  --dart-define=JCE_APPROVED_PRODUCTION_PROJECT_ID=$env:JCE_APPROVED_PRODUCTION_PROJECT_ID `
-  --dart-define-from-file=config/production_android.local.json
+flutter pub get
+flutter run -d windows --dart-define-from-file=config/node.local.json
 ```
 
-See [Environment configuration](docs/environment_configuration.md) for the
-complete strategy and variables.
+For a development-only demo without a server:
 
-## Firebase
-
-FlutterFire options are committed for the current Firebase project. The
-canonical `com.jce.pos` Android and Apple apps are registered in `jce-pos`.
-Regenerate configuration whenever Firebase apps or projects change:
-
-```sh
-flutterfire configure
+```powershell
+flutter run -d windows --dart-define=JCE_ENV=development --dart-define=JCE_ENABLE_DEMO_AUTH=true --dart-define=JCE_DEMO_BRANCH_ID=demo-main
 ```
 
-Application startup is recoverable: initialization failures show a controlled
-screen with retry instead of terminating before Flutter renders.
+A deployment has one authoritative database. Branch-local operation uses LAN
+connectivity without internet; Render is an independent hosted deployment.
+Clients never connect directly to PostgreSQL. SQLite-first writes and signed
+outbox operations survive outages and restarts. Offline PIN sign-in requires
+prior enrollment on that device and unexpired authorization. Product images are
+optional and never block checkout or core sync.
 
-Phase 2 authentication uses the `getMyAccessProfile` and `registerDevice`
-callables under `backend/functions`. Apply
-`backend/sql/phase_2_access_control.sql`, configure the database secret, and
-deploy the functions before enabling production sign-in. See
-[Phase 2 access backend](docs/phase_2_access_backend.md).
+The canonical bundle identifier is `com.jce.pos`. Linux, macOS and iOS scaffolds
+are retained for evaluation, not approved production targets. Windows production
+remains blocked under [ADR-0001](docs/adr/0001_windows_production_transport.md).
+Physical device, hardware, disconnected-WAN and restore acceptance remain pending.
+Local source cleanup does not approve a production deployment or delete cloud data.
 
-Phase 4 adds the `inventory.adjustments.approve` permission. Apply
-`backend/sql/phase_4_inventory_permissions.sql` to existing environments and
-refresh the signed-in administrator's access before testing threshold approval.
-Remote inventory tables and outbox processing remain part of Phases 7 and 8;
-the running app uses Drift as its operational offline source in Phase 4.
+## Development
 
-Phase 5 adds `registers.manage` and `shifts.discrepancies.approve`. Apply
-`backend/sql/phase_5_shift_permissions.sql` and refresh administrator access
-before configuring registers. Cashiers continue to open and operate their own
-shifts through `sales.process`. Register, shift, cash-movement, and close-count
-mutations are atomic in Drift and enter the outbox; authoritative remote shift
-tables and command processing remain part of Phases 7 and 8.
+Follow [AGENTS.md](AGENTS.md) and the [backend refactor handoff](docs/backend_refactor.md).
+Features use clean architecture, Riverpod, repository contracts and typed results.
+The dedicated `core/sync` module owns upload, download and conflict resolution.
 
-Phase 6 adds `sales.discounts.approve`. Apply
-`backend/sql/phase_6_sales_permissions.sql` and refresh administrator access
-before testing branch discount thresholds. Checkout re-resolves current local
-product, price, tax, stock, and inventory-version data, then commits the sale,
-payments, receipt sequence, inventory ledger, audit record, and outbox command
-in one Drift transaction. Remote sale processing remains part of Phases 7 and
-8.
+```powershell
+dart format --output=none --set-exit-if-changed lib test integration_test tool
+flutter analyze
+flutter test
+```
 
-Phase 7 adds the versioned authoritative PostgreSQL schema, transactional
-`applyRemoteCommand` callable, generated SQL Connect SDK, secure change-feed
-queries, permission-code seeds, and authenticated product-image finalization.
-See [Phase 7 remote backend](docs/phase_7_remote_backend.md) before applying
-migrations or deploying an environment. Development and staging are deployed
-as separate Firebase/SQL Connect/Cloud SQL projects. The isolated production
-project, runtime identity, client app registrations, billing link, and budget are
-prepared, but its live SQL/Storage resources are not provisioned;
-never point it at a non-production database.
+Backend validation runs in `jce_backend` with its own CI. See that repository's
+README for Node/PostgreSQL commands and local/Render deployment runbooks.
+[Public release configuration](config/README.md) describes production validation.
+Historical `docs/phase_*` and Firebase deployment documents preserve earlier
+implementation evidence; their Firebase deployment commands are retired.
 
-Phase 8 adds the restartable synchronization engine, scoped outbox ownership,
-atomic cursor advancement, optimistic master-data conflicts, accepted
-inventory projections, foreground/background triggers, diagnostics, and the
-administrator conflict workflow. See
-[Phase 8 synchronization engine](docs/phase_8_sync_engine.md) before deploying
-the updated Functions and client together.
+Drift schema snapshots remain immutable. For intentional model changes:
 
-Phase 9 adds immutable, compensating return and void transactions, refund and
-drawer reconciliation, manager approval evidence, correction receipts, and
-offline ordering guarantees. See
-[Phase 9 sale corrections](docs/phase_9_sale_corrections.md) for its policy and
-deployment requirements.
-
-Phase 10 adds source reservation, shipment, in-transit custody, destination
-receipt, discrepancies, and approved receipt corrections for stock transfers.
-See [Phase 10 stock transfers](docs/phase_10_stock_transfers.md).
-
-Phase 11 adds supplier management, purchase-order approval, partial and multiple
-goods receipts, receipt-only inventory posting, and deterministic weighted-
-average landed costs. Apply `backend/sql/migrations/0006_phase11_purchasing.sql`
-before deploying the updated Functions and client. See
-[Phase 11 purchasing](docs/phase_11_purchasing.md).
-
-Phase 12 adds normalized offline customer lookup, optional sale attribution,
-branch purchase history, duplicate merges, privacy-preserving archival and
-anonymization, and an immutable loyalty ledger. Apply
-`backend/sql/migrations/0007_phase12_customers.sql` before deploying the
-updated Functions and schema-version-11 client. See
-[Phase 12 customers](docs/phase_12_customers.md).
-
-Phase 14 adds schema-versioned offline operational settings, deterministic
-organization-to-branch precedence, configurable inventory reason codes and
-feature flags, append-only audit enforcement, safe metadata redaction, and a
-filterable audit administration screen. Apply
-`backend/sql/migrations/0009_phase14_audit_settings.sql` before deploying the
-updated Functions, SQL Connect schema, and schema-version-12 client. See
-[Phase 14 audit and settings](docs/phase_14_audit_settings.md).
-
-Phase 15 adds register-scoped keyboard-wedge scanner settings, network ESC/POS
-printing for 58 mm and 80 mm thermal printers, printer-connected cash-drawer
-pulses, a persistent bounded-retry print queue, marked and synchronized reprint
-audits, and screen/PDF receipt fallback. Apply
-`backend/sql/migrations/0010_phase15_pos_hardware.sql` before deploying the
-updated Functions and schema-version-13 client. See
-[Phase 15 POS hardware](docs/phase_15_pos_hardware.md).
-
-## Code generation
-
-The ongoing administration and cashier completion work is tracked in
-[Admin/POS implementation status](docs/admin_pos_completion_status.md), including
-what is implemented, the remaining phase exits, verification, and deployment order.
-
-Production release work is gated by the phased
-[deployment, testing, and production-readiness plan](docs/production_deployment_plan.md).
-Phase 0 governance is tracked in the
-[production governance policy](docs/production_governance.md), and Phase 2
-operators use the [production environment runbook](docs/production_environment_runbook.md).
-The current repository implementation and external blockers are summarized in
-the [Phase 0–2 checkpoint](docs/phase_0_2_production_readiness.md).
-
-```sh
+```powershell
 dart run build_runner build --delete-conflicting-outputs --low-resources-mode
 ```
 
-For continuous generation during development:
-
-```sh
-dart run build_runner watch --delete-conflicting-outputs --low-resources-mode
-```
-
-The checked-in Drift schema snapshot under `drift_schemas/` is the migration
-baseline. Before changing a released schema, increment `schemaVersion` and run:
-
-```sh
-dart run drift_dev make-migrations
-```
-
-Web builds use the checked-in `web/sqlite3.wasm` runtime and generated Drift
-worker. Regenerate the worker after upgrading Drift:
-
-```sh
-dart compile js web/drift_worker.dart -O4 -o web/drift_worker.js
-```
-
-## Verification
-
-```sh
-dart format --output=none --set-exit-if-changed lib test integration_test
-flutter analyze
-flutter test
-cd backend/functions && npm run build
-cd backend/functions && npm test
-```
-
-These checks also run in GitHub Actions.
+Increment the released schema version and use `dart run drift_dev make-migrations`
+for database changes. This source retirement leaves SQLite schema 20 unchanged.
+After a Drift upgrade regenerate `web/drift_worker.js` with
+`dart compile js web/drift_worker.dart -O4 -o web/drift_worker.js`.

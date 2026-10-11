@@ -1,5 +1,9 @@
 # Phase 9 sale corrections
 
+> Historical Firebase implementation/deployment record. Firebase runtime and deployment
+> commands below are retired. Use [Node installation](node_installation.md) and
+> the [source retirement record](firebase_source_retirement.md) for current operation.
+
 Phase 9 adds auditable returns and voids without changing the original sale,
 sale items, or payments. Every correction is an offline-first compensating
 transaction that atomically writes SQLite business rows, inventory and drawer

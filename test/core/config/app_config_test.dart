@@ -13,10 +13,6 @@ void main() {
       expect(config.apiBaseUri, isNull);
       expect(config.demoBranchId, isNull);
       expect(
-        config.firebaseFunctionsRegion,
-        AppConfig.defaultFirebaseFunctionsRegion,
-      );
-      expect(
         config.accessRefreshInterval,
         AppConfig.defaultAccessRefreshInterval,
       );
@@ -28,10 +24,6 @@ void main() {
 
       expect(config.enableDemoAuth, isFalse);
       expect(config.demoBranchId, isNull);
-      expect(
-        config.firebaseFunctionsRegion,
-        AppConfig.defaultFirebaseFunctionsRegion,
-      );
     });
 
     test('accepts test overrides without changing dart defines', () {
@@ -50,13 +42,13 @@ void main() {
       expect(config.demoBranchId, 'test-branch');
     });
 
-    test('allows the Firebase Functions region to be overridden', () {
-      final config = AppConfig.fromValues(
-        environment: 'development',
-        firebaseFunctionsRegion: 'us-central1',
-      );
-
-      expect(config.firebaseFunctionsRegion, 'us-central1');
+    test('rejects legacy and unknown backend profiles', () {
+      for (final backend in ['firebase', 'other', '']) {
+        expect(
+          () => AppConfig.fromValues(environment: 'staging', backend: backend),
+          throwsFormatException,
+        );
+      }
     });
 
     test('allows access verification durations to be overridden', () {

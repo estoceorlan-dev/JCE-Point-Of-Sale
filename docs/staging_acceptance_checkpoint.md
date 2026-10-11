@@ -1,5 +1,9 @@
 # Staging acceptance checkpoint — 2026-09-10
 
+> Historical Firebase implementation/deployment record. Firebase runtime and deployment
+> commands below are retired. Use [Node installation](node_installation.md) and
+> the [source retirement record](firebase_source_retirement.md) for current operation.
+
 Target: `jce-pos-staging-259528`, `asia-southeast1`, Cloud SQL
 `jce-pos-instance`, database `jce-pos-database`. Production was not touched.
 

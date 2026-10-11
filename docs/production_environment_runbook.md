@@ -1,5 +1,9 @@
 # Production environment provisioning runbook
 
+> Historical Firebase implementation/deployment record. Firebase runtime and deployment
+> commands below are retired. Use [Node installation](node_installation.md) and
+> the [source retirement record](firebase_source_retirement.md) for current operation.
+
 Status: infrastructure-only SQL Connect trial active; production NO-GO. This
 runbook does not itself authorize migration, data loading, or deployment.
 

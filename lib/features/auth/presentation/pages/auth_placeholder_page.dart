@@ -9,10 +9,10 @@ class AuthPlaceholderPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const FeaturePlaceholderPage(
       title: 'Authentication',
-      subtitle: 'Firebase Authentication entry point for staff access.',
+      subtitle: 'Account access and enrolled offline cashier sign-in.',
       icon: Icons.lock_outline,
       highlights: [
-        'Email, password, and future SSO flows through Firebase Auth.',
+        'API account sign-in and device-bound offline cashier PINs.',
         'Role and branch assignment resolved after sign-in.',
         'Auth state exposed through repository and Riverpod providers.',
       ],

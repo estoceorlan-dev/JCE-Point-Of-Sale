@@ -70,7 +70,7 @@ class AppNavigationShell extends ConsumerWidget {
         onRefreshAccess: () => _refreshAccess(ref),
         syncState: syncState,
         onSync: () => _sync(ref),
-        onOfflinePin: (!kIsWeb && ref.watch(appConfigProvider).useNodeBackend)
+        onOfflinePin: (!kIsWeb && !ref.watch(appConfigProvider).enableDemoAuth)
             ? () => showDialog<void>(
                 context: context,
                 builder: (_) => const Dialog(
@@ -84,7 +84,7 @@ class AppNavigationShell extends ConsumerWidget {
               )
             : null,
         onSwitchCashier:
-            (!kIsWeb && ref.watch(appConfigProvider).useNodeBackend)
+            (!kIsWeb && !ref.watch(appConfigProvider).enableDemoAuth)
             ? () async {
                 final result = await ref
                     .read(authControllerProvider.notifier)

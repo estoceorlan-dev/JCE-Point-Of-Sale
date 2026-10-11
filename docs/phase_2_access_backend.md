@@ -1,5 +1,9 @@
 # Phase 2 access backend contract
 
+> Historical Firebase implementation/deployment record. Firebase runtime and deployment
+> commands below are retired. Use [Node installation](node_installation.md) and
+> the [source retirement record](firebase_source_retirement.md) for current operation.
+
 The Flutter client uses Firebase Authentication for identity and PostgreSQL for
 application access. Apply `backend/sql/phase_2_access_control.sql` to the
 environment database before enabling production authentication.

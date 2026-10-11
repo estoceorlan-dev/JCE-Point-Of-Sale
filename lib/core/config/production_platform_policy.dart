@@ -9,8 +9,7 @@ enum AppClientPlatform { web, android, windows, ios, macos, linux, other }
 final productionPlatformPolicyProvider = Provider<ProductionPlatformPolicy>((
   ref,
 ) {
-  final config = ref.watch(appConfigProvider);
-  if (config.useNodeBackend && kIsWeb) {
+  if (kIsWeb) {
     return const ProductionPlatformPolicy(
       platform: AppClientPlatform.web,
       isSupported: true,
@@ -72,8 +71,8 @@ class ProductionPlatformPolicy {
         allowsPointOfSale: false,
         blockReason:
             'Production Windows is deferred by ADR-0001 until an approved '
-            'production-supported transport and device-trust implementation '
-            'replaces the current FlutterFire Windows path.',
+            'Node transport, secure-storage, reboot and device acceptance '
+            'checks are complete.',
       ),
       _ => ProductionPlatformPolicy(
         platform: platform,

@@ -5,11 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workmanager/workmanager.dart';
 
-import '../../features/auth/presentation/controllers/auth_controller.dart';
-import '../../shared/models/business_context.dart';
 import '../config/app_config.dart';
-import '../services/backend_sync_service.dart';
-import '../services/firebase_initialization_service.dart';
 
 const backgroundSyncTaskName = 'com.jce.pos.background_sync';
 
@@ -46,27 +42,9 @@ void syncCallbackDispatcher() {
     try {
       final config = container.read(appConfigProvider);
       if (config.enableDemoAuth) return true;
-      if (config.useNodeBackend) {
-        await container.read(installationBindingProvider).initialize();
-        await container.read(nodeQueueRecoveryProvider).recover();
-        return true;
-      }
-      await container
-          .read(firebaseInitializationServiceProvider)
-          .initialize(config);
-      final session = await container.read(authControllerProvider.future);
-      if (session == null) return true;
-      final result = await container
-          .read(backendSyncServiceProvider)
-          .synchronize(
-            context: BusinessContext(
-              organizationId: session.activeOrganizationId,
-              branchId: session.activeBranchId,
-              actorUserId: session.activeOrganization.appUserId,
-            ),
-            trigger: SyncTrigger.background,
-          );
-      return !result.offline;
+      await container.read(installationBindingProvider).initialize();
+      await container.read(nodeQueueRecoveryProvider).recover();
+      return true;
     } catch (_) {
       return false;
     } finally {

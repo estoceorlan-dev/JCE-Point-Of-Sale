@@ -4,7 +4,6 @@ import 'dart:convert';
 export '../sync/sync_coordinator.dart';
 
 import '../remote/remote_api_exception.dart';
-import '../remote/legacy_sync_error.dart';
 import '../remote/node_command_data_source.dart';
 import '../remote/node_sync_data_source.dart';
 import '../error/failures.dart';
@@ -13,7 +12,6 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/models/business_context.dart';
-import '../config/app_config.dart';
 import '../database/app_database.dart';
 import '../database/daos/outbox_dao.dart';
 import '../database/daos/sync_conflict_dao.dart';
@@ -24,7 +22,6 @@ import '../database/models/outbox_state.dart';
 import '../database/models/sync_cursor_key.dart';
 import '../database/outbox_retry_policy.dart';
 import '../logger/app_logger.dart';
-import '../remote/firebase_functions_provider.dart';
 import '../remote/remote_command_data_source.dart';
 import '../remote/remote_sync_data_source.dart';
 import '../sync/connectivity_monitor.dart';
@@ -36,28 +33,11 @@ import '../utils/app_clock.dart';
 final remoteCommandDataSourceProvider = Provider<RemoteCommandDataSource>((
   ref,
 ) {
-  final config = ref.watch(appConfigProvider);
-  if (config.useNodeBackend) {
-    return NodeCommandDataSource(ref.watch(nodeDeviceTransportProvider));
-  }
-  return CloudFunctionsRemoteCommandDataSource(
-    functions: ref.watch(firebaseFunctionsProvider),
-    functionName: config.remoteCommandFunctionName,
-    deviceRegistrationFunctionName: config.deviceRegistrationFunctionName,
-    metadataDao: ref.watch(metadataDaoProvider),
-  );
+  return NodeCommandDataSource(ref.watch(nodeDeviceTransportProvider));
 });
 
 final remoteSyncDataSourceProvider = Provider<RemoteSyncDataSource>((ref) {
-  final config = ref.watch(appConfigProvider);
-  if (config.useNodeBackend) {
-    return NodeSyncDataSource(ref.watch(nodeDeviceTransportProvider));
-  }
-  if (!config.enablePosSyncV2) return SqlConnectRemoteSyncDataSource();
-  return CloudFunctionsAuthorizedRemoteSyncDataSource(
-    functions: ref.watch(firebaseFunctionsProvider),
-    functionName: config.authorizedChangesFunctionName,
-  );
+  return NodeSyncDataSource(ref.watch(nodeDeviceTransportProvider));
 });
 
 final remoteChangeApplierProvider = Provider<RemoteChangeApplier>((ref) {
@@ -66,7 +46,7 @@ final remoteChangeApplierProvider = Provider<RemoteChangeApplier>((ref) {
 
 final backendSyncServiceProvider = Provider<BackendSyncService>((ref) {
   return OfflineFirstBackendSyncService(
-    deviceUploads: !kIsWeb && ref.watch(appConfigProvider).useNodeBackend,
+    deviceUploads: !kIsWeb,
     commands: ref.watch(remoteCommandDataSourceProvider),
     remote: ref.watch(remoteSyncDataSourceProvider),
     database: ref.watch(appDatabaseProvider),
@@ -180,8 +160,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
       // A usable network interface is only a hint. A successful authorized
       // backend pull is the reachability check that establishes online state.
       initialPull = await _pullAndApply(context);
-    } catch (rawError, stackTrace) {
-      final error = normalizeLegacySyncError(rawError);
+    } catch (error, stackTrace) {
       if (error is RemoteApiException && error.code == 'resource-exhausted') {
         await _saveThrottle(context, error.details);
         return SyncRunResult(
@@ -277,8 +256,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
     var finalPull = 0;
     try {
       if (canPull) finalPull = await _pullAndApply(context);
-    } catch (rawError) {
-      final error = normalizeLegacySyncError(rawError);
+    } catch (error) {
       if (error is! RemoteApiException || error.code != 'resource-exhausted') {
         rethrow;
       }
@@ -333,8 +311,7 @@ class OfflineFirstBackendSyncService implements BackendSyncService {
         );
       }
       return _PushOutcome.succeeded;
-    } catch (rawError, stackTrace) {
-      final error = normalizeLegacySyncError(rawError);
+    } catch (error, stackTrace) {
       final message = _safeError(error);
       if (error is RemoteApiException && error.code == 'resource-exhausted') {
         final delay = await _saveThrottle(context, error.details);

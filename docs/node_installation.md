@@ -1,11 +1,11 @@
 # Node/PostgreSQL client installation
 
-Phase 3–4 implementation, 2026-10-09. The default `JCE_BACKEND` is now `node`.
-Use the standalone `../jce_backend` repository; the embedded Firebase backend is
-retained only for the explicit `JCE_BACKEND=firebase` rollback path.
+Updated 2026-10-11. The only supported backend is the standalone `../jce_backend`
+Node.js/PostgreSQL API. The Firebase runtime and embedded backend are retired;
+see [source retirement](firebase_source_retirement.md) for the archived checkpoint.
 
 1. Provision an empty dedicated PostgreSQL database with the backend operator
-   commands and apply migrations through 0022. Enable authentication, create its
+   commands and apply migrations through 0024. Enable authentication, create its
    signing key, and configure the API's trusted HTTPS origin. Keep PostgreSQL and
    private signing/database credentials on the server.
 2. Copy `config/node.local.example.json` to `config/node.local.json` (ignored by Git).
@@ -41,10 +41,9 @@ HttpOnly cookies. Only non-secret deployment/profile metadata goes into browser
 storage. No device private key, bearer token, PIN, or offline enrollment is stored
 there. Web checkout stays disabled in every Node environment.
 
-The Node path skips Firebase initialization and product-image upload processing.
-Images remain optional; the old image adapter and staff invitation-link UI are
-Phase 5 parity work. Staff activation/recovery uses the backend's one-time token
-workflow. These features do not silently fall back to Firebase.
+The client uses an optional image queue
+and staff activation/recovery token workflow. Image failure does not block checkout
+or core sync.
 
 Windows production remains blocked by ADR-0001 pending real device acceptance.
 The automated SQLite/API sale test is not proof of physical Android secure storage,
@@ -67,4 +66,20 @@ before clients; preserve the deployment ID and signing key.
 
 Operator source runbooks are in `jce_backend/docs/local_production_package.md` and
 `backup_restore.md`. Native signed installers, physical reboot/hardware/Wi-Fi tests
-and the Windows production gate remain pending; Render/Firebase retirement is Phase 7.
+and the Windows production gate remain pending. Cloud retirement remains separate.
+
+## Phase 7 hosted preparation (2026-10-11)
+
+The backend now has separate staging/production Render Blueprints, a same-origin
+web artifact packager/server and an isolated migration release workflow. Follow
+`jce_backend/docs/render_deployment.md`. Build with
+`flutter build web --release --no-web-resources-cdn --dart-define-from-file=config/node.render.local.json`
+using an actual provisioned profile, not the example placeholders. Keep the profile
+out of version control and include only public client settings. The API URL must
+equal the origin serving web administration for cookies and CSRF to work.
+
+No hosted deployment or cloud resource retirement was performed. Firebase source
+retirement is recorded separately. Physical
+device and recovery acceptance is still required. This phase retains the existing
+Windows gate and web checkout restriction. API 1.1.0/schema 24/SQLite 20 remain
+compatible; server metadata reports release `node-refactor-phase-7`.

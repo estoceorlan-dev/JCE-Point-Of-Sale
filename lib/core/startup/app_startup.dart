@@ -1,15 +1,11 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart';
-import '../sync/node_queue_recovery.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app.dart';
-import '../../features/auth/presentation/providers/native_auth_providers.dart';
 import '../config/app_config.dart';
 import '../config/production_platform_policy.dart';
 import '../logger/app_logger.dart';
-import '../services/firebase_initialization_service.dart';
+import '../services/node_initialization_service.dart';
 import '../theme/app_theme.dart';
 import 'startup_failure_page.dart';
 
@@ -54,14 +50,7 @@ class _AppStartupState extends ConsumerState<AppStartup> {
     try {
       final config = ref.read(appConfigProvider);
       ref.read(productionPlatformPolicyProvider).ensureSupported();
-      if (config.useNodeBackend) {
-        await ref.read(installationBindingProvider).initialize();
-        if (!kIsWeb) unawaited(ref.read(nodeQueueRecoveryProvider).recover());
-      } else {
-        await ref
-            .read(firebaseInitializationServiceProvider)
-            .initialize(config);
-      }
+      await ref.read(appInitializationServiceProvider).initialize(config);
       if (mounted) {
         setState(() {
           _isInitializing = false;

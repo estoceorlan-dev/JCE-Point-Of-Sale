@@ -1,44 +1,32 @@
-# Release configuration
+# Public Node client configuration
 
-For the Node refactor, use `node.local.example.json` or `node.render.example.json`
-and follow [Node installation](../docs/node_installation.md). These examples target
-staging until physical acceptance and production packaging are complete.
+Use `node.local.example.json` for branch-local staging or `node.render.example.json`
+for a separate hosted staging deployment. Copy to a gitignored `*.local.json` and
+replace all placeholders using the trusted operator setup. See
+[Node installation](../docs/node_installation.md). Node is the only supported backend.
+Old Firebase profiles must be replaced; they are not silently converted.
 
-The production Android/web examples below belong to the retained **Firebase**
-release path and explicitly set `JCE_BACKEND=firebase`. Add that setting to any
-older local Firebase profile, because the application default is now Node. The
-existing Firebase release validator does not validate Node deployments.
+For production Android/web candidates, use the corresponding production example.
+Public verification keys are a JSON string keyed by `kid`, containing EC P-256
+public JWKs. Never include a private `d`, passwords, session tokens, service-account
+JSON, database URLs or signing secrets. Dart defines are public compiled data.
+The API URL must be an HTTPS origin; web must be served from that same origin.
 
-## Legacy Firebase release configuration
-
-Copy the platform example to a gitignored `*.local.json` file, replace every
-placeholder with the isolated production Firebase client identifiers, then
-validate it against the production project ID approved in the protected CI
-environment. Firebase API keys in these files identify a client; they do not
-replace App Check, authentication, authorization, or server-side rate limits.
+The independently approved deployment UUID belongs in protected CI settings,
+not the JSON file. Supply it to the validator and build so startup also enforces it:
 
 ```powershell
-Copy-Item config/production_web.example.json config/production_web.local.json
-
 dart run tool/validate_release_config.dart `
   --config=config/production_web.local.json `
   --platform=web `
-  --expected-project=$env:JCE_APPROVED_PRODUCTION_PROJECT_ID
+  --expected-deployment=$env:JCE_APPROVED_PRODUCTION_DEPLOYMENT_ID
 
-flutter build web `
-  --release `
-  --dart-define=JCE_APPROVED_PRODUCTION_PROJECT_ID=$env:JCE_APPROVED_PRODUCTION_PROJECT_ID `
+flutter build web --release --no-web-resources-cdn `
+  --dart-define=JCE_APPROVED_PRODUCTION_DEPLOYMENT_ID=$env:JCE_APPROVED_PRODUCTION_DEPLOYMENT_ID `
   --dart-define-from-file=config/production_web.local.json
 ```
 
-Use the Android example with `--platform=android` and `flutter build appbundle`.
-Production Windows validation intentionally fails until ADR-0001 is superseded
-by an implemented and approved transport/device-trust design.
-
-Never add passwords, refresh tokens, service-account JSON, private keys, signing
-keys, database URLs, or customer data to a dart-define file. Dart defines are
-compiled into the client and must be treated as public.
-
-Keep `JCE_APPROVED_PRODUCTION_PROJECT_ID` outside the JSON file. Protected CI
-supplies it independently to both the validator and the Flutter build so startup
-also rejects an accidentally selected production project.
+Use `--platform=android` and `flutter build appbundle` for Android, with a provisioned
+release keystore. Windows production validation still fails until ADR-0001's physical
+acceptance is completed. Passing the validator proves configuration shape and
+approval matching, not service availability or production readiness.

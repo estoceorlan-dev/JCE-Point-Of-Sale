@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/config/app_config.dart';
 import '../../../auth/presentation/controllers/account_action_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -344,14 +343,9 @@ class _UsersPageState extends ConsumerState<UsersPage>
               if (account.status == UserAccountStatus.invited)
                 PopupMenuItem(
                   value: 'invite',
-                  child: Text(
-                    ref.watch(appConfigProvider).useNodeBackend
-                        ? 'Copy activation token'
-                        : 'Copy invite link',
-                  ),
+                  child: Text('Copy activation token'),
                 ),
-              if (account.status == UserAccountStatus.active &&
-                  ref.watch(appConfigProvider).useNodeBackend)
+              if (account.status == UserAccountStatus.active)
                 const PopupMenuItem(
                   value: 'recovery',
                   child: Text('Copy password recovery token'),
@@ -581,11 +575,7 @@ class _UsersPageState extends ConsumerState<UsersPage>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                ref.read(appConfigProvider).useNodeBackend
-                    ? 'Activation token copied. It expires in one hour.'
-                    : 'Invite link copied. It was not stored locally.',
-              ),
+              content: Text('Activation token copied. It expires in one hour.'),
             ),
           );
         }

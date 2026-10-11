@@ -1,5 +1,9 @@
 # Phase 7 validation and controlled rollout
 
+> Historical Firebase implementation/deployment record. Firebase runtime and deployment
+> commands below are retired. Use [Node installation](node_installation.md) and
+> the [source retirement record](firebase_source_retirement.md) for current operation.
+
 Updated 2026-09-10. This document tracks the requested completion plan's Phase
 7. It is separate from the repository's historical Phase 7 remote-backend
 milestone.

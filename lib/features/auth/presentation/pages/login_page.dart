@@ -98,9 +98,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         onForgotPassword: _showForgotPasswordMessage,
                       ),
                       if ((!kIsWeb &&
-                          ref.watch(appConfigProvider).useNodeBackend))
+                          !ref.watch(appConfigProvider).enableDemoAuth))
                         const OfflinePinPanel(),
-                      if (ref.watch(appConfigProvider).useNodeBackend)
+                      if (!ref.watch(appConfigProvider).enableDemoAuth)
                         const AccountActionPanel(),
                     ],
                   ),

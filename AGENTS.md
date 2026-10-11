@@ -69,13 +69,12 @@ credentials. Retain SQLite-first writes and the dedicated synchronization queue.
 
 ## Backend migration status
 
-The accepted migration plan is
-`jce_backend/docs/architecture_refactor_plan.md`. Phase 0 establishes checkpoints,
-ownership, inventory, and release contracts; it does not migrate runtime behavior.
-Phases 3-4 select the Node runtime by default and preserve explicit Firebase
-rollback adapters. Physical device acceptance remains pending; retain production
-platform gates and defer Firebase retirement to Phase 7. Do not remove platform gates or authorize new
-production deployments merely because a planning phase is complete.
+The accepted migration plan is `jce_backend/docs/architecture_refactor_plan.md`.
+Phase 7 source cleanup removes Firebase runtime adapters at the user's explicit
+request. A verified source archive and Git bundles preserve rollback evidence;
+see `jce_pos/docs/firebase_source_retirement.md`. Physical device and hosted
+acceptance remain pending. Retain production platform gates; source cleanup does
+not authorize a production release or cloud resource deletion.
 
 Target clients are Windows and Android POS, with web administration. Offline
 cashier sign-in uses prior per-device PIN enrollment and expiring authorization.
@@ -147,7 +146,7 @@ Responsible for:
 * PostgreSQL repositories in the Node.js backend
 * File/object-storage adapters
 
-Firebase belongs only to the legacy adapters being replaced. New backend features
+Firebase is retired from the active runtime. New backend features
 must not require Firebase, Google Cloud IAM, or cloud identity for local operation.
 
 ---

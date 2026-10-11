@@ -17,7 +17,7 @@ Future<void> main(List<String> arguments) async {
     ReleaseConfigValidator.ensureValid(
       values: decoded,
       platform: parsed.platform,
-      expectedProjectId: parsed.expectedProjectId,
+      expectedDeploymentId: parsed.expectedDeploymentId,
     );
     stdout.writeln(
       'Production ${parsed.platform.name} configuration is valid. '
@@ -36,7 +36,7 @@ class _Arguments {
   const _Arguments({
     required this.configPath,
     required this.platform,
-    required this.expectedProjectId,
+    required this.expectedDeploymentId,
   });
 
   factory _Arguments.parse(List<String> arguments) {
@@ -48,27 +48,27 @@ class _Arguments {
 
     final configPath = valueFor('config');
     final platform = valueFor('platform');
-    final expectedProject = valueFor('expected-project');
+    final expectedDeployment = valueFor('expected-deployment');
     if (configPath == null ||
         configPath.isEmpty ||
         platform == null ||
         platform.isEmpty ||
-        expectedProject == null ||
-        expectedProject.isEmpty) {
+        expectedDeployment == null ||
+        expectedDeployment.isEmpty) {
       throw const FormatException(
         'Usage: dart run tool/validate_release_config.dart '
         '--config=<local-json> --platform=<android|web|windows> '
-        '--expected-project=<approved-project-id>',
+        '--expected-deployment=<approved-deployment-uuid>',
       );
     }
     return _Arguments(
       configPath: configPath,
       platform: ReleasePlatform.parse(platform),
-      expectedProjectId: expectedProject,
+      expectedDeploymentId: expectedDeployment,
     );
   }
 
   final String configPath;
   final ReleasePlatform platform;
-  final String expectedProjectId;
+  final String expectedDeploymentId;
 }

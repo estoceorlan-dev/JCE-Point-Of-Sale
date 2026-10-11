@@ -1,5 +1,9 @@
 # Phase 12: Customer Management and Loyalty
 
+> Historical Firebase implementation/deployment record. Firebase runtime and deployment
+> commands below are retired. Use [Node installation](node_installation.md) and
+> the [source retirement record](firebase_source_retirement.md) for current operation.
+
 Phase 12 adds organization-wide customer records without making checkout or
 customer lookup depend on connectivity. PostgreSQL remains the online master,
 while all screens read and write the local Drift projection first.

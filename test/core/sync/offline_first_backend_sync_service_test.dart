@@ -1,5 +1,4 @@
 import 'package:jce_pos/core/remote/remote_api_exception.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -97,8 +96,8 @@ void main() {
     'throttling remains retryable beyond the normal attempt limit',
     () async {
       await _enqueue(database, initialTime, operationId: 'throttled');
-      commands.error = FirebaseFunctionsException(
-        code: 'resource-exhausted',
+      commands.error = RemoteApiException(
+        'resource-exhausted',
         message: 'Usage limit reached',
         details: {'retryAfterSeconds': 120},
       );
@@ -120,7 +119,7 @@ void main() {
         expect(commands.executed.length, requests);
         clock.value = clock.value.add(const Duration(hours: 2));
       }
-      commands.error = _FunctionsError('unavailable');
+      commands.error = _RemoteError('unavailable');
       await service().synchronize(context: context);
       final afterNetworkFailure = await database
           .select(database.syncOutboxEntries)
@@ -156,7 +155,7 @@ void main() {
           aggregateId: 'item-$index',
         );
       }
-      commands.error = _FunctionsError('resource-exhausted');
+      commands.error = _RemoteError('resource-exhausted');
       await service().synchronize(context: context);
       expect(commands.executed.length, 4);
       expect(
@@ -174,8 +173,8 @@ void main() {
     'consecutive quota windows back off across recreated services',
     () async {
       await _enqueue(database, initialTime, operationId: 'quota-backoff');
-      commands.error = FirebaseFunctionsException(
-        code: 'resource-exhausted',
+      commands.error = RemoteApiException(
+        'resource-exhausted',
         message: 'Usage limit reached',
         details: {'retryAfterSeconds': 1},
       );
@@ -200,7 +199,7 @@ void main() {
     'throttled pulls pause and recover without touching the outbox',
     () async {
       await _enqueue(database, initialTime, operationId: 'pull-pause');
-      remote.error = _FunctionsError('resource-exhausted');
+      remote.error = _RemoteError('resource-exhausted');
       await service().synchronize(context: context);
       expect(commands.executed, isEmpty);
       remote.error = null;
@@ -214,7 +213,7 @@ void main() {
   test('offline commands synchronize after connectivity returns', () async {
     await _enqueue(database, initialTime, operationId: 'op-1');
     connectivity.connected = false;
-    remote.error = _FunctionsError('unavailable');
+    remote.error = _RemoteError('unavailable');
 
     final offline = await service().synchronize(context: context);
 
@@ -417,7 +416,7 @@ void main() {
       aggregateType: 'product',
       aggregateId: 'product-1',
     );
-    commands.error = _FunctionsError('aborted');
+    commands.error = _RemoteError('aborted');
 
     await service().synchronize(context: context);
 
@@ -478,7 +477,7 @@ void main() {
       aggregateType: 'sale',
       aggregateId: 'sale-1',
     );
-    commands.error = _FunctionsError('invalid-argument');
+    commands.error = _RemoteError('invalid-argument');
 
     await service().synchronize(context: context);
 
@@ -791,8 +790,8 @@ class _ThrowingApplier implements RemoteChangeApplier {
   Future<void> apply(RemoteChange change) => throw StateError('apply failed');
 }
 
-class _FunctionsError extends FirebaseFunctionsException {
-  _FunctionsError(String code) : super(code: code, message: 'Rejected');
+class _RemoteError extends RemoteApiException {
+  _RemoteError(super.code) : super(message: 'Rejected');
 }
 
 class _SilentLogger implements AppLogger {

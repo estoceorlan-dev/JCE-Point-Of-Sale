@@ -10,9 +10,9 @@ import '../../domain/repositories/product_image_repository.dart';
 final productImageRepositoryProvider = Provider<ProductImageRepository>((ref) {
   return LocalProductImageRepository(
     ref.watch(appDatabaseProvider),
-    sessions: ref.watch(appConfigProvider).useNodeBackend
-        ? ref.watch(nativeApiSessionRepositoryProvider)
-        : null,
+    sessions: ref.watch(appConfigProvider).enableDemoAuth
+        ? null
+        : ref.watch(nativeApiSessionRepositoryProvider),
   );
 });
 

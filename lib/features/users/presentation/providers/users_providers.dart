@@ -3,15 +3,12 @@ import '../../../auth/presentation/controllers/account_action_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_provider.dart';
-import '../../../../core/config/app_config.dart';
-import '../../../../core/remote/firebase_functions_provider.dart';
 import '../../../../core/database/local_mutation_transaction.dart';
 import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../shared/providers/app_providers.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../data/repositories/offline_first_users_repository.dart';
-import '../../data/services/cloud_staff_invitation_service.dart';
 import '../../domain/entities/staff_account.dart';
 import '../../domain/repositories/users_repository.dart';
 import '../../domain/services/staff_invitation_service.dart';
@@ -56,14 +53,5 @@ final activeUserAdminSessionProvider = Provider((ref) {
 });
 
 final staffInvitationServiceProvider = Provider<StaffInvitationService>((ref) {
-  final config = ref.watch(appConfigProvider);
-  if (config.useNodeBackend) {
-    return NodeStaffInvitationService(ref.watch(accountActionServiceProvider));
-  }
-  return CloudStaffInvitationService(
-    functions: ref.watch(firebaseFunctionsProvider),
-    generateFunctionName: config.generateStaffInviteFunctionName,
-    acceptFunctionName: config.acceptStaffInviteFunctionName,
-    demoMode: config.enableDemoAuth,
-  );
+  return NodeStaffInvitationService(ref.watch(accountActionServiceProvider));
 });

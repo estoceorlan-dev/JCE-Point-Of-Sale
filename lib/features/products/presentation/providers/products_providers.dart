@@ -7,7 +7,6 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/database/database_provider.dart';
 import '../../../../core/database/local_mutation_transaction.dart';
 import '../../../../core/logger/app_logger.dart';
-import '../../../../core/remote/firebase_functions_provider.dart';
 import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../shared/providers/app_providers.dart';
@@ -15,7 +14,6 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/data_sources/product_catalog_local_data_source.dart';
 import '../../data/repositories/drift_products_repository.dart';
-import '../../data/services/product_image_upload_processor.dart';
 import '../../domain/entities/catalog_category.dart';
 import '../../domain/entities/catalog_tax_category.dart';
 import '../../domain/entities/catalog_unit.dart';
@@ -52,23 +50,11 @@ final productsRepositoryProvider = Provider<ProductsRepository>((ref) {
 final productImageUploadProcessorProvider = Provider<ImageUploadProcessor>((
   ref,
 ) {
-  final config = ref.watch(appConfigProvider);
-  if (config.useNodeBackend) {
-    return NodeImageUploadProcessor(
-      ref.watch(appDatabaseProvider),
-      ref.watch(nativeApiSessionRepositoryProvider),
-      ref.watch(appClockProvider),
-      ref.watch(appLoggerProvider),
-    );
-  }
-  return ProductImageUploadProcessor(
-    database: ref.watch(appDatabaseProvider),
-    firebaseAuth: ref.watch(firebaseAuthProvider),
-    functions: ref.watch(firebaseFunctionsProvider),
-    functionName: config.finalizeProductImageFunctionName,
-    idGenerator: ref.watch(idGeneratorProvider),
-    clock: ref.watch(appClockProvider),
-    logger: ref.watch(appLoggerProvider),
+  return NodeImageUploadProcessor(
+    ref.watch(appDatabaseProvider),
+    ref.watch(nativeApiSessionRepositoryProvider),
+    ref.watch(appClockProvider),
+    ref.watch(appLoggerProvider),
   );
 });
 

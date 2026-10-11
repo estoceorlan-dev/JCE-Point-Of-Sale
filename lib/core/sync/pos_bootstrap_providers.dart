@@ -8,21 +8,15 @@ import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../shared/models/business_context.dart';
 import '../config/app_config.dart';
 import '../database/database_provider.dart';
-import '../remote/firebase_functions_provider.dart';
-import '../remote/pos_bootstrap_remote_data_source.dart';
 import 'drift_pos_bootstrap_repository.dart';
 import 'pos_bootstrap_repository.dart';
 
 final posBootstrapRepositoryProvider = Provider<PosBootstrapRepository>((ref) {
-  final config = ref.watch(appConfigProvider);
   return DriftPosBootstrapRepository(
     database: ref.watch(appDatabaseProvider),
-    remote: config.useNodeBackend
-        ? NodeBootstrapDataSource(ref.watch(nativeApiSessionRepositoryProvider))
-        : CloudFunctionsPosBootstrapRemoteDataSource(
-            functions: ref.watch(firebaseFunctionsProvider),
-            functionName: config.posBootstrapFunctionName,
-          ),
+    remote: NodeBootstrapDataSource(
+      ref.watch(nativeApiSessionRepositoryProvider),
+    ),
   );
 });
 
@@ -30,7 +24,7 @@ final posBootstrapProgressProvider = StreamProvider<PosBootstrapProgress>((
   ref,
 ) {
   final config = ref.watch(appConfigProvider);
-  if (config.enableDemoAuth || !config.enablePosSyncV2) {
+  if (config.enableDemoAuth) {
     return Stream.value(
       const PosBootstrapProgress(status: PosBootstrapStatus.ready),
     );

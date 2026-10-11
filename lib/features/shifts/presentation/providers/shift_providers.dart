@@ -3,7 +3,6 @@ import '../../data/services/node_register_claim_authorization_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/database_provider.dart';
-import '../../../../core/config/app_config.dart';
 import '../../../../core/database/local_mutation_transaction.dart';
 import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/id_generator.dart';
@@ -13,7 +12,6 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../data/data_sources/shift_local_data_source.dart';
 import '../../data/repositories/drift_shift_repository.dart';
 import '../../data/repositories/drift_register_claim_repository.dart';
-import '../../data/services/firebase_register_claim_authorization_service.dart';
 import '../../domain/entities/cash_shift.dart';
 import '../../domain/entities/register.dart';
 import '../../domain/entities/register_claim.dart';
@@ -60,18 +58,8 @@ final registerClaimRepositoryProvider = Provider<RegisterClaimRepository>((
 
 final registerClaimAuthorizationServiceProvider =
     Provider<RegisterClaimAuthorizationService>((ref) {
-      final config = ref.watch(appConfigProvider);
-      if (config.useNodeBackend) {
-        return NodeRegisterClaimAuthorizationService(
-          ref.watch(nativeAuthApiProvider),
-        );
-      }
-      return FirebaseRegisterClaimAuthorizationService(
-        config: config,
-        functionName: config.registerClaimAuthorizationFunctionName,
-        region:
-            config.firebaseFunctionsRegion ??
-            AppConfig.defaultFirebaseFunctionsRegion,
+      return NodeRegisterClaimAuthorizationService(
+        ref.watch(nativeAuthApiProvider),
       );
     });
 
