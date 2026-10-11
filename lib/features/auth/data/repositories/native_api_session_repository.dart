@@ -7,7 +7,7 @@ import '../datasources/native_auth_api.dart';
 import '../security/credential_record_store.dart';
 import '../../domain/offline/native_session_repository.dart';
 
-// Transport/session adapter prepared for Phase 4; the Firebase provider remains active.
+// Native Node API sessions, persisted through the platform credential vault.
 class NativeApiSessionRepository implements NativeSessionRepository {
   const NativeApiSessionRepository(this.api, this.records);
   final NativeAuthApi api;

@@ -57,6 +57,8 @@ dependencies:
 
   web: ^1.1.1
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
 
