@@ -21,6 +21,7 @@ void main() {
         'y': base64UrlEncode(List.filled(32, 2)).replaceAll('=', ''),
       },
     }),
+    'JCE_ONLINE_ONLY': 'false',
   };
   List<String> validate(
     Map<String, Object?> config, {
@@ -34,7 +35,24 @@ void main() {
 
   test('accepts public Node Android and web profiles', () {
     expect(validate(validConfig()), isEmpty);
-    expect(validate(validConfig(), platform: ReleasePlatform.web), isEmpty);
+    expect(
+      validate(
+        validConfig()..['JCE_ONLINE_ONLY'] = 'true',
+        platform: ReleasePlatform.web,
+      ),
+      isEmpty,
+    );
+  });
+
+  test('keeps production modes platform-specific', () {
+    expect(
+      validate(validConfig(), platform: ReleasePlatform.web),
+      isNotEmpty,
+    );
+    expect(
+      validate(validConfig()..['JCE_ONLINE_ONLY'] = 'true'),
+      isNotEmpty,
+    );
   });
   test('retains Windows production gate', () {
     expect(

@@ -24,6 +24,7 @@ abstract final class ReleaseConfigValidator {
     'JCE_DEPLOYMENT_ID',
     'JCE_ORGANIZATION_CODE',
     'JCE_OFFLINE_VERIFICATION_KEYS',
+    'JCE_ONLINE_ONLY',
   };
   static const allowedKeys = <String>{
     ...requiredKeys,
@@ -73,6 +74,14 @@ abstract final class ReleaseConfigValidator {
       errors.add(
         'Windows production remains deferred by ADR-0001 pending device acceptance.',
       );
+    }
+    if (platform == ReleasePlatform.web &&
+        _value(values, 'JCE_ONLINE_ONLY') != 'true') {
+      errors.add('Production web deployments must be explicitly online-only.');
+    }
+    if (platform != ReleasePlatform.web &&
+        _value(values, 'JCE_ONLINE_ONLY') != 'false') {
+      errors.add('Native production clients must retain offline operation.');
     }
     final deployment = _value(values, 'JCE_DEPLOYMENT_ID');
     if (deployment == null ||

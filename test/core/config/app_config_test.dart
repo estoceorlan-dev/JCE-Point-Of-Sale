@@ -10,6 +10,7 @@ void main() {
       expect(config.environment, AppEnvironment.production);
       expect(config.enableDemoAuth, isFalse);
       expect(config.enableDiagnostics, isFalse);
+      expect(config.onlineOnly, isFalse);
       expect(config.apiBaseUri, isNull);
       expect(config.demoBranchId, isNull);
       expect(
@@ -78,6 +79,26 @@ void main() {
           environment: 'development',
           apiBaseUrl: '/api',
           demoBranchId: 'test-branch',
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test('online-only mode requires an API and rejects demo auth', () {
+      expect(
+        () => AppConfig.fromValues(
+          environment: 'production',
+          onlineOnly: 'true',
+        ),
+        throwsFormatException,
+      );
+      expect(
+        () => AppConfig.fromValues(
+          environment: 'development',
+          apiBaseUrl: 'https://pos.example.test',
+          onlineOnly: 'true',
+          enableDemoAuth: 'true',
+          demoBranchId: 'demo',
         ),
         throwsFormatException,
       );

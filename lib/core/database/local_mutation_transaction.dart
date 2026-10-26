@@ -6,24 +6,39 @@ import '../error/failures.dart';
 import '../error/result.dart';
 import 'app_database.dart';
 import 'database_provider.dart';
+import '../config/app_config.dart';
+import '../services/online_availability_service.dart';
 import 'models/outbox_command.dart';
 
 final localMutationTransactionProvider = Provider<LocalMutationTransaction>((
   ref,
 ) {
-  return LocalMutationTransaction(ref.watch(appDatabaseProvider));
+  final config = ref.watch(appConfigProvider);
+  return LocalMutationTransaction(
+    ref.watch(appDatabaseProvider),
+    precondition: config.onlineOnly
+        ? () => ref
+              .read(onlineAvailabilityServiceProvider)
+              .mutationPrecondition(config)
+        : null,
+  );
 });
 
 class LocalMutationTransaction {
-  const LocalMutationTransaction(this._database);
+  const LocalMutationTransaction(this._database, {this.precondition});
 
   final AppDatabase _database;
+  final Future<Failure?> Function()? precondition;
 
   Future<Result<T, Failure>> execute<T>({
     required Future<T> Function(AppDatabase database) businessWrite,
     required AuditLogEntry auditEntry,
     required OutboxCommand outboxCommand,
   }) async {
+    final preconditionFailure = await precondition?.call();
+    if (preconditionFailure != null) {
+      return Result.failure(preconditionFailure);
+    }
     if (auditEntry.operationId != null &&
         auditEntry.operationId != outboxCommand.operationId) {
       return const Result.failure(

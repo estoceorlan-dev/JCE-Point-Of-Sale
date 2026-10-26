@@ -7,6 +7,7 @@ import 'core/routing/app_router.dart';
 import 'core/sync/sync_lifecycle_listener.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/environment_banner.dart';
+import 'core/widgets/online_required_gate.dart';
 import 'features/hardware/presentation/widgets/receipt_print_lifecycle_listener.dart';
 
 class JcePosApp extends ConsumerWidget {
@@ -27,7 +28,11 @@ class JcePosApp extends ConsumerWidget {
       builder: (context, child) => EnvironmentBanner(
         environment: environment,
         child: ReceiptPrintLifecycleListener(
-          child: SyncLifecycleListener(child: child ?? const SizedBox.shrink()),
+          child: OnlineRequiredGate(
+            child: SyncLifecycleListener(
+              child: child ?? const SizedBox.shrink(),
+            ),
+          ),
         ),
       ),
     );

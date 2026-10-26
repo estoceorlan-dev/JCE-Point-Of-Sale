@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#F8FAFC",
     "theme_color": "#2563EB",
-    "description": "Offline-first multi-branch point of sale system.",
+    "description": "JCE multi-branch point of sale administration.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

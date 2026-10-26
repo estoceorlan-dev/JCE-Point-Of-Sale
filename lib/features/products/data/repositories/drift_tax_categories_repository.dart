@@ -15,14 +15,14 @@ import '../../domain/repositories/tax_categories_repository.dart';
 
 class DriftTaxCategoriesRepository implements TaxCategoriesRepository {
   const DriftTaxCategoriesRepository({
-    required AppDatabase database,
+    required LocalMutationTransaction localMutationTransaction,
     required IdGenerator ids,
     required AppClock clock,
-  }) : _database = database,
+  }) : _localMutationTransaction = localMutationTransaction,
        _ids = ids,
        _clock = clock;
 
-  final AppDatabase _database;
+  final LocalMutationTransaction _localMutationTransaction;
   final IdGenerator _ids;
   final AppClock _clock;
 
@@ -139,7 +139,7 @@ class DriftTaxCategoriesRepository implements TaxCategoriesRepository {
   ) {
     final operationId = _ids.newId();
     final now = _clock.nowUtc();
-    return LocalMutationTransaction(_database).execute(
+    return _localMutationTransaction.execute(
       businessWrite: write,
       auditEntry: AuditLogEntry(
         id: _ids.newId(),

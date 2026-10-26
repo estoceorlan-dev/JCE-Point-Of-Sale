@@ -33,6 +33,7 @@ NativeAuthProfile nodeInstallationProfile() {
         'JCE_ORGANIZATION_CODE': organization,
         'JCE_OFFLINE_VERIFICATION_KEYS': keysJson,
         'JCE_ALLOW_HTTP_LOOPBACK': '$loopback',
+        'JCE_ONLINE_ONLY': const String.fromEnvironment('JCE_ONLINE_ONLY'),
       },
       platform: kIsWeb
           ? ReleasePlatform.web

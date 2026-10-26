@@ -10,7 +10,10 @@ For production Android/web candidates, use the corresponding production example.
 Public verification keys are a JSON string keyed by `kid`, containing EC P-256
 public JWKs. Never include a private `d`, passwords, session tokens, service-account
 JSON, database URLs or signing secrets. Dart defines are public compiled data.
-The API URL must be an HTTPS origin; web must be served from that same origin.
+The API URL must be an HTTPS origin; web must be served from that same browser
+origin. The Vercel deployment satisfies this with same-origin `/v1` and `/health`
+rewrites to Render. Production web requires `JCE_ONLINE_ONLY=true`; native
+production profiles require `JCE_ONLINE_ONLY=false`.
 
 The independently approved deployment UUID belongs in protected CI settings,
 not the JSON file. Supply it to the validator and build so startup also enforces it:

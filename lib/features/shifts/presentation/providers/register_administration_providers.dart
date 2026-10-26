@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/database/database_provider.dart';
+import '../../../../core/database/local_mutation_transaction.dart';
 import '../../../../core/utils/app_clock.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../../shared/providers/app_providers.dart';
@@ -12,6 +13,7 @@ final registerAdministrationRepositoryProvider =
     Provider<RegisterAdministrationRepository>(
       (ref) => DriftRegisterAdministrationRepository(
         database: ref.watch(appDatabaseProvider),
+        localMutationTransaction: ref.watch(localMutationTransactionProvider),
         ids: ref.watch(idGeneratorProvider),
         clock: ref.watch(appClockProvider),
       ),

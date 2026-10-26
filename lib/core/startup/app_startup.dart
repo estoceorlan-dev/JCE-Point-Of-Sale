@@ -6,6 +6,7 @@ import '../config/app_config.dart';
 import '../config/production_platform_policy.dart';
 import '../logger/app_logger.dart';
 import '../services/node_initialization_service.dart';
+import '../services/online_availability_service.dart';
 import '../theme/app_theme.dart';
 import 'startup_failure_page.dart';
 
@@ -51,6 +52,7 @@ class _AppStartupState extends ConsumerState<AppStartup> {
       final config = ref.read(appConfigProvider);
       ref.read(productionPlatformPolicyProvider).ensureSupported();
       await ref.read(appInitializationServiceProvider).initialize(config);
+      await ref.read(onlineAvailabilityServiceProvider).ensureReady(config);
       if (mounted) {
         setState(() {
           _isInitializing = false;

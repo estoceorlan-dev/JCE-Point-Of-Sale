@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+.vercel/
+.vercel-cache/
+node_modules/
 .tmp/
 .firebase/
 

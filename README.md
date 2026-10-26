@@ -11,6 +11,11 @@ checkpoint, verification and remaining deployment gates.
 
 ## Getting started
 
+The hosted web administration build is an explicitly online-only profile. Vercel
+serves the bundle and same-origin proxies API traffic to Render; local Windows and
+Android deployments retain the existing offline-first behavior. See the backend
+[Vercel + Render guide](../jce_backend/docs/vercel_render_free_deployment.md).
+
 Follow [Node installation](docs/node_installation.md) to provision the backend,
 configure the API origin/deployment UUID/public verification keys, and enroll a
 cashier PIN. Copy `config/node.local.example.json` to an ignored

@@ -1,0 +1,7 @@
+{
+  "name": "jce-pos-vercel-build",
+  "private": true,
+  "scripts": {
+    "build": "bash tool/build_vercel.sh && node tool/prepare_vercel_output.mjs"
+  }
+}

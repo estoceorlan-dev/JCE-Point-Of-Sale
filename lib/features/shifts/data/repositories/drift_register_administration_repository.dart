@@ -17,12 +17,15 @@ class DriftRegisterAdministrationRepository
     implements RegisterAdministrationRepository {
   const DriftRegisterAdministrationRepository({
     required AppDatabase database,
+    required LocalMutationTransaction localMutationTransaction,
     required IdGenerator ids,
     required AppClock clock,
   }) : _database = database,
+       _localMutationTransaction = localMutationTransaction,
        _ids = ids,
        _clock = clock;
   final AppDatabase _database;
+  final LocalMutationTransaction _localMutationTransaction;
   final IdGenerator _ids;
   final AppClock _clock;
 
@@ -77,7 +80,7 @@ class DriftRegisterAdministrationRepository
       if (draft != null) 'code': draft.code,
       if (draft != null) 'name': draft.name,
     };
-    return LocalMutationTransaction(_database).execute(
+    return _localMutationTransaction.execute(
       businessWrite: (database) async {
         final row =
             await (database.select(database.registers)..where(

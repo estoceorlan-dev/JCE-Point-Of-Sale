@@ -14,6 +14,7 @@ class AppConfig {
     required this.environment,
     required this.enableDemoAuth,
     required this.enableDiagnostics,
+    this.onlineOnly = false,
     this.accessRefreshInterval = defaultAccessRefreshInterval,
     this.maxOfflineAccessAge = defaultMaxOfflineAccessAge,
     this.apiBaseUri,
@@ -32,6 +33,7 @@ class AppConfig {
     const apiBaseUrl = String.fromEnvironment('JCE_API_BASE_URL');
     const demoAuthValue = String.fromEnvironment('JCE_ENABLE_DEMO_AUTH');
     const diagnosticsValue = String.fromEnvironment('JCE_ENABLE_DIAGNOSTICS');
+    const onlineOnlyValue = String.fromEnvironment('JCE_ONLINE_ONLY');
     const demoBranchIdValue = String.fromEnvironment('JCE_DEMO_BRANCH_ID');
     const accessRefreshMinutes = String.fromEnvironment(
       'JCE_ACCESS_REFRESH_MINUTES',
@@ -45,6 +47,7 @@ class AppConfig {
       apiBaseUrl: apiBaseUrl,
       enableDemoAuth: demoAuthValue,
       enableDiagnostics: diagnosticsValue,
+      onlineOnly: onlineOnlyValue,
       demoBranchId: demoBranchIdValue,
       accessRefreshMinutes: accessRefreshMinutes,
       maxOfflineAccessHours: maxOfflineAccessHours,
@@ -59,6 +62,7 @@ class AppConfig {
     String? apiBaseUrl,
     String? enableDemoAuth,
     String? enableDiagnostics,
+    String? onlineOnly,
     String? demoBranchId,
     String? accessRefreshMinutes,
     String? maxOfflineAccessHours,
@@ -86,6 +90,11 @@ class AppConfig {
       enableDiagnostics,
       fallback: !parsedEnvironment.isProduction,
       key: 'JCE_ENABLE_DIAGNOSTICS',
+    );
+    final parsedOnlineOnly = _parseOptionalBool(
+      onlineOnly,
+      fallback: false,
+      key: 'JCE_ONLINE_ONLY',
     );
     final normalizedDemoBranchId = _normalizeOptional(demoBranchId);
     final parsedAccessRefreshMinutes = _parsePositiveInt(
@@ -120,12 +129,23 @@ class AppConfig {
         'JCE_ENABLE_DIAGNOSTICS must be false in production.',
       );
     }
+    if (parsedOnlineOnly && parsedApiBaseUri == null) {
+      throw const FormatException(
+        'JCE_API_BASE_URL is required when JCE_ONLINE_ONLY is true.',
+      );
+    }
+    if (parsedOnlineOnly && parsedEnableDemoAuth) {
+      throw const FormatException(
+        'Demo authentication is unavailable in online-only mode.',
+      );
+    }
 
     return AppConfig(
       environment: parsedEnvironment,
       apiBaseUri: parsedApiBaseUri,
       enableDemoAuth: parsedEnableDemoAuth,
       enableDiagnostics: parsedEnableDiagnostics,
+      onlineOnly: parsedOnlineOnly,
       demoBranchId: normalizedDemoBranchId,
       accessRefreshInterval: Duration(minutes: parsedAccessRefreshMinutes),
       maxOfflineAccessAge: Duration(hours: parsedMaxOfflineAccessHours),
@@ -136,6 +156,7 @@ class AppConfig {
   final Uri? apiBaseUri;
   final bool enableDemoAuth;
   final bool enableDiagnostics;
+  final bool onlineOnly;
   final String? demoBranchId;
   final Duration accessRefreshInterval;
   final Duration maxOfflineAccessAge;

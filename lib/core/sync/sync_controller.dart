@@ -37,6 +37,7 @@ final syncStateProvider =
         ref,
         context,
         automatic: !ref.watch(appConfigProvider).enableDemoAuth,
+        onlineOnly: ref.watch(appConfigProvider).onlineOnly,
         hydrateAdministration:
             session?.administrationPermissions.isNotEmpty ?? false,
         hydrateLocations: session?.can(AppPermission.manageInventory) ?? false,
@@ -62,10 +63,12 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
     this._ref,
     this._context, {
     required bool automatic,
+    required bool onlineOnly,
     required bool hydrateAdministration,
     bool hydrateLocations = false,
     bool posActive = false,
-  }) : _hydrateAdministration = hydrateAdministration,
+  }) : _onlineOnly = onlineOnly,
+       _hydrateAdministration = hydrateAdministration,
        _hydrateLocations = hydrateLocations,
        _posActive = posActive,
        super(const AsyncData(SyncState(status: SyncStatus.idle))) {
@@ -113,7 +116,9 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
             state = AsyncData(
               current.copyWith(
                 status: SyncStatus.offline,
-                message: 'Network unavailable. Local changes are safe.',
+                message: _onlineOnly
+                    ? 'Network unavailable. This deployment requires an online connection.'
+                    : 'Network unavailable. Local changes are safe.',
               ),
             );
           }
@@ -127,6 +132,7 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
 
   final Ref _ref;
   final BusinessContext? _context;
+  final bool _onlineOnly;
   final bool _hydrateAdministration;
   final bool _hydrateLocations;
   final bool _posActive;
@@ -206,7 +212,9 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
           status: result.offline ? SyncStatus.offline : SyncStatus.idle,
           lastSyncedAt: result.offline ? null : result.finishedAt,
           message: result.offline
-              ? 'The API is unavailable. Local changes are safe.'
+              ? _onlineOnly
+                    ? 'The API is unavailable. This deployment requires an online connection.'
+                    : 'The API is unavailable. Local changes are safe.'
               : result.authenticationRequired
               ? 'Sign in online to download updates. Signed operations can still upload.'
               : result.conflicts > 0
@@ -221,7 +229,9 @@ class SyncController extends StateNotifier<AsyncValue<SyncState>> {
         latest.copyWith(
           status: SyncStatus.failed,
           message: error is NetworkFailure
-              ? 'The configured API is unavailable. Local changes are safe.'
+              ? _onlineOnly
+                    ? 'The configured API is unavailable. Reconnect before continuing.'
+                    : 'The configured API is unavailable. Local changes are safe.'
               : error is AuthenticationFailure ||
                     error is RemoteApiException && error.status == 401
               ? 'Your API session expired. Sign in again to download updates.'
